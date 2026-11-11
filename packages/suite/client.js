@@ -1,5 +1,5 @@
 window.__ModuleLoader__.load({
-  id: "dsh-asuta-suite",
+  id: "dsh-asuta-cdx-plus",
   factory(require) {
     const React = require("react");
     const h = React.createElement;
@@ -149,7 +149,7 @@ window.__ModuleLoader__.load({
     "bundleConfig": false
   }
 ];
-    const suiteName = "dsh-asuta-suite";
+    const suiteName = "dsh-asuta-cdx-plus";
 
     function Overview({ subject }) {
       if (subject.kind !== "bundle" || subject.pkg.name !== suiteName) return null;
@@ -160,8 +160,8 @@ window.__ModuleLoader__.load({
       const quote = features.find(feature => feature.directory === "selection-quote");
       const side = features.find(feature => feature.directory === "sidebar-chat");
       const sideHint = rows.get(quote.name)?.enabled && !rows.get(side.name)?.enabled;
-      return h("section", { "data-dsh-enhancements": "overview", style: { font: "inherit", lineHeight: 1.6 } },
-        h("strong", null, zh ? "增强套件" : "Enhancement suite"),
+      return h("section", { "data-dsh-cdx-plus": "overview", style: { font: "inherit", lineHeight: 1.6 } },
+        h("strong", null, "DSH CDX Plus"),
         h("p", { role: "status" }, zh
           ? `${enabled} / ${features.length} 项功能已启用。下方组件开关分别控制每个功能。`
           : `${enabled} / ${features.length} features enabled. Use the component switches below to control each feature.`),

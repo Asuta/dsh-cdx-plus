@@ -1,6 +1,6 @@
 - insert:
     - id: asuta-suite
-      name: dsh-asuta-suite
+      name: dsh-asuta-cdx-plus
       config: {}
 
 - insert:

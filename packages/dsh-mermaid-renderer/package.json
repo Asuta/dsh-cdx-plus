@@ -62,11 +62,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
     "directory": "packages/dsh-mermaid-renderer"
   },
-  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/dsh-mermaid-renderer",
+  "homepage": "https://github.com/Asuta/dsh-cdx-plus/tree/main/packages/dsh-mermaid-renderer",
   "bugs": {
-    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+    "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   }
 }

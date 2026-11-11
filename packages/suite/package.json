@@ -1,8 +1,8 @@
 {
-  "name": "dsh-asuta-suite",
+  "name": "dsh-asuta-cdx-plus",
   "version": "0.1.0",
   "type": "module",
-  "description": "DSH enhancement suite: 18 independently switchable features, status overview and configuration access.",
+  "description": "DSH CDX Plus: familiar interactions, a smoother DSH experience. 18 independently switchable features.",
   "license": "MIT",
   "icon": "./icon.svg",
   "exports": {
@@ -59,7 +59,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
     "directory": "packages/suite"
   },
   "publishConfig": {

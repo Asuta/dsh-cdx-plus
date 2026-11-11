@@ -88,12 +88,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
     "directory": "packages/dsh-sidebrowser"
   },
-  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/dsh-sidebrowser",
+  "homepage": "https://github.com/Asuta/dsh-cdx-plus/tree/main/packages/dsh-sidebrowser",
   "bugs": {
-    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+    "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {

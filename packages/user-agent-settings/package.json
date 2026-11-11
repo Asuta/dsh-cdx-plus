@@ -47,12 +47,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
     "directory": "packages/user-agent-settings"
   },
-  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/user-agent-settings",
+  "homepage": "https://github.com/Asuta/dsh-cdx-plus/tree/main/packages/user-agent-settings",
   "bugs": {
-    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+    "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
     "dsh-plugin",

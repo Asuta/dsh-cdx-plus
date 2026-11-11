@@ -59,12 +59,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
     "directory": "packages/worktree-control"
   },
-  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/worktree-control",
+  "homepage": "https://github.com/Asuta/dsh-cdx-plus/tree/main/packages/worktree-control",
   "bugs": {
-    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+    "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
     "dsh-plugin",

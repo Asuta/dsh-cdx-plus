@@ -43,12 +43,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
     "directory": "packages/archived-sessions"
   },
-  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/archived-sessions",
+  "homepage": "https://github.com/Asuta/dsh-cdx-plus/tree/main/packages/archived-sessions",
   "bugs": {
-    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+    "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
     "dsh-plugin",

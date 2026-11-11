@@ -1,6 +1,8 @@
-# DSH Enhancements
+# DSH CDX Plus
 
-DSH 增强套件：一次安装，18 项功能独立启停。
+**DSH 体验增强套件**
+
+熟悉的交互，更顺手的 DSH。一次安装，18 项功能独立启停。
 
 本仓库包含发行插件、构建源码、运行时资源与发布验证脚本。开发技能、现场笔记、临时文件和本机配置不进入此仓库。
 
@@ -8,9 +10,9 @@ DSH 增强套件：一次安装，18 项功能独立启停。
 
 **尚未发布：以下命令供正式发布后使用。**
 
-    dsh plugin --profile desktop add dsh-asuta-suite
+    dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
-在「插件 → DSH 增强套件」里分别开启或关闭各个组件。也可以单独安装下列任意插件。开关作用于当前 profile；是否需要重启以 DSH 提示为准。
+在「插件 → DSH CDX Plus」里分别开启或关闭各个组件。也可以单独安装下列任意插件。开关作用于当前 profile；是否需要重启以 DSH 提示为准。
 
 | 功能 | 独立包名 |
 | --- | --- |

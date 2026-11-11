@@ -46,7 +46,7 @@ function decoratePluginPage(registration,options){
       const style=document.createElement('style');style.textContent=css;document.head.appendChild(style);ctx.effect(()=>()=>style.remove());
       const slot=(key,Component)=>ctx.slots.inject('plugins.bundle.config',()=>ctx.slots.register({name:'plugins.bundle.config',key},Component));
       ctx.effect(()=>slot(options.name,()=>h(Page,{})));
-      ctx.effect(()=>ctx.slots.inject("plugins.row.config",()=>ctx.slots.register({name:"plugins.row.config",key:"dsh-asuta-suite#dsh-asuta-sidebrowser"},()=>h(Page,{}))));
+      ctx.effect(()=>ctx.slots.inject("plugins.row.config",()=>ctx.slots.register({name:"plugins.row.config",key:"dsh-asuta-cdx-plus#dsh-asuta-sidebrowser"},()=>h(Page,{}))));
       const abort=new AbortController(),disposers=[];ctx.effect(()=>()=>{abort.abort();for(const off of disposers)off?.();});
       api(options.route,undefined,abort.signal).then(data=>{if(abort.signal.aborted)return;for(const row of data.rows)disposers.push(ctx.slots.inject('plugins.row.config',()=>ctx.slots.register({name:'plugins.row.config',key:`${options.name}#${row.id}`},()=>h(Page,{only:row.id}))));}).catch(()=>{});
     }

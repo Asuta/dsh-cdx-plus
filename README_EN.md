@@ -1,12 +1,14 @@
-# DSH Enhancements
+# DSH CDX Plus
+
+**Familiar interactions, a smoother DSH experience.**
 
 Install one suite to get 18 independently switchable features. This repository contains release packages, rebuildable source and runtime resources. Development skills, local notes, test fixtures and machine configuration remain in the development repository.
 
 **Not published yet. After publication:**
 
-    dsh plugin --profile desktop add dsh-asuta-suite
+    dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
-Open Plugins → DSH Enhancements to enable or disable individual components. Each feature can also be installed separately; see [README.md](README.md) for the package list. Settings remain in each feature's own UI. Do not enable duplicate development and release versions.
+Open Plugins → DSH CDX Plus to enable or disable individual components. Each feature can also be installed separately; see [README.md](README.md) for the package list. Settings remain in each feature's own UI. Do not enable duplicate development and release versions.
 
 ## Validation
 

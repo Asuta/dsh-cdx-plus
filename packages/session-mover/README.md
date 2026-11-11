@@ -6,4 +6,4 @@ Move idle conversations across workspaces with history preserved; place new fork
 
     dsh plugin --profile desktop add dsh-asuta-session-mover
 
-也可安装 dsh-asuta-suite 获得全部功能，在插件页面独立开启或关闭此组件。
+也可安装 dsh-asuta-cdx-plus 获得全部功能，在插件页面独立开启或关闭此组件。
