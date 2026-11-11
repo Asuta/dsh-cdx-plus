@@ -7,7 +7,11 @@ import { execFileSync } from 'node:child_process';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 execFileSync(process.execPath, [path.join(root, 'scripts/verify.mjs')], { stdio: 'inherit' });
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'release-manifest.json'), 'utf8'));
-const npmCandidates = [process.env.npm_execpath, path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')].filter(Boolean);
+const npmCandidates = [
+  process.env.npm_execpath,
+  path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js'),
+  path.resolve(path.dirname(process.execPath), '../lib/node_modules/npm/bin/npm-cli.js'),
+].filter(Boolean);
 if (process.platform === 'win32') {
   for (const entry of execFileSync('where.exe', ['npm.cmd'], { encoding: 'utf8' }).trim().split(/\r?\n/)) npmCandidates.push(path.join(path.dirname(entry), 'node_modules/npm/bin/npm-cli.js'));
 }
