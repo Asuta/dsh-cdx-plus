@@ -1,0 +1,62 @@
+{
+  "name": "dsh-asuta-session-mover",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Move idle conversations across workspaces with history preserved; place new forks immediately above their source. · 跨工作区拖拽空闲对话并保留历史；新分支紧邻原对话上方。",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "mover.js",
+    "placement.js",
+    "README.md",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "directory": "packages/session-mover"
+  },
+  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/session-mover",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": "0.2.2-rc.1"
+  },
+  "license": "MIT",
+  "icon": "./icon.svg"
+}

@@ -1,0 +1,4 @@
+- insert:
+    - id: selection-quote
+      name: 'dsh-asuta-selection-quote'
+      config: {}

@@ -1,0 +1,72 @@
+{
+  "name": "dsh-asuta-suite",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "DSH enhancement suite: 18 independently switchable features, status overview and configuration access.",
+  "license": "MIT",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "dsh-asuta-archived-sessions": "0.1.0",
+    "dsh-asuta-codex-review": "0.1.0",
+    "dsh-asuta-conversation-workbench": "0.1.0",
+    "dsh-asuta-desktop-navigation": "0.1.0",
+    "dsh-asuta-mermaid-renderer": "0.1.0",
+    "dsh-asuta-sidebrowser": "0.1.0",
+    "dsh-asuta-git-diff": "0.1.0",
+    "dsh-asuta-hide-new-session": "0.1.0",
+    "dsh-asuta-history-edit": "0.1.0",
+    "dsh-asuta-project-activity": "0.1.0",
+    "dsh-asuta-projectless-chat": "0.1.0",
+    "dsh-asuta-reasoning-effort-memory": "0.1.0",
+    "dsh-asuta-selection-quote": "0.1.0",
+    "dsh-asuta-session-mover": "0.1.0",
+    "dsh-asuta-sidebar-chat": "0.1.0",
+    "dsh-asuta-sidebar-more": "0.1.0",
+    "dsh-asuta-user-agent-settings": "0.1.0",
+    "dsh-asuta-worktree-control": "0.1.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    }
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": "0.2.2-rc.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "directory": "packages/suite"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ]
+}

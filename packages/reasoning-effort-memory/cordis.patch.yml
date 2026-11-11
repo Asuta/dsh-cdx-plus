@@ -1,0 +1,4 @@
+- insert:
+    - id: reasoning-effort-memory
+      name: 'dsh-asuta-reasoning-effort-memory'
+      config: {}

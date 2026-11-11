@@ -1,0 +1,4 @@
+- insert:
+    - id: desktop-enhancements
+      name: 'dsh-asuta-desktop-navigation'
+      config: {}

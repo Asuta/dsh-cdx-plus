@@ -1,0 +1,13 @@
+{
+  "quote": "Add to conversation",
+  "comment": "Comment",
+  "sideChat": "Ask in side chat",
+  "copy": "Copy",
+  "panelTitle": "Quotes",
+  "panelGuide": "Every quote sent in this session, with a jump back to its source",
+  "chip": "Quote",
+  "meta": {
+    "title": "selection-quote",
+    "description": "选中引用：选中对话里的文字，引用、评论或开侧边对话。 · Select text in a conversation to quote it, annotate it, or ask it in a side thread."
+  }
+}

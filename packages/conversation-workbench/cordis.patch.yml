@@ -1,0 +1,4 @@
+- insert:
+    - id: conversation-workbench
+      name: "dsh-asuta-conversation-workbench"
+      config: {}

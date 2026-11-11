@@ -1,0 +1,58 @@
+{
+  "name": "dsh-asuta-conversation-workbench",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Cross-conversation controls, artifacts and PR checks for DSH.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "*.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "README.md",
+    "icon.svg",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "icon": "./icon.svg",
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": "0.2.2-rc.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "directory": "packages/conversation-workbench"
+  },
+  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/conversation-workbench",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ],
+  "license": "MIT"
+}

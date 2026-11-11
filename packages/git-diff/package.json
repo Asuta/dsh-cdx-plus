@@ -1,0 +1,61 @@
+{
+  "name": "dsh-asuta-git-diff",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Read-only Git changes panel in the DSH right sidebar.",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "git.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "icon.svg",
+    "locale/*.json",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": "0.2.2-rc.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "directory": "packages/git-diff"
+  },
+  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/git-diff",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ],
+  "license": "MIT",
+  "icon": "./icon.svg"
+}

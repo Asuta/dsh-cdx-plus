@@ -1,0 +1,58 @@
+{
+  "name": "dsh-asuta-hide-new-session",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Hide the New Session button at the top of the sidebar. · 隐藏侧边栏顶部的「新会话」按钮。",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "icon": "./icon.svg",
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale/*.json",
+    "README.md",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "directory": "packages/hide-new-session"
+  },
+  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/hide-new-session",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": "0.2.2-rc.1"
+  },
+  "license": "MIT"
+}

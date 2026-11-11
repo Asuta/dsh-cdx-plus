@@ -1,0 +1,4 @@
+- insert:
+    - id: session-mover
+      name: 'dsh-asuta-session-mover'
+      config: {}

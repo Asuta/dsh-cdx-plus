@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Git Worktree Control",
+    "description": "Create, switch, snapshot, restore, and manage Git worktrees in DSH conversations."
+  }
+}

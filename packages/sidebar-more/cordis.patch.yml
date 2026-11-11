@@ -1,0 +1,4 @@
+- insert:
+    - id: sidebar-more
+      name: 'dsh-asuta-sidebar-more'
+      config: {}

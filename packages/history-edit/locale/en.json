@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "history-edit",
+    "description": "Edit a sent user message and regenerate its response in the same conversation."
+  }
+}

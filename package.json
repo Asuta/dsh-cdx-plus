@@ -1,0 +1,16 @@
+{
+  "name": "dsh-enhancements-workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "verify": "node scripts/verify.mjs",
+    "pack": "node scripts/pack.mjs",
+    "pack:preview": "node scripts/pack.mjs --local-preview"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

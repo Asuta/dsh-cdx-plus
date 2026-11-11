@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Mermaid Diagram Renderer">
+  <rect x="2" y="2" width="28" height="28" rx="8" fill="#e9f0fd"/>
+  <path d="M10 11v10m12-10v10M10 16h12" fill="none" stroke="#4176e6" stroke-width="2" stroke-linecap="round"/>
+  <rect x="6" y="7" width="8" height="8" rx="2.5" fill="#fff" stroke="#4176e6" stroke-width="1.5"/>
+  <rect x="18" y="17" width="8" height="8" rx="2.5" fill="#fff" stroke="#4176e6" stroke-width="1.5"/>
+</svg>

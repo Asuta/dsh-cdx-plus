@@ -1,0 +1,59 @@
+{
+  "name": "dsh-asuta-reasoning-effort-memory",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.js",
+  "description": "Remember the selected reasoning effort for each provider and model.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "icon.svg",
+    "locale/*.json",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-session"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "directory": "packages/reasoning-effort-memory"
+  },
+  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/reasoning-effort-memory",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": "0.2.2-rc.1"
+  },
+  "license": "MIT",
+  "icon": "./icon.svg"
+}

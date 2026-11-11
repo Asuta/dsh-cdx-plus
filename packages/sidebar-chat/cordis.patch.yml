@@ -1,0 +1,5 @@
+- insert:
+    - id: sidebar-chat
+      name: 'dsh-asuta-sidebar-chat'
+      config: {}
+

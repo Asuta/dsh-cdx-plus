@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Mermaid 图表渲染 (dsh-asuta-mermaid-renderer)",
+    "description": "将助手回复中的 Mermaid 代码块渲染为可切换查看的图表。"
+  }
+}

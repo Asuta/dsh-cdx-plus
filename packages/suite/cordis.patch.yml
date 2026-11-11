@@ -1,0 +1,101 @@
+- insert:
+    - id: asuta-suite
+      name: dsh-asuta-suite
+      config: {}
+
+- insert:
+    - id: archived-sessions
+      name: 'dsh-asuta-archived-sessions'
+      config: {}
+
+- insert:
+    - id: local-codex-review
+      name: 'dsh-asuta-codex-review'
+      config: {}
+
+- insert:
+    - id: conversation-workbench
+      name: "dsh-asuta-conversation-workbench"
+      config: {}
+
+- insert:
+    - id: desktop-enhancements
+      name: 'dsh-asuta-desktop-navigation'
+      config: {}
+
+# dsh-asuta-mermaid-renderer — host plugin insertion.
+#
+# The host half is deliberately inert: all behaviour lives in the browser half
+# (lib/client.js). This row exists so the package is an ENABLED Loader entry,
+# which is what makes the host-side client-modules scanner publish
+# `exports["./client"]` to the browser as a module.
+#
+# Keep the id stable: it is also the namespace you would use for a future
+# host-side Config (`ctx.configForms.get('dsh-asuta-mermaid-renderer')`).
+- insert:
+    - id: dsh-asuta-mermaid-renderer
+      name: dsh-asuta-mermaid-renderer
+
+- insert:
+    - id: dsh-asuta-sidebrowser
+      name: 'dsh-asuta-sidebrowser'
+
+- insert:
+    - id: local-git-diff
+      name: "dsh-asuta-git-diff"
+      config: {}
+
+- insert:
+    - id: hide-new-session
+      name: 'dsh-asuta-hide-new-session'
+      config: {}
+
+- insert:
+    - id: local-history-edit
+      name: "dsh-asuta-history-edit"
+      config: {}
+
+- insert:
+    - id: project-activity
+      name: 'dsh-asuta-project-activity'
+      config: {}
+
+- insert:
+    - id: projectless-chat
+      name: 'dsh-asuta-projectless-chat'
+      config: {}
+
+- insert:
+    - id: reasoning-effort-memory
+      name: 'dsh-asuta-reasoning-effort-memory'
+      config: {}
+
+- insert:
+    - id: selection-quote
+      name: 'dsh-asuta-selection-quote'
+      config: {}
+
+- insert:
+    - id: session-mover
+      name: 'dsh-asuta-session-mover'
+      config: {}
+
+- insert:
+    - id: sidebar-chat
+      name: 'dsh-asuta-sidebar-chat'
+      config: {}
+
+- insert:
+    - id: sidebar-more
+      name: 'dsh-asuta-sidebar-more'
+      config: {}
+
+- insert:
+    - id: user-agent-settings
+      name: 'dsh-asuta-user-agent-settings'
+      config: {}
+
+- insert:
+    - id: worktree-control
+      name: "dsh-asuta-worktree-control"
+      config: {}

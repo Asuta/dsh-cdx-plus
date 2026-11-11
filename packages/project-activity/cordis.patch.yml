@@ -1,0 +1,4 @@
+- insert:
+    - id: project-activity
+      name: 'dsh-asuta-project-activity'
+      config: {}

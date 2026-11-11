@@ -1,0 +1,74 @@
+{
+  "name": "dsh-asuta-worktree-control",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Create, switch, snapshot, restore, and manage Git worktrees in DSH conversations.",
+  "main": "index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "index.js",
+    "git.js",
+    "terminal-jobs.js",
+    "terminal-client.mjs",
+    "terminal-input.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README_EN.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "icon.svg",
+    "locale/*.json",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": "0.2.2-rc.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-workspace",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
+    }
+  },
+  "dependencies": {
+    "ignore": "7.0.14",
+    "smol-toml": "1.9.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "directory": "packages/worktree-control"
+  },
+  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/worktree-control",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ],
+  "license": "MIT"
+}

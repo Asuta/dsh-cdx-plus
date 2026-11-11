@@ -1,0 +1,13 @@
+{
+  "quote": "添加到对话",
+  "comment": "评论",
+  "sideChat": "在侧边聊天中提问",
+  "copy": "复制",
+  "panelTitle": "引用清单",
+  "panelGuide": "查看这个会话里发出的每一条引用，并跳回原文",
+  "chip": "引用",
+  "meta": {
+    "title": "选中引用",
+    "description": "选中引用：选中对话里的文字，引用、评论或开侧边对话。 · Select text in a conversation to quote it, annotate it, or ask it in a side thread."
+  }
+}

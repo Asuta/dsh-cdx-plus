@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Side Chat",
+    "description": "Opens independent, continuable side conversations in the right sidebar using the current conversation as context, without posting replies back to it."
+  }
+}

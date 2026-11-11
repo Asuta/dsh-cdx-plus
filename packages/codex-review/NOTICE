@@ -1,0 +1,6 @@
+This plugin includes the Codex code review rubric and Apache License 2.0
+from OpenAI Codex (https://github.com/openai/codex), commit 86ac091
+(2026-11-05), path codex-rs/prompts/templates/review/rubric.md.
+The rubric is included without modification in assets/codex/rubric.md.
+SHA-256: 56e3d0a5a4df3d670dc18b3b26f0525188fd4d81260a8676905a2573aa6d6dee.
+The DSH integration and other plugin files are independently implemented.

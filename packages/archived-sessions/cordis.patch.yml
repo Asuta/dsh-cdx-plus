@@ -1,0 +1,4 @@
+- insert:
+    - id: archived-sessions
+      name: 'dsh-asuta-archived-sessions'
+      config: {}

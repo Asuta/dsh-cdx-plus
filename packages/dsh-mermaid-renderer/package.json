@@ -1,0 +1,72 @@
+{
+  "name": "dsh-asuta-mermaid-renderer",
+  "version": "0.1.0",
+  "description": "Render Mermaid fences in assistant replies as diagrams with a source toggle.",
+  "icon": "./icon.svg",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./client": "./lib/client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "index.mjs",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale/*.json",
+    "README.md",
+    "README_EN.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24",
+    "dsh": "0.2.2-rc.1"
+  },
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "mermaid": "^12.2.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-enhancements.git",
+    "directory": "packages/dsh-mermaid-renderer"
+  },
+  "homepage": "https://github.com/Asuta/dsh-enhancements/tree/main/packages/dsh-mermaid-renderer",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-enhancements/issues"
+  }
+}

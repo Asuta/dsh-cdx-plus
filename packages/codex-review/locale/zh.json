@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "代码审查",
+    "description": "在当前对话中运行独立的 Codex 式代码审查"
+  }
+}

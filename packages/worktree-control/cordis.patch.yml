@@ -1,0 +1,4 @@
+- insert:
+    - id: worktree-control
+      name: "dsh-asuta-worktree-control"
+      config: {}
