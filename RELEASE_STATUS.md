@@ -1,6 +1,6 @@
 # 发布状态
 
-本地发行候选，尚未上传 GitHub、npm 或插件市场。名称：DSH CDX Plus；仓库：Asuta/dsh-cdx-plus；合集：dsh-asuta-cdx-plus。
+GitHub 发行仓库已公开并推送源码（2026-11-12）；npm 包和插件市场尚未发布。名称：DSH CDX Plus；仓库：Asuta/dsh-cdx-plus；合集：dsh-asuta-cdx-plus。
 
 ## 已完成的本机验证（2026-11-11）
 
@@ -14,7 +14,6 @@
 ## 发布前待完成
 
 - npm 登录；发布时确认包名和账号权限。
-- 获得公开推送授权，创建并推送 Asuta/dsh-cdx-plus。当前仅有本地仓库。
 - 验证引用、侧边对话和工作树等功能间的可选联动。打包成功不代表全部行为已验收。
 - 从 npm 的全新安装验收、桌面浏览器实际控制验收及市场条目提交。
 
@@ -25,7 +24,7 @@
 1. 执行 node scripts/verify.mjs 和 node scripts/pack.mjs。
 2. 先发布 artifacts/ 下的 18 个子包，再发布合集包。合集锁定本次子包的精确版本。
 3. 在全新 profile 从 npm 只安装一次合集，检查单项关闭和恢复。
-4. 推送干净的公开仓库，添加 dsh-plugin topic，按市场贡献规范提交条目。合集有状态概览、联动提示与配置入口；最终收录由市场维护者审核。
+4. GitHub 仓库已公开，已添加 dsh-plugin 和 deepseek-harness topic；完成安装验收后，按市场贡献规范提交条目。合集有状态概览、联动提示与配置入口；最终收录由市场维护者审核。
 
 ## 迁移与限制
 
