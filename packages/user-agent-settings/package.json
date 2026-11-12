@@ -1,8 +1,8 @@
 {
   "name": "dsh-asuta-user-agent-settings",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "peerDependencies": {
-    "@deepseek-ai/dsh-sandbox": "0.2.2-rc.1"
+    "@deepseek-ai/dsh-sandbox": "0.2.2-rc.2"
   },
   "type": "module",
   "description": "Edit native global Agent instructions, choose a compression model, and refresh the frontend from Settings.",
@@ -60,7 +60,7 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "license": "MIT",
   "peerDependenciesMeta": {

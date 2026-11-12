@@ -1,6 +1,10 @@
 {
   "name": "dsh-asuta-sidebar-more",
-  "version": "0.1.0",
+  "version": "0.1.2",
+  "engines": {
+    "dsh": "0.2.2-rc.2",
+    "node": "^22.19.0 || >=24"
+  },
   "type": "module",
   "description": "Compact sidebar panels and scroll Pinned, Workspaces and Recent together. · 精简侧栏面板，置顶、工作区与最近共用滚动区。",
   "main": "index.js",
@@ -52,9 +56,5 @@
     "dsh-plugin",
     "deepseek-harness"
   ],
-  "engines": {
-    "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
-  },
   "license": "MIT"
 }

@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-codex-review",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "description": "Codex-style code review in the current DSH conversation",
   "main": "./lib/index.js",
@@ -30,7 +30,7 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "dsh": {
     "bundle": {

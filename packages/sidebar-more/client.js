@@ -38,6 +38,14 @@ window.__ModuleLoader__.load({
         min-height: 0 !important; overflow: visible !important; scrollbar-gutter: auto; }
       [data-sm-scroll-region] .sm-pin-list { max-height: none; overflow: visible; overscroll-behavior: auto; }
       [data-sm-scroll-region] [class*="_fade"] { display: none; }`,
+      // rc.2 adds an outer scrollport and a height-limited workspace. Keep the
+      // navigation fixed and let only our shared region consume the free height.
+      `[data-sm-scroll-viewport] { display: flex !important; flex-direction: column;
+        overflow: hidden !important; box-sizing: border-box;
+        padding: 8px calc(var(--dsh-sidebar-inline-padding) - 2px) 0 4px; }
+      [data-sm-scroll-viewport]::before, [data-sm-scroll-viewport]::after { display: none; }
+      [data-sm-scroll-viewport] > [data-sm-scroll-region] { flex: 1; }
+      [data-sm-scroll-viewport] [data-sm-scroll-layer] { height: auto !important; max-height: none !important; }`,
       // 「置顶」 section. Every row is 32px, matching a workspace session row, and
       // the list stops at eight rows before wrapping into its own scroller so a
       // long pin list cannot push the workspace tree off the column.
@@ -122,17 +130,38 @@ window.__ModuleLoader__.load({
     const SCROLL_REGION_EVENT = 'sidebar-more:scroll-root-change'
     let browsingScrollTop = 0
 
+    /** Tell the native wheel hand-off which element actually scrolls, keeping its ref lifecycle. */
+    function createSectionScrollBridge(sectionScroller) {
+      let native = null, region = null
+      const binding = {
+        bindScrollerRef(element) {
+          native = element
+          sectionScroller.bindScrollerRef(native ? region ?? native : null)
+        },
+      }
+      return {
+        useSectionScroller: () => binding,
+        setRegion(element) {
+          region = element
+          sectionScroller.bindScrollerRef(native ? region ?? native : null)
+        },
+      }
+    }
+
     /** Adapt the current workspace DOM without reparenting React-owned nodes. */
-    function installUnifiedScrollRegion() {
-      let region = null, frame = 0, stopped = false
+    function installUnifiedScrollRegion(scrollBridge) {
+      let region = null, viewport = null, frame = 0, stopped = false
       let layers = new Set()
       const remember = () => { if (region) browsingScrollTop = region.scrollTop }
       const announce = () => window.dispatchEvent(new Event(SCROLL_REGION_EVENT))
       const release = () => {
         if (!region) return
         remember()
+        scrollBridge?.setRegion(null)
         region.removeEventListener('scroll', remember)
         region.removeAttribute('data-sm-scroll-region')
+        viewport?.removeAttribute('data-sm-scroll-viewport')
+        viewport = null
         for (const node of layers) node.removeAttribute('data-sm-scroll-layer')
         layers.clear()
         region = null
@@ -148,7 +177,13 @@ window.__ModuleLoader__.load({
           release()
           region = next
           region.setAttribute('data-sm-scroll-region', '')
+          viewport = region.closest('[data-sidebar-scrollport]')
+          if (viewport) {
+            viewport.setAttribute('data-sm-scroll-viewport', '')
+            viewport.scrollTop = 0
+          }
           region.addEventListener('scroll', remember, { passive: true })
+          scrollBridge?.setRegion(region)
         }
         const root = region.firstElementChild
         const current = new Set([root])
@@ -216,16 +251,19 @@ window.__ModuleLoader__.load({
             if (!descriptor || (!descriptor.writable && !descriptor.configurable) || entry.component[owned]) throw new Error('unsupported-workspace-component')
             const NativeWorkspaceBrowser = entry.component
             function WorkspaceWithPinnedRows(props) {
+              const sectionScroller = props.useSectionScroller?.()
+              const scrollBridge = React.useMemo(() => sectionScroller ? createSectionScrollBridge(sectionScroller) : null, [sectionScroller])
               const bridge = React.useMemo(() => ({
-                renderSlot: props.renderSlot, t: props.t, requestSessionRename: props.requestSessionRename,
-                openSessionMenu: props.openSessionMenu, useContextMenuTarget: props.useContextMenuTarget,
-              }), [props.renderSlot, props.t, props.requestSessionRename, props.openSessionMenu, props.useContextMenuTarget])
+                renderSlot: props.renderSlot, renderFactorySlot: props.renderFactorySlot,
+                t: props.t, requestSessionRename: props.requestSessionRename,
+                useContextMenuTarget: props.useContextMenuTarget,
+              }), [props.renderSlot, props.renderFactorySlot, props.t, props.requestSessionRename, props.useContextMenuTarget])
               React.useLayoutEffect(() => {
                 nativeRowBridge.publish(bridge)
                 return () => nativeRowBridge.release(bridge)
               }, [bridge])
-              React.useLayoutEffect(() => props.wide ? installUnifiedScrollRegion() : undefined, [props.wide])
-              return React.createElement(NativeWorkspaceBrowser, props)
+              React.useLayoutEffect(() => props.wide ? installUnifiedScrollRegion(scrollBridge) : undefined, [props.wide, scrollBridge])
+              return React.createElement(NativeWorkspaceBrowser, scrollBridge ? { ...props, useSectionScroller: scrollBridge.useSectionScroller } : props)
             }
             Object.defineProperty(WorkspaceWithPinnedRows, owned, { value: true })
             Object.defineProperty(WorkspaceWithPinnedRows, 'displayName', { value: 'WorkspaceWithPinnedRows' })
@@ -393,7 +431,7 @@ window.__ModuleLoader__.load({
     function PinnedRow({ row, current, label, onOpen, onUnpin, native, now }) {
       const classes = nativeRowClasses()
       // During native owner startup/reload keep the original safe minimal row.
-      if (!native || !classes || typeof native.openSessionMenu !== 'function' || typeof native.useContextMenuTarget !== 'function') return React.createElement('li', { className: 'sm-pin-item' },
+      if (!native || !classes || typeof native.renderFactorySlot !== 'function' || typeof native.useContextMenuTarget !== 'function') return React.createElement('li', { className: 'sm-pin-item' },
         React.createElement('div', { className: 'sm-pin-row sm-pin-fallback', role: 'treeitem', tabIndex: 0, 'aria-selected': current, onClick: () => onOpen(row.id), onKeyDown: e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen(row.id) } } },
           React.createElement('span', { className: 'sm-pin-title' }, row.title || label('untitled')),
           React.createElement('button', { type: 'button', className: 'sm-pin-action', 'aria-label': label('unpin'), onClick: e => { e.stopPropagation(); onUnpin(row.id) } }, React.createElement(primitives.IconPinFillRegular))))
@@ -443,15 +481,11 @@ window.__ModuleLoader__.load({
         React.createElement('span', { className: classes.time, 'aria-hidden': primary.trailingLabel ? true : undefined }, primary.trailingLabel ?? relativeLabel(row.updatedAt, now, t)),
         React.createElement('span', { className: classes.pinIndicator, role: 'img', 'aria-label': t('row.pinned'), title: t('row.pinned') }, React.createElement(primitives.IconPinFillRegular, { size: 14 })),
         React.createElement('span', { className: classes.rowActions, onClick: e => e.stopPropagation(), onKeyDown: e => e.stopPropagation() },
-          React.createElement('button', {
-            type: 'button', className: classes.iconButton, 'aria-label': t('actions.session.aria', { name: title }),
-            'aria-expanded': menuOpen, 'data-context-menu-trigger': '',
-            onClick: event => {
-              event.currentTarget.focus({ preventScroll: true })
-              const rect = event.currentTarget.getBoundingClientRect()
-              native.openSessionMenu(row.id, title, { x: rect.left, y: rect.bottom }, 'toggle')
-            },
-          }, React.createElement(primitives.IconEllipsisOutlineRegular)),
+          native.renderFactorySlot('contextMenu.button', {
+            target: { kind: 'session', value: { sessionId: row.id, displayTitle: row.title } },
+            label: t('actions.session.aria', { name: title }),
+            className: classes.iconButton,
+          }),
           renderSlot('sidebar.workspaces.session.row.action', childProps)))
       const content = React.createElement('div', { className: classes.hoverContent },
         React.createElement('div', { className: classes.hoverTitle }, title),

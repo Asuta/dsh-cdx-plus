@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-history-edit",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "description": "Edit a sent user message and regenerate its response in the same conversation.",
   "main": "index.js",
@@ -25,7 +25,7 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "dsh": {
     "bundle": {

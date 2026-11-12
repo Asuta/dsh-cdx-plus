@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "archived-sessions",
     "name": "dsh-asuta-archived-sessions",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "归档会话管理",
     "rowId": "archived-sessions",
     "bundleConfig": false
@@ -15,7 +15,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "codex-review",
     "name": "dsh-asuta-codex-review",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "代码审查",
     "rowId": "local-codex-review",
     "bundleConfig": false
@@ -23,7 +23,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "conversation-workbench",
     "name": "dsh-asuta-conversation-workbench",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "对话管理工具",
     "rowId": "conversation-workbench",
     "bundleConfig": false
@@ -31,7 +31,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "desktop-navigation",
     "name": "dsh-asuta-desktop-navigation",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "桌面导航",
     "rowId": "desktop-enhancements",
     "bundleConfig": false
@@ -39,7 +39,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "dsh-mermaid-renderer",
     "name": "dsh-asuta-mermaid-renderer",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "Mermaid 图表",
     "rowId": "dsh-asuta-mermaid-renderer",
     "bundleConfig": false
@@ -47,7 +47,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "dsh-sidebrowser",
     "name": "dsh-asuta-sidebrowser",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "内置浏览器",
     "rowId": "dsh-asuta-sidebrowser",
     "bundleConfig": true
@@ -55,7 +55,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "git-diff",
     "name": "dsh-asuta-git-diff",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "Git 变更",
     "rowId": "local-git-diff",
     "bundleConfig": false
@@ -63,7 +63,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "hide-new-session",
     "name": "dsh-asuta-hide-new-session",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "隐藏新会话按钮",
     "rowId": "hide-new-session",
     "bundleConfig": false
@@ -71,7 +71,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "history-edit",
     "name": "dsh-asuta-history-edit",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "历史消息编辑",
     "rowId": "local-history-edit",
     "bundleConfig": false
@@ -79,7 +79,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "project-activity",
     "name": "dsh-asuta-project-activity",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "项目活动状态",
     "rowId": "project-activity",
     "bundleConfig": false
@@ -87,7 +87,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "projectless-chat",
     "name": "dsh-asuta-projectless-chat",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "无工作区对话",
     "rowId": "projectless-chat",
     "bundleConfig": false
@@ -95,7 +95,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "reasoning-effort-memory",
     "name": "dsh-asuta-reasoning-effort-memory",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "记忆思考强度",
     "rowId": "reasoning-effort-memory",
     "bundleConfig": false
@@ -103,7 +103,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "selection-quote",
     "name": "dsh-asuta-selection-quote",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "选中引用",
     "rowId": "selection-quote",
     "bundleConfig": false
@@ -111,7 +111,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "session-mover",
     "name": "dsh-asuta-session-mover",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "移动对话",
     "rowId": "session-mover",
     "bundleConfig": false
@@ -119,7 +119,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "sidebar-chat",
     "name": "dsh-asuta-sidebar-chat",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "侧边对话",
     "rowId": "sidebar-chat",
     "bundleConfig": false
@@ -127,7 +127,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "sidebar-more",
     "name": "dsh-asuta-sidebar-more",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "侧栏整理",
     "rowId": "sidebar-more",
     "bundleConfig": false
@@ -135,7 +135,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "user-agent-settings",
     "name": "dsh-asuta-user-agent-settings",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "Agent 设置",
     "rowId": "user-agent-settings",
     "bundleConfig": false
@@ -143,7 +143,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "worktree-control",
     "name": "dsh-asuta-worktree-control",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "title": "工作树控制",
     "rowId": "worktree-control",
     "bundleConfig": false

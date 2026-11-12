@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-projectless-chat",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "description": "Create independent conversations outside existing workspaces.",
   "main": "index.js",
@@ -57,7 +57,7 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "license": "MIT"
 }

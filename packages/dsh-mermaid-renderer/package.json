@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-mermaid-renderer",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Render Mermaid fences in assistant replies as diagrams with a source toggle.",
   "icon": "./icon.svg",
   "type": "module",
@@ -37,7 +37,7 @@
   },
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "scripts": {
     "build": "node build.mjs"

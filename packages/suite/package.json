@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-cdx-plus",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "description": "DSH CDX Plus: familiar interactions, a smoother DSH experience. 18 independently switchable features.",
   "license": "MIT",
@@ -22,24 +22,24 @@
     "LICENSE"
   ],
   "dependencies": {
-    "dsh-asuta-archived-sessions": "0.1.0",
-    "dsh-asuta-codex-review": "0.1.0",
-    "dsh-asuta-conversation-workbench": "0.1.0",
-    "dsh-asuta-desktop-navigation": "0.1.0",
-    "dsh-asuta-mermaid-renderer": "0.1.0",
-    "dsh-asuta-sidebrowser": "0.1.0",
-    "dsh-asuta-git-diff": "0.1.0",
-    "dsh-asuta-hide-new-session": "0.1.0",
-    "dsh-asuta-history-edit": "0.1.0",
-    "dsh-asuta-project-activity": "0.1.0",
-    "dsh-asuta-projectless-chat": "0.1.0",
-    "dsh-asuta-reasoning-effort-memory": "0.1.0",
-    "dsh-asuta-selection-quote": "0.1.0",
-    "dsh-asuta-session-mover": "0.1.0",
-    "dsh-asuta-sidebar-chat": "0.1.0",
-    "dsh-asuta-sidebar-more": "0.1.0",
-    "dsh-asuta-user-agent-settings": "0.1.0",
-    "dsh-asuta-worktree-control": "0.1.0"
+    "dsh-asuta-archived-sessions": "0.1.2",
+    "dsh-asuta-codex-review": "0.1.2",
+    "dsh-asuta-conversation-workbench": "0.1.2",
+    "dsh-asuta-desktop-navigation": "0.1.2",
+    "dsh-asuta-mermaid-renderer": "0.1.2",
+    "dsh-asuta-sidebrowser": "0.1.2",
+    "dsh-asuta-git-diff": "0.1.2",
+    "dsh-asuta-hide-new-session": "0.1.2",
+    "dsh-asuta-history-edit": "0.1.2",
+    "dsh-asuta-project-activity": "0.1.2",
+    "dsh-asuta-projectless-chat": "0.1.2",
+    "dsh-asuta-reasoning-effort-memory": "0.1.2",
+    "dsh-asuta-selection-quote": "0.1.2",
+    "dsh-asuta-session-mover": "0.1.2",
+    "dsh-asuta-sidebar-chat": "0.1.2",
+    "dsh-asuta-sidebar-more": "0.1.2",
+    "dsh-asuta-user-agent-settings": "0.1.2",
+    "dsh-asuta-worktree-control": "0.1.2"
   },
   "dsh": {
     "bundle": {
@@ -55,7 +55,7 @@
   },
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "repository": {
     "type": "git",

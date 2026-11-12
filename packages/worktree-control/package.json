@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-worktree-control",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "description": "Create, switch, snapshot, restore, and manage Git worktrees in DSH conversations.",
   "main": "index.js",
@@ -33,7 +33,7 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "dsh": {
     "bundle": {

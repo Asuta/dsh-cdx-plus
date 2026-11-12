@@ -59,11 +59,9 @@ export async function runReview(ctx, parent, target, signal, options = {}) {
     try {
       activation = await ctx.subagents.startActivation({
         provider: 'spawn', childId, label: '代码审查', delivery: 'caller', signal,
-        request: {
-          parent, cwd,
-          prompt: [{ type: 'text', text: prompt }],
-          ...(options.model ? { agentOptions: { model: options.model } } : {}),
-        },
+        parent, cwd,
+        prompt: [{ type: 'text', text: prompt }],
+        ...(options.model ? { agentOptions: { model: options.model } } : {}),
       })
     } finally { stop() }
     const result = await awaitResult(activation, signal)

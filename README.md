@@ -8,7 +8,7 @@
 
 ## 安装
 
-**尚未发布：以下命令供正式发布后使用。**
+**当前发行候选 0.1.2 尚未发布到 npm。旧版 0.1.0 曾发布 10 个子插件，其余受 registry 限流影响；合集尚未发布。以下命令暂不可用于完整安装，进度见 RELEASE_STATUS.md。**
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
@@ -45,6 +45,6 @@
 
 包内已有构建产物；各子包保留可重建的源码。npm 安装包通过各自的 files 白名单控制内容。此仓库由开发仓库自动导出，功能改动应先进入开发源再同步。同步器拒绝覆盖此仓库中手工修改的文件。
 
-本次兼容基线：DSH 0.2.2-rc.1。当前限制和发布步骤见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
+本次兼容基线：DSH 0.2.2-rc.2。当前限制和发布步骤见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
 
 此前未声明许可的自有代码及合集采用 MIT；各子包既有的 MIT、Apache-2.0 和第三方声明保持原样。[English documentation](README_EN.md)。

@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-sidebrowser",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "description": "本地维护的 DSH 侧边栏浏览器：结构化观察、原生输入、页面开发诊断与操作后复核。",
   "main": "./index.js",
@@ -52,7 +52,7 @@
   },
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "scripts": {
     "check": "node --check index.js && node --check client.js && node --check src/features.js",

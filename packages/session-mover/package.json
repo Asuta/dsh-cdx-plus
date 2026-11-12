@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-session-mover",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "description": "Move idle conversations across workspaces with history preserved; place new forks immediately above their source. · 跨工作区拖拽空闲对话并保留历史；新分支紧邻原对话上方。",
   "main": "index.js",
@@ -55,7 +55,7 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.1"
+    "dsh": "0.2.2-rc.2"
   },
   "license": "MIT",
   "icon": "./icon.svg"

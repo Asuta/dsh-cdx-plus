@@ -2,6 +2,10 @@
 
 The sidebar keeps the native Plugins entry and More launcher visible. Every other panel, including panels pinned later, appears inside More above the existing plugin discovery and creation actions. The pinned conversation section and workspace browser remain below the panel list.
 
+## 1.0.5 — DSH rc.2 scroll hand-off
+
+The shared Pinned, Workspaces and Recent viewport now binds to the native `useSectionScroller` capability. DSH 0.2.2-rc.2 can route both upward and downward wheel gestures to the actual scrolling element. The outer shell keeps navigation fixed; the workspace's new height cap is removed only while this adapter is active. Collapsing the sidebar or unloading the plugin restores native refs and styles.
+
 ## 1.0.3 — shared sidebar scrolling
 
 Pinned, Workspaces and Recent now scroll together, including their section headings. Global controls above them and the footer stay fixed. Pinned no longer has an eight-row scroll limit in this layout; each section retains its collapse control. Opening a conversation preserves the shared scroll offset.
