@@ -12,9 +12,9 @@ Some feature logic draws on analysis of decompiled Codex desktop code and is ada
 
 ## 安装 / Installation
 
-版本 0.1.2，适配 DSH 0.2.2-rc.2。安装前查看发布状态；当前合集尚未上传 npm。以下命令在正式发布后使用。
+版本 0.1.3，适配 DSH 0.2.2-rc.2。以下命令安装 npm 最新正式版；各版本进度见发行仓库的 RELEASE_STATUS.md。
 
-Version 0.1.2 targets DSH 0.2.2-rc.2. Check release status first: the suite is not published to npm yet. After publication:
+Version 0.1.3 targets DSH 0.2.2-rc.2. Install the latest published npm version with the command below. See RELEASE_STATUS.md in the release repository for version-specific status.
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 

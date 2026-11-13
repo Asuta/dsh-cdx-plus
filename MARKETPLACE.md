@@ -30,9 +30,9 @@ Codex-inspired plugin suite for DeepSeek Harness (DSH): selection quotes, side c
 
 - 发行仓库：https://github.com/Asuta/dsh-cdx-plus
 - 合集包名：dsh-asuta-cdx-plus
-- 当前候选版本：0.1.2
+- 当前候选版本：0.1.3
 - [中文介绍](README.md)、[English](README_EN.md)
 - [选中引用](docs/images/selection-quotes.png)、[工作树环境](docs/images/worktree-environments.png)、[代码审查](docs/images/review-scope.png)
 - 关键词：DSH、DeepSeek Harness、Codex、Codex-inspired、插件合集、Git worktree、代码审查、侧边对话
 
-正式提交前应确认全部依赖版本可下载并完成全新安装验收，再按目标市场的实际表单填写。此草稿未提交到任何市场。
+0.1.2 已完成全部依赖下载校验与隔离全新安装。合集收录申请已提交至 awesome-dsh-plugins：[PR #236](https://github.com/dshworks/awesome-dsh-plugins/pull/236)，等待审核；尚未确认被任何市场收录。

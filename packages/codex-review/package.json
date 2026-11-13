@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-codex-review",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "Run /review in DSH with scope selection and an independent agent producing Codex-style findings with priorities and file locations. · 在 DSH 中用 /review 选择审查范围，由独立子代理输出带优先级和文件行号的 Codex 风格报告。",
   "main": "./lib/index.js",

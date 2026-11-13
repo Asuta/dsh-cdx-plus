@@ -1,5 +1,7 @@
 # DSH CDX Plus — Codex-inspired workflows for DSH
 
+npm: `dsh-asuta-cdx-plus` · GitHub: `Asuta/dsh-cdx-plus`
+
 **A DeepSeek Harness plugin suite with 18 independently switchable features.**
 
 Bring familiar Codex-style interactions to DeepSeek Harness (DSH): quote selected text, explore a question in a side chat, create Git worktrees with local environments, and review code with an independent agent.
@@ -47,7 +49,7 @@ Enter /review and select uncommitted changes, a base branch, a specific commit o
 
 ## Install and get started
 
-**Current version: 0.1.2. Compatibility baseline: DSH 0.2.2-rc.2. The suite and all feature packages are published on npm.** See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
+**Repository version: 0.1.3. Compatibility baseline: DSH 0.2.2-rc.2.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
@@ -78,7 +80,7 @@ In a new PowerShell window, use a separate data directory and install into a tes
 
 Open the local address printed by DSH and configure a model. Closing this PowerShell window ends the environment-variable setting; the test data remains in the temporary directory. Embedded browser control requires the Electron desktop host and cannot be fully tested in this web preview.
 
-The local suite is private and intended only for testing. Use the npm installation above when the release becomes available.
+The local suite is private and intended only for testing. Use the npm installation above for published releases.
 
 </details>
 
@@ -119,7 +121,7 @@ The suite itself does not require one. Chat, side conversations and review use m
 
 ### Can I enable only Git worktree management?
 
-Yes. Disable the other suite components, or install the worktree package alone after publication. Worktrees require a usable Git repository; environment commands also require the DSH built-in terminal, Node.js and the appropriate shell. The plugin supports .worktreeinclude, multiple environments and optional setup scripts.
+Yes. Disable the other suite components, or install the worktree package alone. Worktrees require a usable Git repository; environment commands also require the DSH built-in terminal, Node.js and the appropriate shell. The plugin supports .worktreeinclude, multiple environments and optional setup scripts.
 
 ### Does hiding side-chat history remove its context?
 

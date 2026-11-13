@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-mermaid-renderer",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Render Mermaid code as readable diagrams in DSH conversations. · 在 DSH 对话中将 Mermaid 代码渲染为可阅读的图表。",
   "icon": "./icon.svg",
   "type": "module",

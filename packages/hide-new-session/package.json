@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-hide-new-session",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "Hide the new-chat button at the top of the DSH sidebar for a simpler navigation area. · 隐藏 DSH 侧栏顶部的新会话按钮，精简导航区域。",
   "exports": {

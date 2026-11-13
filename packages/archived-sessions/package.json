@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-archived-sessions",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "Find, restore and delete archived DSH conversations. · 集中查找、恢复和删除已归档的 DSH 对话。",
   "exports": {

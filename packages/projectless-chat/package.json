@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-projectless-chat",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "Start DSH conversations outside a workspace and configure their default working directory. · 新建不绑定工作区的 DSH 对话，并配置默认工作目录。",
   "main": "index.js",

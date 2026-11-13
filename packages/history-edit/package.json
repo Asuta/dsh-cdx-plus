@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-history-edit",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "Edit plain-text message history in DSH and regenerate the response. · 编辑 DSH 对话中的纯文本历史消息并重新生成回复。",
   "main": "index.js",

@@ -1,5 +1,7 @@
 # DSH CDX Plus — 为 DSH 补齐 Codex 风格体验
 
+npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
+
 **DeepSeek Harness（DSH）插件合集：18 项功能，按需开启或关闭。**
 
 习惯了 Codex 的交互方式，希望在 DSH 中使用选中引用、侧边对话、工作树环境和代码审查？DSH CDX Plus 将这些增强能力整理为一个合集，让你更快配置熟悉的开发工作流。
@@ -49,7 +51,7 @@
 
 ## 安装与快速开始
 
-**当前版本 0.1.2，适配基线 DSH 0.2.2-rc.2。合集与全部子包已发布到 npm。** 各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
+**本仓库版本 0.1.3，适配基线 DSH 0.2.2-rc.2。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 

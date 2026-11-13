@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-git-diff",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "Inspect staged, unstaged, uncommitted and branch diffs beside a DSH conversation. · 在 DSH 对话旁查看暂存、未暂存、未提交改动及分支差异。",
   "main": "index.js",

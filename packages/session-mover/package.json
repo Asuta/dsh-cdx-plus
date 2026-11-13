@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-session-mover",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "Drag idle DSH conversations into another workspace with precise placement and undo. · 将空闲 DSH 对话拖到其他工作区，支持精确落位和撤销。",
   "main": "index.js",
