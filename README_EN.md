@@ -49,8 +49,6 @@ Enter /review and select uncommitted changes, a base branch, a specific commit o
 
 **Current version: 0.1.2. Compatibility baseline: DSH 0.2.2-rc.2. The suite and all feature packages are published on npm.** See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
 
-After publication:
-
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
 Open Plugins → DSH CDX Plus and enable the components you want. Individual packages can also be installed separately.
