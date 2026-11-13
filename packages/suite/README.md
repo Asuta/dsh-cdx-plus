@@ -4,6 +4,10 @@
 
 Bring familiar Codex-style interactions to DSH with selection quotes, side chats, Git worktree environments and code review. Each of the 18 features has its own switch.
 
+部分功能的逻辑参考了对 Codex 桌面版反编译代码的分析，并针对 DSH 插件机制做适配。开发结合聚焦测试与真实界面验收，关注操作细节、流畅性和稳定性；验证范围以发布状态为准，不承诺与 Codex 等同的性能。
+
+Some feature logic draws on analysis of decompiled Codex desktop code and is adapted to DSH's plugin mechanisms. Development combines focused tests and real UI checks, with attention to interaction details, responsiveness and stability. See release status for verification coverage; performance parity with Codex is not claimed.
+
 [功能展示 / Screenshots](https://github.com/Asuta/dsh-cdx-plus#readme) · [English guide](https://github.com/Asuta/dsh-cdx-plus/blob/main/README_EN.md) · [发布状态 / Release status](https://github.com/Asuta/dsh-cdx-plus/blob/main/RELEASE_STATUS.md) · [反馈 / Issues](https://github.com/Asuta/dsh-cdx-plus/issues)
 
 ## 安装 / Installation

@@ -6,6 +6,12 @@ Bring familiar Codex-style interactions to DeepSeek Harness (DSH): quote selecte
 
 [中文](README.md) · [Release status](RELEASE_STATUS.md) · [Report an issue](https://github.com/Asuta/dsh-cdx-plus/issues)
 
+## Informed implementation, verified interactions
+
+Some interaction logic and implementation approaches draw on **analysis of decompiled Codex desktop code**, adapted to DSH's plugin mechanisms. We focus on workflows and behavioral details so people familiar with Codex can use these features comfortably in DSH.
+
+Development combines focused tests with real UI acceptance checks. Verified scenarios include bidirectional sidebar scrolling, review scope selection and visible worktree command output; see [release status](RELEASE_STATUS.md) for coverage. Responsiveness and stability remain ongoing goals. Actual performance depends on the DSH version, project size and runtime environment; we do not claim performance parity with Codex.
+
 ## What would you like to do?
 
 | Your workflow | What the suite adds |
