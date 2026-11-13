@@ -49,13 +49,11 @@
 
 ## 安装与快速开始
 
-**当前版本 0.1.2，适配基线 DSH 0.2.2-rc.2。部分子包已发布，合集尚未发布到 npm；下面的合集安装命令需等正式发布后使用。** 各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
-
-正式发布后：
+**当前版本 0.1.2，适配基线 DSH 0.2.2-rc.2。合集与全部子包已发布到 npm。** 各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
-安装后打开「插件 → DSH CDX Plus」，按需启停各组件。只需要某一项功能时，也可在对应版本发布后单独安装下方的子包。
+安装后打开「插件 → DSH CDX Plus」，按需启停各组件。只需要某一项功能时，也可单独安装下方的子包。
 
 建议先体验三个入口：
 
