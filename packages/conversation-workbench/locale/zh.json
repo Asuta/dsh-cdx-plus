@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "对话工作台",
-    "description": "跨对话管理、产物关联及 PR 检查诊断"
+    "description": "让 DSH Agent 按需查找和读取对话、管理工作区、移动会话并查询 PR 检查结果。"
   }
 }

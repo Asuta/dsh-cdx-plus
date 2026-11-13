@@ -2,7 +2,7 @@
   "name": "dsh-asuta-sidebrowser",
   "version": "0.1.2",
   "type": "module",
-  "description": "本地维护的 DSH 侧边栏浏览器：结构化观察、原生输入、页面开发诊断与操作后复核。",
+  "description": "Browse in the DSH desktop sidebar and let agents operate pages and inspect console, network and styles. · 在 DSH 桌面侧栏中浏览网页，让 Agent 操作页面并检查控制台、网络和样式。",
   "main": "./index.js",
   "exports": {
     ".": "./index.js",
@@ -63,7 +63,11 @@
   "keywords": [
     "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "browser-automation",
+    "embedded-browser",
+    "developer-tools"
   ],
   "pluginPage": {
     "name": "dsh-asuta-sidebrowser",

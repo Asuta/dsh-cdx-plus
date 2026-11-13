@@ -2,7 +2,7 @@
   "name": "dsh-asuta-worktree-control",
   "version": "0.1.2",
   "type": "module",
-  "description": "Create, switch, snapshot, restore, and manage Git worktrees in DSH conversations.",
+  "description": "Create Git worktrees for DSH chats with .worktreeinclude, multiple environments, setup scripts and visible terminal commands. · 为 DSH 对话创建 Git 工作树，支持 .worktreeinclude、多份环境、setup 脚本和可见终端命令。",
   "main": "index.js",
   "icon": "./icon.svg",
   "exports": {
@@ -67,8 +67,15 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "git-worktree",
+    "worktreeinclude",
+    "development-environment",
+    "setup-script",
+    "terminal"
   ],
   "license": "MIT"
 }

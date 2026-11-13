@@ -2,7 +2,7 @@
   "name": "dsh-asuta-session-mover",
   "version": "0.1.2",
   "type": "module",
-  "description": "Move idle conversations across workspaces with history preserved; place new forks immediately above their source. · 跨工作区拖拽空闲对话并保留历史；新分支紧邻原对话上方。",
+  "description": "Drag idle DSH conversations into another workspace with precise placement and undo. · 将空闲 DSH 对话拖到其他工作区，支持精确落位和撤销。",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
@@ -50,8 +50,13 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "conversation-management",
+    "drag-and-drop",
+    "workspace-management"
   ],
   "engines": {
     "node": "^22.19.0 || >=24",

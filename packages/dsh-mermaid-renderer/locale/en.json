@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Mermaid Diagram Renderer (dsh-asuta-mermaid-renderer)",
-    "description": "Render Mermaid fences in assistant replies as diagrams with a source toggle."
+    "description": "Render Mermaid code as readable diagrams in DSH conversations."
   }
 }

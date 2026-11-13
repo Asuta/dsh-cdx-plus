@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Global Agent Settings",
-    "description": "Edit global AGENTS instructions, choose a context compression model, and reload the frontend."
+    "description": "Edit global agent instructions, choose a compaction model and refresh the frontend from DSH settings."
   }
 }

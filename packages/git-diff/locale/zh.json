@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Git 变更",
-    "description": "Read-only Git changes panel in the DSH right sidebar."
+    "description": "在 DSH 对话旁查看暂存、未暂存、未提交改动及分支差异。"
   }
 }

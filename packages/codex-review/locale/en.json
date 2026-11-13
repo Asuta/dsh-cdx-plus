@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Code Review",
-    "description": "Run an independent Codex-style code review in this conversation"
+    "description": "Run /review in DSH with scope selection and an independent agent producing Codex-style findings with priorities and file locations."
   }
 }

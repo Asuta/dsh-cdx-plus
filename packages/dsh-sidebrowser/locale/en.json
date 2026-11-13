@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "dsh-sidebrowser",
-    "description": "本地维护的 DSH 侧边栏浏览器：结构化观察、原生输入、页面开发诊断与操作后复核。"
+    "title": "Embedded browser",
+    "description": "Browse in the DSH desktop sidebar and let agents operate pages and inspect console, network and styles."
   }
 }

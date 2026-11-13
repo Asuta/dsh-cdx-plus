@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Agent 全局设置",
-    "description": "编辑所有工作区共用的原生 AGENTS 指令、指定上下文压缩模型，并快速刷新前端。"
+    "description": "在 DSH 设置页编辑全局 Agent 指令、选择压缩模型并刷新前端。"
   }
 }

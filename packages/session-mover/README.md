@@ -1,6 +1,6 @@
 # 移动对话
 
-Move idle conversations across workspaces with history preserved; place new forks immediately above their source. · 跨工作区拖拽空闲对话并保留历史；新分支紧邻原对话上方。
+Drag idle DSH conversations into another workspace with precise placement and undo. · 将空闲 DSH 对话拖到其他工作区，支持精确落位和撤销。
 
 安装命令：
 

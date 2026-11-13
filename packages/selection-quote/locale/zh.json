@@ -8,6 +8,6 @@
   "chip": "引用",
   "meta": {
     "title": "选中引用",
-    "description": "选中引用：选中对话里的文字，引用、评论或开侧边对话。 · Select text in a conversation to quote it, annotate it, or ask it in a side thread."
+    "description": "在 DSH 中选中文字添加引用和批注，汇总引用清单，并联动侧边对话。"
   }
 }

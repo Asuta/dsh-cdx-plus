@@ -1,6 +1,6 @@
 # 侧边对话
 
-Independent side conversations in the right sidebar, forked from the current conversation without posting back. · 在右侧栏开启独立侧边对话，继承当前上下文并支持续聊，不回写主对话。
+Open independent DSH side conversations with inherited context, optional history hiding and conversion to standalone chats. · 在 DSH 右侧开启继承主对话上下文的独立侧边对话，支持隐藏历史显示与转为独立会话。
 
 安装命令：
 

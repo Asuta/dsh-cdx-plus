@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Sidebar Compaction",
-    "description": "Keeps Plugins and More in the sidebar, with Pinned, Workspaces and Recent sharing one scroll area."
+    "description": "Simplify DSH sidebar navigation and scroll pinned chats, workspaces and recent conversations together."
   }
 }

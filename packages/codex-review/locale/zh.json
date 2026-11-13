@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "代码审查",
-    "description": "在当前对话中运行独立的 Codex 式代码审查"
+    "description": "在 DSH 中用 /review 选择审查范围，由独立子代理输出带优先级和文件行号的 Codex 风格报告。"
   }
 }

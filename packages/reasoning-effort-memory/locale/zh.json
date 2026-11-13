@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "记忆思考强度",
-    "description": "Remember the selected reasoning effort for each provider and model."
+    "description": "按提供商和模型记住 DSH 上次使用的思考强度。"
   }
 }

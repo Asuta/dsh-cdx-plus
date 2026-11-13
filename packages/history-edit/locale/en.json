@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "history-edit",
-    "description": "Edit a sent user message and regenerate its response in the same conversation."
+    "title": "Edit message history",
+    "description": "Edit plain-text message history in DSH and regenerate the response."
   }
 }

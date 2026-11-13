@@ -5,7 +5,7 @@
     "@deepseek-ai/dsh-sandbox": "0.2.2-rc.2"
   },
   "type": "module",
-  "description": "Edit native global Agent instructions, choose a compression model, and refresh the frontend from Settings.",
+  "description": "Edit global agent instructions, choose a compaction model and refresh the frontend from DSH settings. · 在 DSH 设置页编辑全局 Agent 指令、选择压缩模型并刷新前端。",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
@@ -55,8 +55,13 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "agent-instructions",
+    "model-settings",
+    "agents-md"
   ],
   "engines": {
     "node": "^22.19.0 || >=24",

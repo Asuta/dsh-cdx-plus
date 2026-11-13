@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Hide New Session",
-    "description": "Hides the New Session button at the top of the sidebar."
+    "description": "Hide the new-chat button at the top of the DSH sidebar for a simpler navigation area."
   }
 }

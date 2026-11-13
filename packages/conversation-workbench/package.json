@@ -2,7 +2,7 @@
   "name": "dsh-asuta-conversation-workbench",
   "version": "0.1.2",
   "type": "module",
-  "description": "Cross-conversation controls, artifacts and PR checks for DSH.",
+  "description": "Give DSH agents on-demand tools to find and read conversations, manage workspaces, move sessions and inspect PR checks. · 让 DSH Agent 按需查找和读取对话、管理工作区、移动会话并查询 PR 检查结果。",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
@@ -51,8 +51,13 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "agent-tools",
+    "conversation-search",
+    "workspace-management"
   ],
   "license": "MIT"
 }

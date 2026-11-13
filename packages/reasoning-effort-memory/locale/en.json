@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "reasoning-effort-memory",
-    "description": "Remember the selected reasoning effort for each provider and model."
+    "title": "Remember reasoning effort",
+    "description": "Remember the last DSH reasoning-effort setting for each provider and model."
   }
 }

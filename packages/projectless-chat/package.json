@@ -2,7 +2,7 @@
   "name": "dsh-asuta-projectless-chat",
   "version": "0.1.2",
   "type": "module",
-  "description": "Create independent conversations outside existing workspaces.",
+  "description": "Start DSH conversations outside a workspace and configure their default working directory. · 新建不绑定工作区的 DSH 对话，并配置默认工作目录。",
   "main": "index.js",
   "icon": "./icon.svg",
   "exports": {
@@ -52,8 +52,12 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "chat",
+    "workspace-management"
   ],
   "engines": {
     "node": "^22.19.0 || >=24",

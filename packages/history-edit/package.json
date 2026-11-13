@@ -2,7 +2,7 @@
   "name": "dsh-asuta-history-edit",
   "version": "0.1.2",
   "type": "module",
-  "description": "Edit a sent user message and regenerate its response in the same conversation.",
+  "description": "Edit plain-text message history in DSH and regenerate the response. · 编辑 DSH 对话中的纯文本历史消息并重新生成回复。",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
@@ -58,8 +58,12 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "message-editing",
+    "conversation-history"
   ],
   "license": "MIT",
   "icon": "./icon.svg"

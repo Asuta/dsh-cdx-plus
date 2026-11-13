@@ -1,7 +1,7 @@
 {
   "name": "dsh-asuta-mermaid-renderer",
   "version": "0.1.2",
-  "description": "Render Mermaid fences in assistant replies as diagrams with a source toggle.",
+  "description": "Render Mermaid code as readable diagrams in DSH conversations. · 在 DSH 对话中将 Mermaid 代码渲染为可阅读的图表。",
   "icon": "./icon.svg",
   "type": "module",
   "main": "index.mjs",
@@ -45,7 +45,11 @@
   "keywords": [
     "deepseek-harness",
     "dsh",
-    "dsh-plugin"
+    "dsh-plugin",
+    "cdx-plus",
+    "mermaid",
+    "diagrams",
+    "markdown"
   ],
   "license": "MIT",
   "devDependencies": {

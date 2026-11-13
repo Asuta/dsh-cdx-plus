@@ -1,6 +1,6 @@
 # 隐藏新会话按钮
 
-Hide the New Session button at the top of the sidebar. · 隐藏侧边栏顶部的「新会话」按钮。
+Hide the new-chat button at the top of the DSH sidebar for a simpler navigation area. · 隐藏 DSH 侧栏顶部的新会话按钮，精简导航区域。
 
 安装命令：
 

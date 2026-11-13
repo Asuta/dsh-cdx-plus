@@ -2,7 +2,7 @@
   "name": "dsh-asuta-project-activity",
   "version": "0.1.2",
   "type": "module",
-  "description": "Native activity indicators on collapsed projects. · 在折叠的项目标题上显示对话运行状态。",
+  "description": "Show conversation activity beside collapsed DSH project headings. · 在折叠的 DSH 项目标题旁显示对话运行状态。",
   "main": "index.js",
   "icon": "./icon.svg",
   "exports": {
@@ -50,8 +50,12 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "project-status",
+    "sidebar"
   ],
   "engines": {
     "node": "^22.19.0 || >=24",

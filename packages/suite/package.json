@@ -2,7 +2,7 @@
   "name": "dsh-asuta-cdx-plus",
   "version": "0.1.2",
   "type": "module",
-  "description": "DSH CDX Plus: familiar interactions, a smoother DSH experience. 18 independently switchable features.",
+  "description": "Codex-inspired plugin suite for DeepSeek Harness (DSH): quotes, side chats, Git worktrees and code review. 18 independently switchable features. · 为 DeepSeek Harness（DSH）补齐 Codex 风格体验：选中引用、侧边对话、工作树环境与代码审查，18 项功能独立启停。",
   "license": "MIT",
   "icon": "./icon.svg",
   "exports": {
@@ -62,11 +62,23 @@
     "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
     "directory": "packages/suite"
   },
+  "homepage": "https://github.com/Asuta/dsh-cdx-plus#readme",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
+  },
   "publishConfig": {
     "access": "public"
   },
   "keywords": [
+    "dsh",
+    "deepseek-harness",
     "dsh-plugin",
-    "deepseek-harness"
+    "cdx-plus",
+    "codex",
+    "codex-inspired",
+    "plugin-bundle",
+    "git-worktree",
+    "code-review",
+    "side-chat"
   ]
 }

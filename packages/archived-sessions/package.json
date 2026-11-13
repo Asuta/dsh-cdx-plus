@@ -2,7 +2,7 @@
   "name": "dsh-asuta-archived-sessions",
   "version": "0.1.2",
   "type": "module",
-  "description": "Archive manager page: list archived sessions, restore them, or delete them permanently.",
+  "description": "Find, restore and delete archived DSH conversations. · 集中查找、恢复和删除已归档的 DSH 对话。",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
@@ -51,8 +51,13 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "conversation-management",
+    "archive",
+    "session-history"
   ],
   "engines": {
     "node": "^22.19.0 || >=24",

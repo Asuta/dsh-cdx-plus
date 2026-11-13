@@ -3,7 +3,7 @@
   "version": "0.1.2",
   "type": "module",
   "main": "index.js",
-  "description": "Remember the selected reasoning effort for each provider and model.",
+  "description": "Remember the last DSH reasoning-effort setting for each provider and model. · 按提供商和模型记住 DSH 上次使用的思考强度。",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
@@ -47,8 +47,12 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "reasoning-effort",
+    "model-settings"
   ],
   "engines": {
     "node": "^22.19.0 || >=24",

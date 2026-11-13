@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Session Mover",
-    "description": "Move idle conversations across workspaces with history and pending input preserved. New forks appear immediately above their source and can then be reordered independently."
+    "description": "Drag idle DSH conversations into another workspace with precise placement and undo."
   }
 }

@@ -6,7 +6,7 @@
     "node": "^22.19.0 || >=24"
   },
   "type": "module",
-  "description": "Compact sidebar panels and scroll Pinned, Workspaces and Recent together. · 精简侧栏面板，置顶、工作区与最近共用滚动区。",
+  "description": "Simplify DSH sidebar navigation and scroll pinned chats, workspaces and recent conversations together. · 精简 DSH 侧栏入口，让置顶、工作区与最近对话共用滚动区域。",
   "main": "index.js",
   "icon": "./icon.svg",
   "exports": {
@@ -53,8 +53,13 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "sidebar",
+    "pinned-chats",
+    "ui-customization"
   ],
   "license": "MIT"
 }

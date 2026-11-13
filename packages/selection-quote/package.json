@@ -2,7 +2,7 @@
   "name": "dsh-asuta-selection-quote",
   "version": "0.1.2",
   "type": "module",
-  "description": "选中引用：选中对话里的文字，引用、评论或开侧边对话。 · Select text in a conversation to quote it, annotate it, or ask it in a side thread.",
+  "description": "Quote selected text, add annotations and browse a quote list in DSH, with optional side-chat integration. · 在 DSH 中选中文字添加引用和批注，汇总引用清单，并联动侧边对话。",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
@@ -52,8 +52,13 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "text-selection",
+    "quotes",
+    "annotations"
   ],
   "engines": {
     "node": "^22.19.0 || >=24",

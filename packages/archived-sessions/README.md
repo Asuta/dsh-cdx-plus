@@ -1,6 +1,6 @@
 # 归档会话管理
 
-Archive manager page: list archived sessions, restore them, or delete them permanently.
+Find, restore and delete archived DSH conversations. · 集中查找、恢复和删除已归档的 DSH 对话。
 
 安装命令：
 

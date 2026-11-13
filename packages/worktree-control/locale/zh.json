@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "工作树管理",
-    "description": "在 DSH 对话中创建、切换、快照、恢复和管理 Git 工作树。"
+    "description": "为 DSH 对话创建 Git 工作树，支持 .worktreeinclude、多份环境、setup 脚本和可见终端命令。"
   }
 }

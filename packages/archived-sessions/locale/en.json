@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Archived sessions",
-    "description": "List archived sessions, restore them, or delete them from disk permanently."
+    "description": "Find, restore and delete archived DSH conversations."
   }
 }

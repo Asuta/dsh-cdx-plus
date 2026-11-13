@@ -1,13 +1,38 @@
-# DSH CDX Plus
+# DSH CDX Plus — Codex-inspired plugins for DeepSeek Harness
 
-DSH 体验增强套件。熟悉的交互，更顺手的 DSH。
+为 DeepSeek Harness（DSH）补齐 Codex 风格交互与开发工作流：选中引用、侧边对话、Git 工作树环境、代码审查等 18 项功能，独立开启或关闭。
 
-安装后打开「插件 → DSH CDX Plus」，通过组件开关分别控制 18 项功能。
+Bring familiar Codex-style interactions to DSH with selection quotes, side chats, Git worktree environments and code review. Each of the 18 features has its own switch.
 
-合集提供功能状态概览、引用与侧边对话的联动提示，并保留内置浏览器的配置入口。其他功能的参数仍在原来的设置页面。
+[功能展示 / Screenshots](https://github.com/Asuta/dsh-cdx-plus#readme) · [English guide](https://github.com/Asuta/dsh-cdx-plus/blob/main/README_EN.md) · [发布状态 / Release status](https://github.com/Asuta/dsh-cdx-plus/blob/main/RELEASE_STATUS.md) · [反馈 / Issues](https://github.com/Asuta/dsh-cdx-plus/issues)
 
-开关作用于当前 profile；关闭不会删除会话或项目。DSH 提示需要重启时按提示操作。
+## 安装 / Installation
 
-不要与开发版或同一功能的单独安装版本重复启用。迁移前先关闭旧版并保留配置备份。
+版本 0.1.2，适配 DSH 0.2.2-rc.2。安装前查看发布状态；当前合集尚未上传 npm。以下命令在正式发布后使用。
 
-当前发行状态见仓库根目录 RELEASE_STATUS.md。
+Version 0.1.2 targets DSH 0.2.2-rc.2. Check release status first: the suite is not published to npm yet. After publication:
+
+    dsh plugin --profile desktop add dsh-asuta-cdx-plus
+
+安装后打开「插件 → DSH CDX Plus」，按需控制 18 项功能。合集提供状态概览、引用与侧边对话的联动提示，以及内置浏览器配置入口；其他参数仍在各功能原有的设置页。
+
+Open Plugins → DSH CDX Plus to toggle components. The suite provides status, integration hints and an embedded-browser settings entry; other settings stay in each feature's own UI.
+
+## 主要功能 / Highlights
+
+- **引用与侧边对话 / Quotes and side chats**：选中文字批注，继承上下文讨论支线；隐藏历史仅影响显示。
+- **工作树与环境 / Worktrees and environments**：Git 工作树、.worktreeinclude、多份环境、setup 脚本与可见终端命令。
+- **代码审查 / Code review**：/review 范围选择、独立子代理、带优先级和文件位置的报告。
+- **对话与界面 / Conversations and UI**：Git diff、历史编辑、会话移动、归档管理、侧栏整理、Mermaid 与内置浏览器等。
+
+开关作用于当前 profile；部分组合功能需要相关组件同时启用。避免重复启用开发版和发行版的同一功能；DSH 提示需要重启时按提示操作。
+
+Switches apply to the current profile. Some integrations require both components enabled. Avoid duplicate development and release copies of the same feature, and follow any restart prompt from DSH.
+
+本合集本身不要求 Codex 账号；模型使用 DSH 的配置，服务凭据和费用由相应提供商决定。
+
+The suite itself does not require a Codex account. Models use your DSH configuration and the relevant provider's credentials and billing.
+
+独立社区项目，部分交互设计受 Codex 启发，与 OpenAI、DeepSeek 无官方隶属或背书关系。各子包保留自身许可证和第三方声明。
+
+Independent community project, inspired in part by Codex interactions; not affiliated with or endorsed by OpenAI or DeepSeek. Each feature retains its own license and third-party notices.

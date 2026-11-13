@@ -2,7 +2,7 @@
   "name": "dsh-asuta-git-diff",
   "version": "0.1.2",
   "type": "module",
-  "description": "Read-only Git changes panel in the DSH right sidebar.",
+  "description": "Inspect staged, unstaged, uncommitted and branch diffs beside a DSH conversation. · 在 DSH 对话旁查看暂存、未暂存、未提交改动及分支差异。",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
@@ -53,8 +53,13 @@
     "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
   },
   "keywords": [
+    "dsh",
     "dsh-plugin",
-    "deepseek-harness"
+    "deepseek-harness",
+    "cdx-plus",
+    "git",
+    "git-diff",
+    "diff-viewer"
   ],
   "license": "MIT",
   "icon": "./icon.svg"
