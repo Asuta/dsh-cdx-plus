@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-sidebar-chat",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "description": "Open independent DSH side conversations with inherited context, optional history hiding and conversion to standalone chats. · 在 DSH 右侧开启继承主对话上下文的独立侧边对话，支持隐藏历史显示与转为独立会话。",
   "main": "index.js",
@@ -65,11 +65,11 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.2"
+    "dsh": "0.2.2-rc.2 || 0.2.2-rc.3"
   },
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-session": "0.2.2-rc.2"
+    "@deepseek-ai/dsh-session": "0.2.2-rc.2 || 0.2.2-rc.3"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh-session": {

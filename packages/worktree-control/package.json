@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-worktree-control",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "description": "Create Git worktrees for DSH chats with .worktreeinclude, multiple environments, setup scripts and visible terminal commands. · 为 DSH 对话创建 Git 工作树，支持 .worktreeinclude、多份环境、setup 脚本和可见终端命令。",
   "main": "index.js",
@@ -33,7 +33,7 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.2"
+    "dsh": "0.2.2-rc.2 || 0.2.2-rc.3"
   },
   "dsh": {
     "bundle": {

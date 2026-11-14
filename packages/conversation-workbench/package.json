@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-conversation-workbench",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "description": "Give DSH agents on-demand tools to find and read conversations, manage workspaces, move sessions and inspect PR checks. · 让 DSH Agent 按需查找和读取对话、管理工作区、移动会话并查询 PR 检查结果。",
   "main": "index.js",
@@ -24,7 +24,7 @@
   "icon": "./icon.svg",
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.2"
+    "dsh": "0.2.2-rc.2 || 0.2.2-rc.3"
   },
   "dsh": {
     "bundle": {

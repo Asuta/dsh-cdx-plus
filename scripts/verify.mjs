@@ -7,12 +7,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'release-manifest.json'), 'utf8'));
 const packages = [];
 const errors = [];
+if (typeof manifest.dshCompatibility !== 'string' || !manifest.dshCompatibility.trim()) errors.push('Missing DSH compatibility range');
 for (const directory of manifest.packages) {
   const location = path.join(root, directory);
   const pkg = JSON.parse(await fs.readFile(path.join(location, 'package.json'), 'utf8'));
   packages.push(pkg);
   if (pkg.private || pkg.name.startsWith('@local/')) errors.push(pkg.name + ': private or development-only package');
-  if (pkg.engines?.dsh !== manifest.dshVersion) errors.push(pkg.name + ': incorrect compatibility version');
+  if (pkg.engines?.dsh !== manifest.dshCompatibility) errors.push(pkg.name + ': incorrect compatibility range');
   if (!pkg.exports?.['./package.json'] || !pkg.dsh?.bundle?.patch) errors.push(pkg.name + ': missing DSH exports/patch');
   for (const value of Object.values(pkg.exports || {})) {
     if (typeof value !== 'string' || value.includes('*')) continue;

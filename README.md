@@ -51,7 +51,9 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 ## 安装与快速开始
 
-**本仓库版本 0.1.3，适配基线 DSH 0.2.2-rc.2。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
+**本仓库版本 0.1.4，适配基线 DSH 0.2.2-rc.3。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
+
+0.1.4 支持 DSH 0.2.2-rc.2 和 0.2.2-rc.3，目前是本地适配候选，尚未发布到 npm。npm 的 0.1.3 仅支持 rc.2；rc.3 请使用下方的本地合集方式，或等待新版正式发布。
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
@@ -66,7 +68,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 <details>
 <summary>现在想试用：从发行源码生成本地合集</summary>
 
-需要 Git、Node.js 24+（含 npm）及 DSH 0.2.2-rc.2。克隆本公开发行仓库，生成本地试用包：
+需要 Git、Node.js 24+（含 npm）及 DSH 0.2.2-rc.3。克隆本公开发行仓库，生成本地试用包：
 
     git clone https://github.com/Asuta/dsh-cdx-plus.git
     cd dsh-cdx-plus
@@ -135,7 +137,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 ### 升级 DSH 后能继续用吗？
 
-当前声明的适配基线为 DSH 0.2.2-rc.2，不代表所有未来版本都已兼容。安装前查看[发布状态](RELEASE_STATUS.md)；反馈问题时请附 DSH 版本、插件版本和复现步骤，并隐去私密信息。
+当前声明的适配基线为 DSH 0.2.2-rc.3，不代表所有未来版本都已兼容。安装前查看[发布状态](RELEASE_STATUS.md)；反馈问题时请附 DSH 版本、插件版本和复现步骤，并隐去私密信息。
 
 ## 维护与贡献
 

@@ -22,7 +22,7 @@ Codex-inspired plugin suite for DeepSeek Harness (DSH): selection quotes, side c
 - 使用 /review 选择范围，由独立子代理输出带优先级和文件位置的审查报告。
 - 整理侧栏、移动和归档会话、查看 Git diff，以及 Mermaid、历史编辑、内置浏览器等增强。
 
-组件可以分别关闭，部分组合能力需同时启用相关组件。当前适配 DSH 0.2.2-rc.2。内置浏览器控制需要桌面宿主；工作树要求可用 Git 仓库。
+组件可以分别关闭，部分组合能力需同时启用相关组件。当前适配 DSH 0.2.2-rc.3。内置浏览器控制需要桌面宿主；工作树要求可用 Git 仓库。
 
 独立社区项目，部分交互设计受 Codex 启发，无 OpenAI 或 DeepSeek 官方隶属、背书关系。
 
@@ -30,7 +30,7 @@ Codex-inspired plugin suite for DeepSeek Harness (DSH): selection quotes, side c
 
 - 发行仓库：https://github.com/Asuta/dsh-cdx-plus
 - 合集包名：dsh-asuta-cdx-plus
-- 当前候选版本：0.1.3
+- 当前候选版本：0.1.4
 - [中文介绍](README.md)、[English](README_EN.md)
 - [选中引用](docs/images/selection-quotes.png)、[工作树环境](docs/images/worktree-environments.png)、[代码审查](docs/images/review-scope.png)
 - 关键词：DSH、DeepSeek Harness、Codex、Codex-inspired、插件合集、Git worktree、代码审查、侧边对话

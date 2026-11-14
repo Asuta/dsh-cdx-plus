@@ -49,7 +49,9 @@ Enter /review and select uncommitted changes, a base branch, a specific commit o
 
 ## Install and get started
 
-**Repository version: 0.1.3. Compatibility baseline: DSH 0.2.2-rc.2.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
+**Repository version: 0.1.4. Compatibility baseline: DSH 0.2.2-rc.3.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
+
+Version 0.1.4 supports DSH 0.2.2-rc.2 and 0.2.2-rc.3. It is a local release candidate and has not been published to npm. The published 0.1.3 supports rc.2 only; rc.3 users should use the local suite instructions below or wait for the new release.
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
@@ -64,7 +66,7 @@ Start with three workflows:
 <details>
 <summary>Try it now: build a local suite from the release source</summary>
 
-Requires Git, Node.js 24+ with npm, and DSH 0.2.2-rc.2.
+Requires Git, Node.js 24+ with npm, and DSH 0.2.2-rc.3.
 
     git clone https://github.com/Asuta/dsh-cdx-plus.git
     cd dsh-cdx-plus
@@ -133,7 +135,7 @@ This is an independent community project inspired in part by Codex interactions.
 
 ### Can I use it with a newer DSH version?
 
-The declared baseline is DSH 0.2.2-rc.2; future versions are not automatically verified. Check [release status](RELEASE_STATUS.md) before installing. Include DSH and plugin versions plus reproduction steps in bug reports, with private information removed.
+The declared baseline is DSH 0.2.2-rc.3; future versions are not automatically verified. Check [release status](RELEASE_STATUS.md) before installing. Include DSH and plugin versions plus reproduction steps in bug reports, with private information removed.
 
 ## Maintenance and contributions
 
