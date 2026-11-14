@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "sourceCommit": "78d4e3c57631b18612afc819b158daf80c7ccd89",
+  "sourceCommit": "98d618faaf59b956de3391d9249015988cda4bcd",
   "files": {
     "packages/archived-sessions/client.js": "8420fb3da9fb7076af6e34e90d62016d990ffcf401104b51f4982f2a39be1013",
     "packages/archived-sessions/cordis.patch.yml": "703795278e0d423babc5365197ba923919aaccd5f801e3770450d76712d5d9b3",
@@ -241,22 +241,22 @@
     "LICENSE": "aaf1bd619f908dee63ac797f0a05dc95095da73cc8692e3caf7e812659fdc387",
     "packages/suite/locale/zh.json": "ba7a94835cd1ddd48d7b9d60e0032d762c2ca33d0d6b59f0bd57bd79f3f2ac0a",
     "packages/suite/locale/en.json": "6eb936ddd868389fcdcc4ee9cb31e9ad3471a6f28f34a0cad930a841e5b4c6d3",
-    "packages/suite/README.md": "f4a4315bec1a8abdc70db794d03dd57110a47d2bd79e1454712560878ce3cae8",
+    "packages/suite/README.md": "adc81bcbbded88bb2f648973f5bc74760b373c1f2120e164c13cd8c9b483c3fc",
     "package.json": "c87ab6466275422eba30d9b3d2a96d7aae58aa7c642734b1fd0fcbfca85adb0c",
     ".gitignore": "8b36f90ad1ead6554d5014ec5f8c593da7013291add4690514f238569a7c72f1",
     ".gitattributes": "1c9beb2ac77fa3543c08a8cacd953baa972877e179e09a7257e66089457db160",
-    "release-manifest.json": "d5aa2adb556716607f8a33f10d9661c0a23287a909eb37244611c7464dc4b899",
+    "release-manifest.json": "750df44ce04f5f5b2b6e745244c93d0c27e203334e80cefe2c04cc6e5ddb9e4e",
     "scripts/verify.mjs": "d4f8982a407c9a3785ff54e78be9b6a647fa2f827ee2f04aba749f96a0fd5347",
     "scripts/pack.mjs": "5c746808e865f7e240b8e1fad5d0a5fd7bf571b2faaa459a216655d5a986a123",
     "docs/images/selection-quotes.png": "74d71b53b1e838d9f9b4cc8e6b1c92414c0a40b17caf710278027244af74a423",
     "docs/images/worktree-environments.png": "1c0d8d160a6288c0cde701a934d5a4954a4164104a33b345d0cb0a12f9ca5387",
     "docs/images/review-scope.png": "ac51c915ab4e2af9444800b63af959d827efd623e03a1bd2d5f11ac4a97643a9",
     ".github/workflows/verify.yml": "00a1882a8204220f093a8498896058b53dc44748e8ba805477abbd27d4a9ae33",
-    "README.md": "5664f0ff492a26a0fb76fb708bcd45b81a8aa7d0c3a053cf6205e8b92bb1eb66",
-    "README_EN.md": "a5f673c16382068b5c1322b695722415be3b5201fd43599a6bfb90956114763f",
-    "CHANGELOG.md": "a6572bbd24fcf4addc770674925a9ee9ac6427c214909f1560049ca661bb6c4d",
-    "RELEASE_STATUS.md": "7c52c15240c19d929907c0a0f2ae332d5907e1c24cdd64d279471ff57af5c55b",
-    "MARKETPLACE.md": "da40bd01869150216c63b584da9c41902386c63a1792976d769610895a12a0b7",
+    "README.md": "c447b8229d47b19193f942ed52ded57fb80029d4c4118149a1d3e00871cdaa33",
+    "README_EN.md": "74bdc1d962df45f5b8505aa94e9096bbe24da112cde7f2472d2bde7d5bbe1a92",
+    "CHANGELOG.md": "8abc728a84872384381ed14ec9df1e568add52f4d2aa5271a62a8e8864ca1596",
+    "RELEASE_STATUS.md": "f74b4c9edd9e6396ee768f08c895a7faea9ebe013fe0c3c71455b2559919f2f4",
+    "MARKETPLACE.md": "4593ad0adfa2b61b36b48ea4a46447844683a6d7fba3809e157a373cce221e72",
     "docs/images/README.md": "8e986dfd86244ad45c7e0e57c70e1233edfd755faadee04a69680cf968fee462"
   }
 }

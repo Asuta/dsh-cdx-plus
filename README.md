@@ -53,7 +53,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 **本仓库版本 0.1.4，适配基线 DSH 0.2.2-rc.3。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
 
-0.1.4 支持 DSH 0.2.2-rc.2 和 0.2.2-rc.3，目前是本地适配候选，尚未发布到 npm。npm 的 0.1.3 仅支持 rc.2；rc.3 请使用下方的本地合集方式，或等待新版正式发布。
+0.1.4 已发布到 npm，支持 DSH 0.2.2-rc.2 和 0.2.2-rc.3；一次安装合集即可获得 18 个子插件。旧版 0.1.3 仅支持 rc.2，rc.3 用户请更新到 0.1.4。
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 

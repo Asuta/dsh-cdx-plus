@@ -16,9 +16,9 @@ Some feature logic draws on analysis of decompiled Codex desktop code and is ada
 
 Version 0.1.4 targets DSH 0.2.2-rc.3. Install the latest published npm version with the command below. See RELEASE_STATUS.md in the release repository for version-specific status.
 
-0.1.4 同时支持 rc.2 和 rc.3，目前尚未发布到 npm；下方命令仍安装仅支持 rc.2 的 0.1.3。rc.3 用户请等待正式发布，或按发行仓库说明生成本地试用包。
+0.1.4 合集及全部 18 个子插件已发布到 npm，同时支持 rc.2 和 rc.3。旧版 0.1.3 仅支持 rc.2，rc.3 用户请更新到 0.1.4。
 
-Version 0.1.4 supports both rc.2 and rc.3 and is not yet published. The command below still installs 0.1.3, which supports rc.2 only. For rc.3, wait for publication or build a local preview as described in the repository.
+The 0.1.4 suite and all 18 plugins are published on npm and support both rc.2 and rc.3. Version 0.1.3 supports rc.2 only; rc.3 users should update to 0.1.4.
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
