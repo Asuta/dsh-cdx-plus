@@ -1,0 +1,38 @@
+name: Publish npm packages
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '合集版本（须与 packages/suite/package.json 一致）'
+        required: true
+        type: string
+      dry_run:
+        description: '只检查，不上传 npm'
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: npm-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'Asuta/dsh-cdx-plus' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@11.15.0 --ignore-scripts
+      - run: npm run pack
+      - name: Publish children first, then suite
+        run: npm run publish:ci
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_DRY_RUN: ${{ inputs.dry_run }}

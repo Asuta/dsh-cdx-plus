@@ -8,7 +8,8 @@
   "scripts": {
     "verify": "node scripts/verify.mjs",
     "pack": "node scripts/pack.mjs",
-    "pack:preview": "node scripts/pack.mjs --local-preview"
+    "pack:preview": "node scripts/pack.mjs --local-preview",
+    "publish:ci": "node scripts/publish.mjs"
   },
   "engines": {
     "node": ">=24"
