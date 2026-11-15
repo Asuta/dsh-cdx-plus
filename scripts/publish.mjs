@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
+import { equivalentTarballs } from './tar-content.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const registry = 'https://registry.npmjs.org';
@@ -32,19 +33,24 @@ function newer(a, b) {
   for (let i = 0; i < 3; i++) if (aa[i] !== bb[i]) return aa[i] > bb[i];
   return false;
 }
-async function available(item) {
+async function available(item, allowEquivalent = false) {
   const response = await get(registry + '/' + encodeURIComponent(item.name) + '/' + item.version, true);
   if (!response) return false;
   const pkg = await response.json();
-  if (pkg.name !== item.name || pkg.version !== item.version || pkg.dist?.integrity !== item.integrity) {
-    throw Error('Published version differs from local artifact: ' + item.name + '@' + item.version + '. Bump the version instead of overwriting.');
-  }
+  if (pkg.name !== item.name || pkg.version !== item.version || !pkg.dist?.integrity?.startsWith('sha512-')) throw Error('Unexpected registry metadata: ' + item.name);
   const tarballUrl = new URL(pkg.dist.tarball);
   if (tarballUrl.origin !== registry) throw Error('Unexpected registry tarball origin.');
   const tarball = await get(tarballUrl, true);
   if (!tarball) return false;
-  const integrity = 'sha512-' + createHash('sha512').update(Buffer.from(await tarball.arrayBuffer())).digest('base64');
-  if (integrity !== item.integrity) throw Error('Downloaded tarball checksum mismatch: ' + item.name);
+  const bytes = Buffer.from(await tarball.arrayBuffer());
+  const integrity = 'sha512-' + createHash('sha512').update(bytes).digest('base64');
+  if (integrity !== pkg.dist.integrity) throw Error('Downloaded tarball checksum mismatch: ' + item.name);
+  if (integrity !== item.integrity) {
+    if (!allowEquivalent || !await equivalentTarballs(await fs.readFile(item.tarball), bytes)) {
+      throw Error('Published version differs from local artifact: ' + item.name + '@' + item.version + '. Bump the version instead of overwriting.');
+    }
+    console.log('Equivalent files (tar metadata/text line endings): ' + item.name);
+  }
   return true;
 }
 
@@ -60,7 +66,7 @@ for (const directory of manifest.packages) {
   item.tarball = path.join(root, 'artifacts', item.filename);
   const integrity = 'sha512-' + createHash('sha512').update(await fs.readFile(item.tarball)).digest('base64');
   if (integrity !== item.integrity) throw Error('Local tarball checksum mismatch: ' + pkg.name);
-  item.published = await available(item);
+  item.published = await available(item, true);
   if (!item.published) {
     const current = await get(registry + '/' + encodeURIComponent(item.name) + '/latest', true);
     if (current && !newer(item.version, (await current.json()).version)) throw Error('Refusing to move latest backwards: ' + item.name);
