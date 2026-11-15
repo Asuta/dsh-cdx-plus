@@ -82,18 +82,35 @@ packages.sort((a, b) => Number(a.name === manifest.suite) - Number(b.name === ma
 if (dryRun) {
   console.log('Dry run complete; no packages uploaded.');
 } else {
-  for (const item of packages) {
-    if (item.published) continue;
+  function upload(item) {
     // Existing staged versions require approval first. A publish error stops the job.
     execFileSync(process.execPath, [process.env.npm_execpath, 'publish', item.tarball, '--access', 'public', '--tag', 'latest', '--ignore-scripts', '--provenance', '--registry=' + registry], { cwd: root, stdio: 'inherit' });
-    let ready = false;
-    for (let attempt = 0; attempt < 18; attempt++) {
-      if (await available(item)) { ready = true; break; }
-      await delay(5000);
+  }
+  async function waitForPackages(items) {
+    const pending = new Set(items);
+    const deadline = Date.now() + 10 * 60 * 1000;
+    while (pending.size) {
+      for (const item of pending) {
+        if (!await available(item)) continue;
+        const latest = await (await get(registry + '/' + encodeURIComponent(item.name) + '/latest')).json();
+        if (latest.version !== item.version) continue;
+        pending.delete(item);
+        console.log('VERIFIED ' + item.name + '@' + item.version);
+      }
+      if (!pending.size) return;
+      if (Date.now() >= deadline) throw Error('Uploaded but still processing; do not republish until registry state is checked: ' + [...pending].map(item => item.name).join(', '));
+      console.log('Waiting for npm processing: ' + pending.size + ' package(s).');
+      await delay(15000);
     }
-    if (!ready) throw Error('Published but not downloadable yet. Check registry before rerunning: ' + item.name);
-    const latest = await (await get(registry + '/' + encodeURIComponent(item.name) + '/latest')).json();
-    if (latest.version !== item.version) throw Error('Unexpected latest version: ' + item.name);
-    console.log('VERIFIED ' + item.name + '@' + item.version);
+  }
+  // Upload sequentially, then allow npm to process the children together.
+  // Never expose a suite until every dependency is downloadable and verified.
+  const children = packages.filter(item => item.name !== manifest.suite && !item.published);
+  for (const item of children) upload(item);
+  await waitForPackages(children);
+  const suiteItem = packages.find(item => item.name === manifest.suite);
+  if (!suiteItem.published) {
+    upload(suiteItem);
+    await waitForPackages([suiteItem]);
   }
 }
