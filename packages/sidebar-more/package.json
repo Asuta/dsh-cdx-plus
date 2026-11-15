@@ -1,8 +1,8 @@
 {
   "name": "dsh-asuta-sidebar-more",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "engines": {
-    "dsh": "0.2.2-rc.2 || 0.2.2-rc.3",
+    "dsh": ">=0.2.2-rc.2",
     "node": "^22.19.0 || >=24"
   },
   "type": "module",

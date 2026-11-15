@@ -1,8 +1,8 @@
 {
   "name": "dsh-asuta-user-agent-settings",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "peerDependencies": {
-    "@deepseek-ai/dsh-sandbox": "0.2.2-rc.2 || 0.2.2-rc.3"
+    "@deepseek-ai/dsh-sandbox": ">=0.2.2-rc.2"
   },
   "type": "module",
   "description": "Edit global agent instructions, choose a compaction model and refresh the frontend from DSH settings. · 在 DSH 设置页编辑全局 Agent 指令、选择压缩模型并刷新前端。",
@@ -65,7 +65,7 @@
   ],
   "engines": {
     "node": "^22.19.0 || >=24",
-    "dsh": "0.2.2-rc.2 || 0.2.2-rc.3"
+    "dsh": ">=0.2.2-rc.2"
   },
   "license": "MIT",
   "peerDependenciesMeta": {
