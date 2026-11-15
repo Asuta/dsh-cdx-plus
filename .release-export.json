@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "sourceCommit": "979eaaf2ef3705bd3985fe24bc96549e69e1e93d",
+  "sourceCommit": "1b97542d5b3dc8d412a84821238bf1b076e0deb3",
   "files": {
     "packages/archived-sessions/client.js": "8420fb3da9fb7076af6e34e90d62016d990ffcf401104b51f4982f2a39be1013",
     "packages/archived-sessions/cordis.patch.yml": "703795278e0d423babc5365197ba923919aaccd5f801e3770450d76712d5d9b3",
@@ -245,7 +245,7 @@
     "package.json": "96598d128336e1559103fd68bcd7f11e5fd32337114ec70118bf19400db63fdb",
     ".gitignore": "8b36f90ad1ead6554d5014ec5f8c593da7013291add4690514f238569a7c72f1",
     ".gitattributes": "1c9beb2ac77fa3543c08a8cacd953baa972877e179e09a7257e66089457db160",
-    "release-manifest.json": "1dea97e2b89e203dac2f0a957503ff84583d8031b8982f2911c1c2ec6231f3b1",
+    "release-manifest.json": "2d2f1ccb4aaac5b03a010171fc65b01b5cdc00142d9ba52f7e874149a57bfe17",
     "scripts/verify.mjs": "d4f8982a407c9a3785ff54e78be9b6a647fa2f827ee2f04aba749f96a0fd5347",
     "scripts/pack.mjs": "5c746808e865f7e240b8e1fad5d0a5fd7bf571b2faaa459a216655d5a986a123",
     "scripts/publish.mjs": "2dade5d62e3f642af6e658f2b92e4ea63a3ccf1ae0eb916b58a433774f830afc",
@@ -255,11 +255,11 @@
     "docs/images/review-scope.png": "ac51c915ab4e2af9444800b63af959d827efd623e03a1bd2d5f11ac4a97643a9",
     ".github/workflows/verify.yml": "00a1882a8204220f093a8498896058b53dc44748e8ba805477abbd27d4a9ae33",
     ".github/workflows/publish.yml": "524c35990636e1d0813ae3af19cef3f4202b7a8e30fb992b66d4e6d3e30ea2ca",
-    "PUBLISHING.md": "dd6c64e1ff9f2a3d2373acba8f7745c79bdfc55f4c77f6915a0f541b74d85af4",
-    "README.md": "ee89a229edef0cf9a262cfe02d86b8f55cc8bbb37906263e830c078e5585e3e5",
-    "README_EN.md": "4ab90e8982cc738e0f0771008bede736995b70cd62804d9701c83609ed0dbe2f",
-    "CHANGELOG.md": "88faccb0560a6dcf0d635e51e38597ce22f23006a58b88dcac41edf20dfc1fec",
-    "RELEASE_STATUS.md": "65bb9ef1dea248c20df47f79be7661b3389599658d05851eae1da6fdf8068058",
+    "PUBLISHING.md": "934e6acd2a3d00715d62f593cc68427edfb24e40773b80f0548fe3d65c943078",
+    "README.md": "45cee8e340836baf8e9828e987b18a3efd169b0b3978109a50da37864e60d599",
+    "README_EN.md": "273357d873bec0546f3d76e6c074c89bd50c14b872ddba216e742621d24da39d",
+    "CHANGELOG.md": "15227ec4b3698e01cdcd1ac38709c9d56e0c7f4095ae5f6f6f3ff7ab7372b105",
+    "RELEASE_STATUS.md": "f8b29d7b960a84cc11385b4b66004f404c1249319828058535f4cbadbab4144a",
     "MARKETPLACE.md": "fc29c3d535b1cbabbf27d2ff3fa5d2d0b6cd679de8e09f3aade00630b5323d08",
     "docs/images/README.md": "8e986dfd86244ad45c7e0e57c70e1233edfd755faadee04a69680cf968fee462"
   }
