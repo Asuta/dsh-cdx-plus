@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "sourceCommit": "e3c2dc688ced6cb269d66bb6896ad721b09af06d",
+  "sourceCommit": "58662d8de2cd7ce8dafa11ecc704ff245706a526",
   "files": {
     "packages/archived-sessions/client.js": "8420fb3da9fb7076af6e34e90d62016d990ffcf401104b51f4982f2a39be1013",
     "packages/archived-sessions/cordis.patch.yml": "703795278e0d423babc5365197ba923919aaccd5f801e3770450d76712d5d9b3",
@@ -245,7 +245,7 @@
     "package.json": "96598d128336e1559103fd68bcd7f11e5fd32337114ec70118bf19400db63fdb",
     ".gitignore": "8b36f90ad1ead6554d5014ec5f8c593da7013291add4690514f238569a7c72f1",
     ".gitattributes": "1c9beb2ac77fa3543c08a8cacd953baa972877e179e09a7257e66089457db160",
-    "release-manifest.json": "eff9a1ccb8e67277d5db758ce508de3eeea3c45f573d948c7e18eb1d65a4a025",
+    "release-manifest.json": "63adcf1ee1e26be9904477364cde3938e0c1b73c7799cc33e041ced573f5256e",
     "scripts/verify.mjs": "d4f8982a407c9a3785ff54e78be9b6a647fa2f827ee2f04aba749f96a0fd5347",
     "scripts/pack.mjs": "5c746808e865f7e240b8e1fad5d0a5fd7bf571b2faaa459a216655d5a986a123",
     "scripts/publish.mjs": "2dade5d62e3f642af6e658f2b92e4ea63a3ccf1ae0eb916b58a433774f830afc",
@@ -256,8 +256,8 @@
     ".github/workflows/verify.yml": "00a1882a8204220f093a8498896058b53dc44748e8ba805477abbd27d4a9ae33",
     ".github/workflows/publish.yml": "524c35990636e1d0813ae3af19cef3f4202b7a8e30fb992b66d4e6d3e30ea2ca",
     "PUBLISHING.md": "934e6acd2a3d00715d62f593cc68427edfb24e40773b80f0548fe3d65c943078",
-    "README.md": "ec0c82a12e757f7245eb8d953ec51dea3af0b793cd22579474a2098eb8a98c9d",
-    "README_EN.md": "5e3387a44b412884340c98345f2cfb52d5d47122e56ab158799fe745030d5949",
+    "README.md": "aa6f9055ff4bb3b67aa2edd4e6d6aff2ed0c3ae9ce1e2237b0f31797af23b3a2",
+    "README_EN.md": "38a5945ea0786100f6d12b3a1641d08cef787f93b6a586b2254a8c7ae9e250f0",
     "CHANGELOG.md": "734f179149644fbc5f26ff11e23891a3a9321a4c8a42ad6b0c5ca2af7ffad857",
     "RELEASE_STATUS.md": "c676069ac7adc26fc50f3b7a485fb55c9ef02a15f4c7d6da17c2be547715d591",
     "MARKETPLACE.md": "e608840a33aa262f0bff0607908245daf25bceea734f4b2accbf19fe06904dc9",

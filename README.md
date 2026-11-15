@@ -6,15 +6,21 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 习惯了 Codex 的交互方式，希望在 DSH 中使用选中引用、侧边对话、工作树环境和代码审查？DSH CDX Plus 将这些增强能力整理为一个合集，让你更快配置熟悉的开发工作流。
 
+（就是把codex里的一堆好用的功能和交互都抄过来了，一站式改善dsh初始版本功能太少的问题，让codex的用户可以尽量无痛迁移，内部很多实现就是直接逆向了codex抄的源码（所以性能和逻辑都没啥问题），应该是同类型大合集插件里功能做的最全的了，来吧用就完事了）（这段话不是ai写的）
+
 **Codex-inspired plugins for DeepSeek Harness:** selection quotes, side chats, Git worktrees and code review.
 
 [English](README_EN.md) · [安装与发布状态](RELEASE_STATUS.md) · [反馈问题](https://github.com/Asuta/dsh-cdx-plus/issues)
+
+*说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
 
 ## 实现有参考，体验有验证
 
 部分功能的交互逻辑与实现思路，参考了对 **Codex 桌面版反编译代码的分析**，再结合 DSH 的插件机制进行适配。我们关注操作流程和行为细节，让熟悉 Codex 的用户在 DSH 中也能顺手使用这些能力。
 
 实现过程中结合聚焦测试与真实界面验收，已验证的场景包括侧栏双向滚动、代码审查范围选择和工作树命令输出。具体覆盖范围见[发布状态](RELEASE_STATUS.md)。流畅性和稳定性是持续优化目标；实际性能仍取决于 DSH 版本、项目规模和运行环境，不作与 Codex 等同的性能承诺。
+
+*说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
 
 ## 你想做什么？
 
@@ -26,6 +32,8 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 | 给不同工作树准备开发环境 | 多份环境配置、setup 脚本、快捷命令与可见的内置终端输出 |
 | 提交前检查改动 | /review 选择审查范围，由独立子代理输出优先级和文件位置；旁边查看 Git diff |
 | 整理越来越多的项目与对话 | 置顶、统一侧栏滚动、移动对话、归档管理和 Agent 对话搜索工具 |
+
+*说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
 
 ## 功能展示
 
@@ -48,6 +56,8 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 输入 /review 后，先选择未提交改动、基准分支、指定提交或自定义要求，再启动审查。
 
 ![DSH 代码审查：选择未提交改动、基准分支、指定提交或自定义要求](docs/images/review-scope.png)
+
+*说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
 
 ## 安装与快速开始
 
@@ -88,6 +98,8 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 </details>
 
+*说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
+
 ## 全部 18 项功能
 
 每个组件都有独立开关；部分组合功能需要同时启用相关组件，例如引用跳转侧边对话、Agent 移动会话。
@@ -112,6 +124,8 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 | [侧栏整理](packages/sidebar-more/) | 精简 DSH 侧栏入口，让置顶、工作区与最近对话共用滚动区域。 | dsh-asuta-sidebar-more |
 | [Agent 设置](packages/user-agent-settings/) | 在 DSH 设置页编辑全局 Agent 指令、选择压缩模型并刷新前端。 | dsh-asuta-user-agent-settings |
 | [工作树控制](packages/worktree-control/) | 为 DSH 对话创建 Git 工作树，支持 .worktreeinclude、多份环境、setup 脚本和可见终端命令。 | dsh-asuta-worktree-control |
+
+*说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
 
 ## 常见问题
 
@@ -139,6 +153,8 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 当前声明的适配基线为 DSH 0.2.2-rc.3，不代表所有未来版本都已兼容。安装前查看[发布状态](RELEASE_STATUS.md)；反馈问题时请附 DSH 版本、插件版本和复现步骤，并隐去私密信息。
 
+*说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
+
 ## 维护与贡献
 
 本仓库包含干净的发行插件、可重建源码和运行资源。它由开发仓库自动导出；开发技能、现场笔记和本机配置不进入发行仓库。建议通过 [Issues](https://github.com/Asuta/dsh-cdx-plus/issues) 提交问题与功能建议，便于同步回开发源。
@@ -149,3 +165,5 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
     node scripts/pack.mjs
 
 各子包保留自己的许可证和第三方声明；新增自有代码及合集采用 MIT。详见各包 LICENSE / NOTICE 与 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
+
+*说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*

@@ -6,13 +6,19 @@ npm: `dsh-asuta-cdx-plus` · GitHub: `Asuta/dsh-cdx-plus`
 
 Bring familiar Codex-style interactions to DeepSeek Harness (DSH): quote selected text, explore a question in a side chat, create Git worktrees with local environments, and review code with an independent agent.
 
+(Basically, I copied a bunch of handy features and interactions from Codex over here, a one-stop fix for DSH's rather limited out-of-the-box feature set, so Codex users can migrate with as little pain as possible. A lot of the internals are directly reverse-engineered and adapted from Codex's source, so performance and logic should be fine. This should be the most feature-complete large plugin bundle of its kind. Go ahead and use it.)(This paragraph was not written by AI.)
+
 [中文](README.md) · [Release status](RELEASE_STATUS.md) · [Report an issue](https://github.com/Asuta/dsh-cdx-plus/issues)
+
+*Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
 
 ## Informed implementation, verified interactions
 
 Some interaction logic and implementation approaches draw on **analysis of decompiled Codex desktop code**, adapted to DSH's plugin mechanisms. We focus on workflows and behavioral details so people familiar with Codex can use these features comfortably in DSH.
 
 Development combines focused tests with real UI acceptance checks. Verified scenarios include bidirectional sidebar scrolling, review scope selection and visible worktree command output; see [release status](RELEASE_STATUS.md) for coverage. Responsiveness and stability remain ongoing goals. Actual performance depends on the DSH version, project size and runtime environment; we do not claim performance parity with Codex.
+
+*Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
 
 ## What would you like to do?
 
@@ -24,6 +30,8 @@ Development combines focused tests with real UI acceptance checks. Verified scen
 | Prepare different development environments | Save multiple environments with setup scripts and manual commands; watch output in the built-in terminal |
 | Review changes before committing | Use /review to select a scope and get findings with priorities and file locations; inspect Git diffs alongside the chat |
 | Keep projects and conversations organized | Pin chats, scroll sidebar sections together, move and archive conversations, and let agents find existing chats |
+
+*Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
 
 ## See the features
 
@@ -46,6 +54,8 @@ Store multiple project environments, setup scripts and manual actions. Commands 
 Enter /review and select uncommitted changes, a base branch, a specific commit or custom instructions before starting the review.
 
 ![DSH code review scope picker](docs/images/review-scope.png)
+
+*Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
 
 ## Install and get started
 
@@ -86,6 +96,8 @@ The local suite is private and intended only for testing. Use the npm installati
 
 </details>
 
+*Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
+
 ## All 18 features
 
 Each component has its own switch. Some integrations need both components enabled, such as opening a side chat from a quote or moving a conversation through agent tools.
@@ -110,6 +122,8 @@ Each component has its own switch. Some integrations need both components enable
 | [Sidebar organization](packages/sidebar-more/) | Simplify DSH sidebar navigation and scroll pinned chats, workspaces and recent conversations together. | dsh-asuta-sidebar-more |
 | [Agent settings](packages/user-agent-settings/) | Edit global agent instructions, choose a compaction model and refresh the frontend from DSH settings. | dsh-asuta-user-agent-settings |
 | [Worktrees and environments](packages/worktree-control/) | Create Git worktrees for DSH chats with .worktreeinclude, multiple environments, setup scripts and visible terminal commands. | dsh-asuta-worktree-control |
+
+*Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
 
 ## Frequently asked questions
 
@@ -137,6 +151,8 @@ This is an independent community project inspired in part by Codex interactions.
 
 The declared baseline is DSH 0.2.2-rc.3; future versions are not automatically verified. Check [release status](RELEASE_STATUS.md) before installing. Include DSH and plugin versions plus reproduction steps in bug reports, with private information removed.
 
+*Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
+
 ## Maintenance and contributions
 
 This generated release repository contains plugins, rebuildable source and runtime resources. Development skills, local notes and machine configuration stay in the development repository. Use [Issues](https://github.com/Asuta/dsh-cdx-plus/issues) for feedback so changes can be carried back to the development source.
@@ -147,3 +163,5 @@ Maintainer checks:
     node scripts/pack.mjs
 
 Existing MIT, Apache-2.0 and third-party notices remain with their packages. Newly licensed owned code and the suite use MIT. Consult each package's LICENSE / NOTICE and [RELEASE_STATUS.md](RELEASE_STATUS.md).
+
+*Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
