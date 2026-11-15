@@ -111,7 +111,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "session-mover",
     "name": "dsh-asuta-session-mover",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "title": "移动对话",
     "rowId": "session-mover",
     "bundleConfig": false

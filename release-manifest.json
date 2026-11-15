@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "1b97542d5b3dc8d412a84821238bf1b076e0deb3",
+  "sourceCommit": "e3c2dc688ced6cb269d66bb6896ad721b09af06d",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.3",
   "dshCompatibility": ">=0.2.2-rc.2",
@@ -133,7 +133,7 @@
     {
       "directory": "session-mover",
       "name": "dsh-asuta-session-mover",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "title": "移动对话",
       "rowId": "session-mover",
       "bundleConfig": false

@@ -10,8 +10,9 @@
  *
  * Every move is backed up (log folder + Workspace index) and rolled back if the
  * attach is refused, so a failure leaves the previous state rather than a
- * half-moved Session. Routes live on the app's own loopback server behind a
- * custom header a cross-origin page cannot send without a preflight.
+ * half-moved Session. Every HTTP route requires the host Connection's
+ * Host/Origin checks and authenticated identity. The custom header is only
+ * an additional cross-origin request guard, never an authentication credential.
  */
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -137,8 +138,27 @@ function send(res, status, payload) {
   res.end(JSON.stringify(payload))
 }
 
-function authorized(req) {
-  return String(req.headers[HEADER] ?? '') === '1'
+function rejectRequest(ctx, req, res) {
+  let rejection
+  try {
+    const connection = ctx.get('connection')
+    if (typeof connection?.requestRejection !== 'function') throw new Error('Authentication unavailable')
+    rejection = connection.requestRejection(req)
+  } catch {
+    rejection = 503
+  }
+  // Only the host's explicit success (undefined) admits a request. Missing,
+  // throwing or incompatible authentication must never fall back to a header.
+  if (rejection !== undefined) {
+    const status = rejection === 401 || rejection === 403 ? rejection : 503
+    send(res, status, { ok: false, code: status === 401 ? 'UNAUTHORIZED' : status === 403 ? 'FORBIDDEN' : 'AUTH_UNAVAILABLE', error: status === 401 ? 'DSH authentication required' : status === 403 ? 'Request rejected by DSH' : 'DSH authentication unavailable' })
+    return true
+  }
+  if (String(req.headers[HEADER] ?? '') !== '1') {
+    send(res, 403, { ok: false, code: 'FORBIDDEN', error: 'missing header' })
+    return true
+  }
+  return false
 }
 
 /** Locate the folder that currently holds one Session's log directory. */
@@ -222,6 +242,7 @@ function evictHeaderIndex(registry, sessionId) {
 // failed permanently and every move reported UNSUPPORTED.
 export const inject = [
   'webServer',
+  'connection',
   'agents',
   'sessions',
   'sessionController',
@@ -269,7 +290,7 @@ export function apply(ctx) {
   ctx.effect(() => ctx.webServer.register({
     kind: 'exact', path: `${PREFIX}/settled`,
     handler: async (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false })
+      if (rejectRequest(ctx, req, res)) return
       if (req.method !== 'POST') return send(res, 405, { ok: false })
       try { send(res, 200, await mover.settle((await readJson(req)).sessionId)) }
       catch (error) { send(res, 400, { ok: false, error: error.message }) }
@@ -278,7 +299,7 @@ export function apply(ctx) {
   ctx.effect(() => ctx.webServer.register({
     kind: 'exact', path: `${PREFIX}/status`,
     handler: (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       send(res, 200, { ok: true, ...mover.status() })
     },
   }), 'session-mover: operation status')
@@ -286,7 +307,7 @@ export function apply(ctx) {
     kind: 'exact',
     path: `${PREFIX}/ping`,
     handler: (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       send(res, 200, { ok: true, app: 'session-mover', origin: ctx.webServer.getOrigin() })
     },
   }), 'session-mover: ping route')
@@ -295,7 +316,7 @@ export function apply(ctx) {
     kind: 'exact',
     path: `${PREFIX}/env`,
     handler: async (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       let zstd = false
       try {
         const zlib = await import('node:zlib')
@@ -318,7 +339,7 @@ export function apply(ctx) {
     kind: 'exact',
     path: `${PREFIX}/sessions`,
     handler: (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       const registry = ctx.get('workspaceRegistry')
       if (!registry) return send(res, 200, { ok: false, error: 'workspaceRegistry unavailable' })
       send(res, 200, {
@@ -338,7 +359,7 @@ export function apply(ctx) {
     kind: 'exact',
     path: `${PREFIX}/live`,
     handler: (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       const agents = ctx.get('agents')
       send(res, 200, { ok: true, live: agents ? agents.list().map((agent) => String(agent.id)) : [] })
     },
@@ -348,7 +369,7 @@ export function apply(ctx) {
     kind: 'exact',
     path: `${PREFIX}/move`,
     handler: async (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'POST only' })
       try {
         const body = await readJson(req)
@@ -374,7 +395,7 @@ export function apply(ctx) {
     kind: 'exact',
     path: `${PREFIX}/cwd`,
     handler: async (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'POST only' })
       try {
         const body = await readJson(req)
@@ -397,7 +418,7 @@ export function apply(ctx) {
   ctx.effect(() => ctx.webServer.register({
     kind: 'exact', path: `${PREFIX}/relocate`,
     handler: async (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'POST only' })
       try {
         const result = await mover.move(await readJson(req))
@@ -416,7 +437,7 @@ export function apply(ctx) {
     kind: 'exact',
     path: `${PREFIX}/reattach`,
     handler: async (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'POST only' })
       try {
         const body = await readJson(req)
@@ -446,7 +467,7 @@ export function apply(ctx) {
     kind: 'exact',
     path: `${PREFIX}/probe`,
     handler: async (req, res) => {
-      if (!authorized(req)) return send(res, 403, { ok: false, error: 'missing header' })
+      if (rejectRequest(ctx, req, res)) return
       if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'POST only' })
       try {
         const body = await readJson(req)

@@ -100,6 +100,7 @@ window.__ModuleLoader__.load({
     async function post(route, body) {
       const response = await fetch(`${PREFIX}/${route}`, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'content-type': 'application/json', 'x-session-mover': '1' },
         body: JSON.stringify(body),
       })
