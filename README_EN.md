@@ -49,7 +49,7 @@ Enter /review and select uncommitted changes, a base branch, a specific commit o
 
 ## Install and get started
 
-**Repository version: 0.1.4. Compatibility baseline: DSH 0.2.2-rc.3.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
+**Repository version: 0.1.5. Compatibility baseline: DSH 0.2.2-rc.3.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
 
 Version 0.1.4 is published on npm and supports DSH 0.2.2-rc.2 and 0.2.2-rc.3. Installing the suite includes all 18 plugins. Version 0.1.3 supports rc.2 only; rc.3 users should update to 0.1.4.
 

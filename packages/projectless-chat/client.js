@@ -14,7 +14,8 @@ window.__ModuleLoader__.load({
     }
     const CSS = [
       '.pc-new{display:inline-flex;align-items:center;justify-content:center;flex:none;width:28px;height:28px;padding:0;border:0;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:0;transition:opacity 120ms ease;-webkit-app-region:no-drag}',
-      '[data-pc-header]:hover .pc-new,[data-pc-header]:focus-within .pc-new,.pc-new:focus-visible,.pc-new:disabled{opacity:1}',
+      '[data-pc-header]:hover .pc-new,[data-pc-header]:focus-within .pc-new,[data-pc-ungrouped]:hover .pc-new,[data-pc-ungrouped]:focus-within .pc-new,.pc-new:focus-visible,.pc-new:disabled{opacity:1}',
+      '.pc-new-ungrouped{margin-left:auto;width:24px;height:24px}',
       '.pc-new:hover,.pc-button:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.pc-new:focus-visible,.pc-button:focus-visible,.pc-input:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:2px}',
       '.pc-new:disabled,.pc-button:disabled{opacity:.5;cursor:default}',
@@ -131,22 +132,26 @@ window.__ModuleLoader__.load({
     }
 
     function Launcher({ ctx, t, wide }) {
-      const [anchor, setAnchor] = React.useState(null), [busy, setBusy] = React.useState(false), [error, setError] = React.useState('')
+      const [anchor, setAnchor] = React.useState(null), [ungrouped, setUngrouped] = React.useState(null), [busy, setBusy] = React.useState(false), [error, setError] = React.useState('')
       const pending = React.useRef(false), alive = React.useRef(true), created = React.useRef(null)
       React.useEffect(() => {
         alive.current = true
-        let previous = null, scheduled = false, stopped = false
+        let previous = null, previousUngrouped = null, scheduled = false, stopped = false
         const sync = () => {
           scheduled = false
           if (stopped) return
           const section = document.querySelector('[data-slot="sidebar.recent.section"]')
           const header = section?.firstElementChild
           if (previous !== header) { previous?.removeAttribute('data-pc-header'); header?.setAttribute('data-pc-header', ''); previous = header; setAnchor(header || null) }
+          // Native UNGROUPED_KEY is empty; real workspaces have a nonempty ID.
+          // Use the stable row key, independent of the current UI language.
+          const row = document.querySelector('[data-row-key="workspace:"]')
+          if (previousUngrouped !== row) { previousUngrouped?.removeAttribute('data-pc-ungrouped'); row?.setAttribute('data-pc-ungrouped', ''); previousUngrouped = row; setUngrouped(row) }
         }
         const observer = new MutationObserver(() => { if (!scheduled) { scheduled = true; queueMicrotask(sync) } })
-        observer.observe(document.body, { childList: true, subtree: true })
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-row-key'] })
         sync()
-        return () => { stopped = true; alive.current = false; observer.disconnect(); previous?.removeAttribute('data-pc-header') }
+        return () => { stopped = true; alive.current = false; observer.disconnect(); previous?.removeAttribute('data-pc-header'); previousUngrouped?.removeAttribute('data-pc-ungrouped') }
       }, [])
       async function create() {
         if (pending.current) return
@@ -161,9 +166,10 @@ window.__ModuleLoader__.load({
         } catch (err) { if (alive.current) setError(err.message) }
         finally { pending.current = false; if (alive.current) setBusy(false) }
       }
-      const button = h('button', { type: 'button', className: 'pc-new', 'data-projectless-new': '', 'aria-label': busy ? t('creating') : t('create'), title: t('create'), disabled: busy, onClick: create },
+      const button = (inUngrouped = false) => h('button', { type: 'button', className: 'pc-new' + (inUngrouped ? ' pc-new-ungrouped' : ''), 'data-projectless-new': '', 'aria-label': busy ? t('creating') : t('create'), title: t('create'), disabled: busy, onClick: event => { event.stopPropagation(); void create() }, onKeyDown: event => { if (event.key === 'Enter' || event.key === ' ') event.stopPropagation() } },
         h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, 'aria-hidden': true }, h('path', { d: 'M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6M16 3l5 5M10 14l1-4 8-8 4 4-8 8-5 1Z' })))
-      return h(React.Fragment, null, anchor ? createPortal(button, anchor) : wide ? h('button', { type: 'button', className: 'pc-button', disabled: busy, onClick: create }, busy ? t('creating') : t('create')) : null,
+      return h(React.Fragment, null, anchor ? createPortal(button(), anchor) : wide ? h('button', { type: 'button', className: 'pc-button', disabled: busy, onClick: create }, busy ? t('creating') : t('create')) : null,
+        ungrouped ? createPortal(button(true), ungrouped) : null,
         error ? createPortal(h('div', { className: 'pc-failure', role: 'alert' }, h('p', { className: 'pc-error' }, t('error') + error), h('button', { type: 'button', className: 'pc-button', onClick: create }, t('retry')), h('button', { type: 'button', className: 'pc-button', onClick: () => setError('') }, t('close'))), document.body) : null)
     }
     return {

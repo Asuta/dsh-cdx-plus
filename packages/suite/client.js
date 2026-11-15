@@ -87,7 +87,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "projectless-chat",
     "name": "dsh-asuta-projectless-chat",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "title": "无工作区对话",
     "rowId": "projectless-chat",
     "bundleConfig": false
@@ -111,7 +111,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "session-mover",
     "name": "dsh-asuta-session-mover",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "title": "移动对话",
     "rowId": "session-mover",
     "bundleConfig": false

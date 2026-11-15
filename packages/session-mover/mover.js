@@ -11,6 +11,9 @@ export const UNGROUPED = 'ungrouped'
 const raw = value => value?.[ORIGINAL] ?? value
 const fail = (code, message) => Object.assign(new Error(message), { code })
 const message = error => error instanceof Error ? error.message : String(error)
+// Stored conversations can use a bare UUID or the legacy session- prefix.
+// Apply the same strict path-safe format to moved IDs and insertion anchors.
+const isSessionId = value => typeof value === 'string' && /^(?:session-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 
 /** Read both public Inbox queues now; keep a value snapshot across unload/reopen. */
 export function snapshotInbox(agent) {
@@ -377,8 +380,8 @@ export function createMover(ctx, io) {
       workspaceId = undoRecord.sourceId
       position = undefined
     }
-    if (position !== undefined && (!position || typeof position !== 'object' || (position.edge === 'end' ? position.anchorSessionId !== undefined : (!/^session-[0-9a-f-]{36}$/i.test(position.anchorSessionId ?? '') || !['before', 'after'].includes(position.edge) || position.anchorSessionId === id)))) return { ok: false, code: 'BAD_REQUEST', error: 'Position requires another conversation and edge before or after' }
-    if (!/^(?:session-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id ?? '') || typeof workspaceId !== 'string' || !workspaceId) return { ok: false, code: 'BAD_REQUEST', error: 'Valid sessionId and workspaceId are required' }
+    if (position !== undefined && (!position || typeof position !== 'object' || Array.isArray(position) || (position.edge === 'end' ? position.anchorSessionId !== undefined : (!isSessionId(position.anchorSessionId) || !['before', 'after'].includes(position.edge) || position.anchorSessionId === id)))) return { ok: false, code: 'BAD_REQUEST', error: 'Position requires another conversation and edge before or after, or edge end without an anchor' }
+    if (!isSessionId(id) || typeof workspaceId !== 'string' || !workspaceId) return { ok: false, code: 'BAD_REQUEST', error: 'Valid sessionId and workspaceId are required' }
     if (stopping) return { ok: false, code: 'NOT_READY', error: 'Session mover is unloading; retry the operation' }
     if (!supported) return { ok: false, code: failureCode ?? 'NOT_READY', error: `Live relocation is not wired: ${failure ?? 'initialization has not completed'}` }
     if (moving.size) return { ok: false, code: 'MOVE_IN_PROGRESS', error: 'Another conversation is being moved; retry when it finishes' }

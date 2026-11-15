@@ -16,7 +16,7 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { createMover } from './mover.js?v=0.4.3'
+import { createMover } from './mover.js?v=0.4.5'
 
 const PREFIX = '/__session-mover'
 const HEADER = 'x-session-mover'

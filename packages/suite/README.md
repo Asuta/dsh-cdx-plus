@@ -12,9 +12,9 @@ Some feature logic draws on analysis of decompiled Codex desktop code and is ada
 
 ## 安装 / Installation
 
-版本 0.1.4，适配 DSH 0.2.2-rc.3。以下命令安装 npm 最新正式版；各版本进度见发行仓库的 RELEASE_STATUS.md。
+版本 0.1.5，适配 DSH 0.2.2-rc.3。以下命令安装 npm 最新正式版；各版本进度见发行仓库的 RELEASE_STATUS.md。
 
-Version 0.1.4 targets DSH 0.2.2-rc.3. Install the latest published npm version with the command below. See RELEASE_STATUS.md in the release repository for version-specific status.
+Version 0.1.5 targets DSH 0.2.2-rc.3. Install the latest published npm version with the command below. See RELEASE_STATUS.md in the release repository for version-specific status.
 
 0.1.4 合集及全部 18 个子插件已发布到 npm，同时支持 rc.2 和 rc.3。旧版 0.1.3 仅支持 rc.2，rc.3 用户请更新到 0.1.4。
 

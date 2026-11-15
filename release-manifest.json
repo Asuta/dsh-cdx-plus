@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "98d618faaf59b956de3391d9249015988cda4bcd",
+  "sourceCommit": "37179366705d930e2836554c0d8a8e86af35fa3e",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.3",
   "dshCompatibility": "0.2.2-rc.2 || 0.2.2-rc.3",
@@ -109,7 +109,7 @@
     {
       "directory": "projectless-chat",
       "name": "dsh-asuta-projectless-chat",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "title": "无工作区对话",
       "rowId": "projectless-chat",
       "bundleConfig": false
@@ -133,7 +133,7 @@
     {
       "directory": "session-mover",
       "name": "dsh-asuta-session-mover",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "title": "移动对话",
       "rowId": "session-mover",
       "bundleConfig": false
