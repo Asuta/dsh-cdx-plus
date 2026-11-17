@@ -6,7 +6,10 @@ npm: `dsh-asuta-cdx-plus` · GitHub: `Asuta/dsh-cdx-plus`
 
 Bring familiar Codex-style interactions to DeepSeek Harness (DSH): quote selected text, explore a question in a side chat, create Git worktrees with local environments, and review code with an independent agent.
 
-(Basically, I copied a bunch of handy features and interactions from Codex over here, a one-stop fix for DSH's rather limited out-of-the-box feature set, so Codex users can migrate with as little pain as possible. A lot of the internals are directly reverse-engineered and adapted from Codex's source, so performance and logic should be fine. This should be the most feature-complete large plugin bundle of its kind. Go ahead and use it.)(This paragraph was not written by AI.)
+> [!IMPORTANT]
+> **Heads-up: the paragraph below was written by the author, not by an AI.**
+>
+> Basically, I copied a bunch of handy features and interactions from Codex over here — a one-step fix for DSH's rather limited out-of-the-box feature set, so Codex users can migrate with as little pain as possible. A lot of the internals are directly reverse-engineered and adapted from Codex's source, so performance and logic should be fine. This should be the most feature-complete large plugin bundle of its kind. Go ahead and use it.
 
 [中文](README.md) · [Release status](RELEASE_STATUS.md) · [Report an issue](https://github.com/Asuta/dsh-cdx-plus/issues)
 

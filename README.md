@@ -6,7 +6,10 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 习惯了 Codex 的交互方式，希望在 DSH 中使用选中引用、侧边对话、工作树环境和代码审查？DSH CDX Plus 将这些增强能力整理为一个合集，让你更快配置熟悉的开发工作流。
 
-（就是把codex里的一堆好用的功能和交互都抄过来了，一站式改善dsh初始版本功能太少的问题，让codex的用户可以尽量无痛迁移，内部很多实现就是直接逆向了codex抄的源码（所以性能和逻辑都没啥问题），应该是同类型大合集插件里功能做的最全的了，来吧用就完事了）（这段话不是ai写的）
+> [!IMPORTANT]
+> **注意：下面这段话是作者本人手写的，不是 AI 生成的。**
+>
+> 就是把 codex 里的一堆好用的功能和交互都抄过来了，一站式改善 dsh 初始版本功能太少的问题，让 codex 的用户可以尽量无痛迁移；内部很多实现就是直接逆向了 codex 抄的源码（所以性能和逻辑都没啥问题）。应该是同类型大合集插件里功能做的最全的了，来吧用就完事了。
 
 **Codex-inspired plugins for DeepSeek Harness:** selection quotes, side chats, Git worktrees and code review.
 
