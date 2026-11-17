@@ -3,7 +3,10 @@ window.__ModuleLoader__.load({
   factory(require) {
     const React = require('react'), h = React.createElement
     const { createPortal } = require('react-dom')
+    const { IconNewChatOutlineRegular } = require('@deepseek-ai/dsh-client-ui-primitives')
     const NS = 'projectlessChat'
+    const UNGROUPED = 'projectless:picker'
+    const PickerContext = React.createContext(null)
     const zh = { create: '新建独立对话', creating: '正在创建独立对话…', ungrouped: '未分组', title: '独立对话默认目录', help: '不属于任何工作区的新对话，会在此目录下按日期创建独立文件夹。仅影响以后新建的对话；聊天记录仍由 DSH 管理。', save: '保存', reset: '恢复默认', browse: '选择文件夹', reload: '重新读取', saved: '已保存；新建对话将使用此目录。', cancel: '取消', choose: '使用此文件夹', loading: '正在加载…', close: '关闭', error: '操作失败：', empty: '此目录下没有子文件夹。', truncated: '目录较多，仅显示部分结果；可直接输入完整路径。', retry: '重试打开' }
     const en = { create: 'New independent conversation', creating: 'Creating conversation…', ungrouped: 'Ungrouped', title: 'Default independent conversation folder', help: 'New conversations outside workspaces receive separate dated folders here. Changes apply only to new conversations. DSH continues to manage chat history.', save: 'Save', reset: 'Restore default', browse: 'Choose folder', reload: 'Reload', saved: 'Saved. New conversations will use this folder.', cancel: 'Cancel', choose: 'Use this folder', loading: 'Loading…', close: 'Close', error: 'Operation failed: ', empty: 'No subfolders.', truncated: 'Some folders are omitted. Enter the full path directly if needed.', retry: 'Open again' }
     async function request(body, signal) {
@@ -14,11 +17,11 @@ window.__ModuleLoader__.load({
     }
     const CSS = [
       '.pc-new{display:inline-flex;align-items:center;justify-content:center;flex:none;width:28px;height:28px;padding:0;border:0;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:0;transition:opacity 120ms ease;-webkit-app-region:no-drag}',
-      '[data-pc-header]:hover .pc-new,[data-pc-header]:focus-within .pc-new,[data-pc-ungrouped]:hover .pc-new,[data-pc-ungrouped]:focus-within .pc-new,.pc-new:focus-visible,.pc-new:disabled{opacity:1}',
+      '[data-pc-header]:hover .pc-new,[data-pc-ungrouped]:hover .pc-new{opacity:1}',
       '.pc-new-ungrouped{margin-left:auto;width:24px;height:24px}',
       '.pc-new:hover,.pc-button:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.pc-new:focus-visible,.pc-button:focus-visible,.pc-input:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:2px}',
-      '.pc-new:disabled,.pc-button:disabled{opacity:.5;cursor:default}',
+      '.pc-new:disabled{cursor:default}.pc-button:disabled,[data-pc-header]:hover .pc-new:disabled,[data-pc-ungrouped]:hover .pc-new:disabled{opacity:.5;cursor:default}',
       '.pc-setting{padding:18px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}',
       '.pc-title{font-size:14px;line-height:20px}.pc-help{color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px;margin:5px 0 12px}',
       '.pc-input{box-sizing:border-box;width:100%;min-width:0;padding:9px 12px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;font-size:13px}',
@@ -28,7 +31,7 @@ window.__ModuleLoader__.load({
       '.pc-dialog{box-sizing:border-box;width:min(620px,calc(100vw - 40px));max-height:80vh;overflow:auto;border:1px solid var(--dsw-alias-border-l2);border-radius:14px;background:var(--dsw-specific-sidebar-fill,#202020);color:var(--dsw-alias-label-primary);padding:22px;box-shadow:0 16px 60px #0006}',
       '.pc-dialog h3{font-size:16px;margin:0 0 16px}.pc-folders{max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-top:12px}.pc-folders button{text-align:left}.pc-crumbs{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}',
       '.pc-failure{position:fixed;bottom:28px;left:28px;z-index:10030;max-width:480px;padding:14px 18px;border:1px solid var(--dsw-alias-border-l2);border-radius:12px;background:var(--dsw-specific-sidebar-fill,#202020);box-shadow:0 8px 30px #0005}',
-      '@media(hover:none){.pc-new{opacity:1}}@media(prefers-reduced-motion:reduce){.pc-new{transition:none}}'
+      '@media(prefers-reduced-motion:reduce){.pc-new{transition:none}}'
     ].join(String.fromCharCode(10))
 
     function FolderPicker({ t, onChoose, onClose }) {
@@ -87,6 +90,50 @@ window.__ModuleLoader__.load({
         picker ? h(FolderPicker, { t, onClose: () => setPicker(false), onChoose: path => { setValue(path); setPicker(false) } }) : null)
     }
 
+    // Extend only the hero picker. The synthetic choice never enters the Host registry.
+    function installIndependentPicker(ctx) {
+      const original = Symbol.for('cordis.original')
+      return ctx.slots.inject('conversation.hero.workspace', () => {
+        let patch = null, changing = false
+        const restore = () => {
+          if (patch && patch.entry.component === patch.wrapper) Object.defineProperty(patch.entry, 'component', patch.descriptor)
+          patch = null
+        }
+        const reconcile = () => {
+          if (changing) return
+          changing = true
+          try {
+            const candidate = ctx.slots.entriesOfSlot('conversation.hero.workspace')[0]
+            const entry = candidate?.[original] ?? candidate
+            if (patch?.entry === entry && entry.component === patch.wrapper) return
+            restore()
+            if (!entry || typeof entry.component !== 'function') return
+            const descriptor = Object.getOwnPropertyDescriptor(entry, 'component')
+            if (!descriptor || (!descriptor.writable && !descriptor.configurable)) return
+            const NativePicker = entry.component
+            function IndependentPicker(props) {
+              const bridge = React.useContext(PickerContext)
+              const snapshot = props.useWorkspaces(state => state)
+              const items = React.useMemo(() => [...snapshot.items, { workspaceId: UNGROUPED, title: ctx.locale.bind(NS)('ungrouped'), path: '', sessionIds: [] }], [snapshot.items])
+              const useWorkspaces = selector => props.useWorkspaces(state => selector({ ...state, items }))
+              return h(NativePicker, !bridge ? props : { ...props, useWorkspaces,
+                selectedId: bridge.independent ? UNGROUPED : props.selectedId,
+                onPick: id => {
+                  if (id !== UNGROUPED) { props.onPick(id); return }
+                  props.onClose()
+                  void bridge.choose()
+                } })
+            }
+            Object.defineProperty(entry, 'component', { ...descriptor, value: IndependentPicker })
+            patch = { entry, descriptor, wrapper: IndependentPicker }
+          } finally { changing = false }
+        }
+        const unsubscribe = ctx.slots.subscribe('conversation.hero.workspace', reconcile)
+        reconcile()
+        return () => { unsubscribe(); restore() }
+      })
+    }
+
     // The native hero needs a workspace label before it enables its composer.
     // Give only an independent blank session a display-only workspace, so the
     // native hero and its agent-preset seat stay mounted and editable.
@@ -114,12 +161,45 @@ window.__ModuleLoader__.load({
               const summary = props.useSessions(state => props.sessionId === undefined ? undefined : state.byId[props.sessionId])
               const workspaces = props.useWorkspaces(state => state)
               const independent = summary?.cwd && workspaces.phase === 'ready' && !workspaces.items.some(workspace => workspace.sessionIds.includes(props.sessionId))
+              const [error, setError] = React.useState('')
+              const pending = React.useRef(false), generation = React.useRef(0), created = React.useRef(null)
+              React.useEffect(() => { generation.current++; return () => { generation.current++ } }, [props.sessionId])
+              async function choose() {
+                if (independent || pending.current) return
+                pending.current = true; setError('')
+                const version = generation.current
+                let reference
+                try {
+                  if (!created.current) {
+                    const { cwd } = await request({ action: 'allocate' })
+                    if (generation.current !== version) return
+                    created.current = await ctx.sessions.create({ cwd })
+                  }
+                  if (generation.current !== version) return
+                  const nextId = created.current
+                  reference = ctx.sessions.retain(nextId, { source: 'projectless-picker' })
+                  const from = props.sessionId === undefined ? null : ctx.conversation.input.shell(props.sessionId)
+                  if (from && !['plain', 'claimed'].includes(from.snapshot.phase)) throw new Error('请等待当前消息发送完成后再切换。')
+                  const next = ctx.conversation.input.shell(nextId)
+                  const draft = from?.draftSnapshot
+                  const attachments = from?.snapshot.attachmentIds ?? []
+                  if (attachments.length && !next.addAttachments(attachments)) throw new Error('无法转移附件，请重试。')
+                  ctx.conversation.rebindDraftFiles(nextId, attachments, true)
+                  if (draft) next.setDraft(draft)
+                  ctx.uiWorkspace.openSession(nextId)
+                  created.current = null
+                  if (from) { from.setDraft(''); attachments.forEach(id => from.removeAttachment(id)); from.actions.persistDraft() }
+                } catch (err) { if (generation.current === version) setError(err.message) }
+                finally { reference?.release(); pending.current = false }
+              }
               const displayWorkspaces = React.useMemo(() => independent && props.hero ? {
                 ...workspaces,
                 items: [...workspaces.items, { workspaceId: 'projectless:' + props.sessionId, title: ctx.locale.bind(NS)('ungrouped'), sessionIds: [props.sessionId] }],
               } : null, [independent, props.hero, props.sessionId, workspaces])
               const useWorkspaces = selector => props.useWorkspaces(() => selector(displayWorkspaces ?? workspaces))
-              return h(NativeContent, { ...props, useWorkspaces })
+              return h(PickerContext.Provider, { value: { independent: !!independent, choose } },
+                h(NativeContent, { ...props, useWorkspaces }),
+                error ? h('div', { className: 'pc-failure', role: 'alert' }, error, h('button', { className: 'pc-button', onClick: () => setError('') }, ctx.locale.bind(NS)('close'))) : null)
             }
             Object.defineProperty(entry, 'component', { ...descriptor, value: IndependentContent })
             patch = { entry, descriptor, wrapper: IndependentContent }
@@ -167,15 +247,16 @@ window.__ModuleLoader__.load({
         finally { pending.current = false; if (alive.current) setBusy(false) }
       }
       const button = (inUngrouped = false) => h('button', { type: 'button', className: 'pc-new' + (inUngrouped ? ' pc-new-ungrouped' : ''), 'data-projectless-new': '', 'aria-label': busy ? t('creating') : t('create'), title: t('create'), disabled: busy, onClick: event => { event.stopPropagation(); void create() }, onKeyDown: event => { if (event.key === 'Enter' || event.key === ' ') event.stopPropagation() } },
-        h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, 'aria-hidden': true }, h('path', { d: 'M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6M16 3l5 5M10 14l1-4 8-8 4 4-8 8-5 1Z' })))
+        h(IconNewChatOutlineRegular, { size: inUngrouped ? 14 : 16 }))
       return h(React.Fragment, null, anchor ? createPortal(button(), anchor) : wide ? h('button', { type: 'button', className: 'pc-button', disabled: busy, onClick: create }, busy ? t('creating') : t('create')) : null,
         ungrouped ? createPortal(button(true), ungrouped) : null,
         error ? createPortal(h('div', { className: 'pc-failure', role: 'alert' }, h('p', { className: 'pc-error' }, t('error') + error), h('button', { type: 'button', className: 'pc-button', onClick: create }, t('retry')), h('button', { type: 'button', className: 'pc-button', onClick: () => setError('') }, t('close'))), document.body) : null)
     }
     return {
-      inject: ['slots', 'locale', 'sessions', 'uiWorkspace'],
+      inject: ['slots', 'locale', 'sessions', 'uiWorkspace', 'conversation'],
       apply(ctx) {
         ctx.effect(() => installIndependentComposer(ctx), 'projectless-chat: native independent composer')
+        ctx.effect(() => installIndependentPicker(ctx), 'projectless-chat: hero workspace choice')
         ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'projectless-chat: translations')
         ctx.effect(() => { const tag = document.createElement('style'); tag.dataset.plugin = 'dsh-asuta-projectless-chat'; tag.dataset.pluginCss = NS; tag.textContent = CSS; document.head.appendChild(tag); return () => tag.remove() }, 'projectless-chat: styles')
         ctx.effect(() => ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({ name: 'sidebar.footer.action', id: 'projectless-chat.create', order: 31, locale: NS }, props => h(Launcher, { ...props, ctx }))), 'projectless-chat: recent launcher')

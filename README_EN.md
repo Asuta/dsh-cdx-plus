@@ -59,9 +59,9 @@ Enter /review and select uncommitted changes, a base branch, a specific commit o
 
 ## Install and get started
 
-**Repository version: 0.1.7. Compatibility baseline: DSH 0.2.2-rc.3.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
+**Repository version: 0.1.8. Compatibility baseline: DSH 0.2.2-rc.3.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
 
-Version 0.1.6 is published on npm. All 19 packages in 0.1.6 allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified runtime baseline remains DSH 0.2.2-rc.3; future API changes may still require fixes. Install 0.1.6 or later to apply the relaxed range. Installing the suite includes all 18 plugins.
+All 19 packages since 0.1.6 allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified runtime baseline remains DSH 0.2.2-rc.3; future API changes may still require fixes. Install 0.1.6 or later to apply the relaxed range. Installing the suite includes all 18 plugins.
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 

@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "archived-sessions",
     "name": "dsh-asuta-archived-sessions",
-    "version": "0.1.6",
+    "version": "0.1.8",
     "title": "归档会话管理",
     "rowId": "archived-sessions",
     "bundleConfig": false
@@ -31,7 +31,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "desktop-navigation",
     "name": "dsh-asuta-desktop-navigation",
-    "version": "0.1.6",
+    "version": "0.1.8",
     "title": "桌面导航",
     "rowId": "desktop-enhancements",
     "bundleConfig": false
@@ -87,7 +87,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "projectless-chat",
     "name": "dsh-asuta-projectless-chat",
-    "version": "0.1.6",
+    "version": "0.1.8",
     "title": "无工作区对话",
     "rowId": "projectless-chat",
     "bundleConfig": false
@@ -103,7 +103,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "selection-quote",
     "name": "dsh-asuta-selection-quote",
-    "version": "0.1.6",
+    "version": "0.1.8",
     "title": "选中引用",
     "rowId": "selection-quote",
     "bundleConfig": false
@@ -127,7 +127,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "sidebar-more",
     "name": "dsh-asuta-sidebar-more",
-    "version": "0.1.6",
+    "version": "0.1.8",
     "title": "侧栏整理",
     "rowId": "sidebar-more",
     "bundleConfig": false

@@ -29,6 +29,11 @@ window.__ModuleLoader__.load({
       panel: 'Archived sessions',
       title: 'Archived sessions',
       count: '{n} archived',
+      archiveOrder: 'Most recently archived first',
+      selectAll: 'Select all', selected: '{n} selected', selectRow: 'Select {title}',
+      restoreSelected: 'Restore selected', deleteSelected: 'Delete selected permanently',
+      batchConfirm: 'Permanently delete {n} conversations, including {a} additional linked side chats. This cannot be undone.',
+      batchResult: '{n} operations completed; {a} failed.',
       empty: 'No archived sessions.',
       emptyHint: 'Sessions you archive appear here.',
       restore: 'Restore',
@@ -60,6 +65,11 @@ window.__ModuleLoader__.load({
       panel: '已归档会话',
       title: '已归档会话',
       count: '已归档 {n} 条',
+      archiveOrder: '按归档先后排序，最近归档在前',
+      selectAll: '全选', selected: '已选择 {n} 条', selectRow: '选择 {title}',
+      restoreSelected: '恢复所选', deleteSelected: '彻底删除所选',
+      batchConfirm: '将永久删除 {n} 条对话，其中包含额外关联的 {a} 条侧边对话，无法撤销。',
+      batchResult: '已完成 {n} 项操作，{a} 项失败。',
       empty: '暂无已归档会话。',
       emptyHint: '你归档的会话会出现在这里。',
       restore: '恢复',
@@ -138,18 +148,6 @@ window.__ModuleLoader__.load({
       return template.replace('{message}', String(message))
     }
 
-    function relativeTime(ms, now) {
-      if (typeof ms !== 'number' || !Number.isFinite(ms)) return ''
-      const delta = Math.max(0, now - ms)
-      const minute = 60000
-      const hour = 60 * minute
-      const day = 24 * hour
-      if (delta < minute) return 'just now'
-      if (delta < hour) return Math.floor(delta / minute) + 'm'
-      if (delta < day) return Math.floor(delta / hour) + 'h'
-      return Math.floor(delta / day) + 'd'
-    }
-
     /**
      * Page styles, tuned for the settings panel content column: the shell's
      * `.options` region owns the scrolling and the side padding, so the root
@@ -184,16 +182,14 @@ window.__ModuleLoader__.load({
 .asx-empty-hint{font-size:12px;margin-top:6px;opacity:.8}
 `
 
-    function SessionRow({ entry, t, busy, confirming, deletionPlan, error, onRestore, onAskDelete, onCancelDelete, onConfirmDelete }) {
+    function SessionRow({ entry, t, busy, selected, onSelect, confirming, deletionPlan, error, onRestore, onAskDelete, onCancelDelete, onConfirmDelete }) {
       const title = entry.missing
         ? t('unknownSession')
         : entry.blank
           ? t('untitled')
           : entry.title || t('untitled')
 
-      const meta = [entry.workspaceTitle || t('ungrouped'), relativeTime(entry.updatedAt, Date.now())]
-        .filter(Boolean)
-        .join(' · ')
+      const meta = entry.workspaceTitle || t('ungrouped')
 
       const actions = confirming
         ? [
@@ -210,6 +206,7 @@ window.__ModuleLoader__.load({
       return h(
         'div',
         { className: busy ? 'asx-row is-busy' : 'asx-row' },
+        h('input', { type: 'checkbox', checked: selected, disabled: busy, onChange: onSelect, 'aria-label': t('selectRow').replace('{title}', title) }),
         h(
           'div',
           { className: 'asx-main' },
@@ -237,6 +234,10 @@ window.__ModuleLoader__.load({
       const [purgeAsk, setPurgeAsk] = React.useState(false)
       const [purging, setPurging] = React.useState(false)
       const [notice, setNotice] = React.useState(null)
+      const [selected, setSelected] = React.useState([])
+      const [batchPlan, setBatchPlan] = React.useState(null)
+      const [batchBusy, setBatchBusy] = React.useState(false)
+      const batchLock = React.useRef(false)
       const refreshPending = React.useCallback(async () => {
         try {
           const result = await callHost('pending', {})
@@ -255,7 +256,9 @@ window.__ModuleLoader__.load({
       const entries = React.useMemo(() => {
         const items = workspaceSnapshot.items || []
         const rows = []
-        for (const id of new Set([...(workspaceSnapshot.archivedSessionIds || []), ...pendingIds])) {
+        // The Host appends on archive, removes on restore, and persists this order.
+        // Reversing it also handles old records without inventing timestamps.
+        for (const id of new Set([...(workspaceSnapshot.archivedSessionIds || [])].reverse().concat(pendingIds))) {
           const summary = sessionSnapshot.byId ? sessionSnapshot.byId[id] : undefined
           const owner = items.find((item) => (item.sessionIds || []).includes(id))
           rows.push({
@@ -264,16 +267,17 @@ window.__ModuleLoader__.load({
             missing: summary === undefined,
             blank: summary ? summary.blank === true : false,
             title: summary ? summary.title : undefined,
-            updatedAt: summary ? summary.updatedAt : undefined,
             workspaceTitle: owner ? owner.title : undefined,
           })
         }
-        rows.sort((left, right) => {
-          if (left.missing !== right.missing) return left.missing ? 1 : -1
-          return (right.updatedAt || 0) - (left.updatedAt || 0)
-        })
         return rows
       }, [workspaceSnapshot, sessionSnapshot, pendingIds])
+      const selectedIds = selected.filter(id => entries.some(entry => entry.id === id))
+      React.useEffect(() => {
+        setSelected(previous => previous.filter(id => entries.some(entry => entry.id === id)))
+      }, [entries])
+      const changeSelection = ids => { setSelected(ids); setBatchPlan(null); setConfirmId(null) }
+      const locked = batchBusy || busyId !== null || purging
 
       const setError = (id, message) => {
         setErrors((previous) => ({ ...previous, [id]: message }))
@@ -365,6 +369,74 @@ window.__ModuleLoader__.load({
         finally { setBusyId(null) }
       }
 
+      const prepareBatchDelete = async () => {
+        if (batchLock.current || locked) return
+        batchLock.current = true; setBatchBusy(true); setBatchPlan(null); setConfirmId(null); setNotice(null)
+        try {
+          const plans = []
+          for (const id of selectedIds) {
+            clearError(id)
+            const result = await callHost('preview', { sessionId: id })
+            if (!result.ok) { setError(id, result.error?.message || t('deleteFailed')); return }
+            plans.push({ id, ...result.value })
+          }
+          // Delete a parent group once when both the parent and its children were selected.
+          plans.sort((a, b) => b.ids.length - a.ids.length)
+          const covered = new Set(), groups = []
+          for (const plan of plans) {
+            if (covered.has(plan.id)) continue
+            groups.push(plan)
+            plan.ids.forEach(id => covered.add(id))
+          }
+          setBatchPlan({ groups, count: covered.size, additional: [...covered].filter(id => !selectedIds.includes(id)).length })
+        } catch (error) { setNotice({ kind: 'err', text: formatMessage(t('deleteFailed'), error.message) }) }
+        finally { batchLock.current = false; setBatchBusy(false) }
+      }
+
+      const runBatch = async deleting => {
+        if (batchLock.current || locked || (deleting && !batchPlan)) return
+        batchLock.current = true; setBatchBusy(true); setConfirmId(null); setNotice(null)
+        const targets = deleting ? batchPlan.groups : selectedIds.map(id => ({ id }))
+        const completed = new Set(), warnings = [], deferredRestores = []
+        let successes = 0, failures = 0
+        try {
+          for (const plan of targets) {
+            if (completed.has(plan.id)) continue
+            clearError(plan.id)
+            try {
+              if (deleting) {
+                const result = await callHost('delete', { sessionId: plan.id, confirmation: plan.confirmation })
+                if (!result.ok) throw new Error(result.error?.message || 'Delete failed')
+                ;(result.value?.deletedSessionIds || plan.ids).forEach(id => completed.add(id))
+                if (result.value?.warning) warnings.push(t('deleteIncomplete').replace('{n}', String(result.value.remaining?.length || 0)).replace('{path}', result.value.quarantine || ''))
+              } else {
+                if (pendingIds.includes(plan.id)) throw new Error(t('deleting'))
+                if (workspaces.list.getSnapshot().archivedSessionIds.includes(plan.id)) await workspaces.unarchiveSession(plan.id)
+                completed.add(plan.id)
+              }
+              successes++
+            } catch (error) {
+              // A linked child can precede its selected parent in the archive list.
+              // Retry restores once after all parents had a chance to restore.
+              if (!deleting) deferredRestores.push({ plan, error })
+              else { failures++; setError(plan.id, formatMessage(t('deleteFailed'), error.message)) }
+            }
+          }
+          for (const { plan, error: originalError } of deferredRestores) {
+            try {
+              if (pendingIds.includes(plan.id)) throw originalError
+              await workspaces.unarchiveSession(plan.id)
+              completed.add(plan.id); successes++
+            } catch (error) { failures++; setError(plan.id, formatMessage(t('restoreFailed'), error.message)) }
+          }
+          setSelected(previous => previous.filter(id => !completed.has(id)))
+          setBatchPlan(null)
+          try { await sessions.refresh() } catch (error) { warnings.push(formatMessage(t('refreshFailed'), error.message)) }
+          await refreshPending(); await refreshLeftovers()
+          setNotice({ kind: failures || warnings.length ? 'warn' : 'ok', text: [t('batchResult').replace('{n}', successes).replace('{a}', failures), ...warnings].join(' ') })
+        } finally { batchLock.current = false; setBatchBusy(false) }
+      }
+
       return h(
         'div',
         { className: 'asx-root' },
@@ -379,6 +451,18 @@ window.__ModuleLoader__.load({
             h('span', { className: 'asx-count' }, formatCount(t('count'), entries.length)),
           ),
           h('p', { className: 'asx-note' }, t('deleteNote')),
+          h('p', { className: 'asx-note' }, t('archiveOrder')),
+          entries.length > 0 ? h('div', { className: 'asx-leftovers' },
+            h('label', null, h('input', { type: 'checkbox', checked: selectedIds.length === entries.length, disabled: locked,
+              ref: node => { if (node) node.indeterminate = selectedIds.length > 0 && selectedIds.length < entries.length },
+              onChange: event => changeSelection(event.target.checked ? entries.map(entry => entry.id) : []) }), ' ', t('selectAll')),
+            h('span', null, t('selected').replace('{n}', selectedIds.length)),
+            h('button', { className: 'asx-btn', disabled: locked || !selectedIds.length, onClick: () => runBatch(false) }, t('restoreSelected')),
+            h('button', { className: 'asx-btn is-danger', disabled: locked || !selectedIds.length, onClick: prepareBatchDelete }, t('deleteSelected'))) : null,
+          batchPlan ? h('div', { className: 'asx-leftovers', role: 'alert' },
+            h('span', null, t('batchConfirm').replace('{n}', batchPlan.count).replace('{a}', batchPlan.additional)),
+            h('button', { className: 'asx-btn is-danger', disabled: locked, onClick: () => runBatch(true) }, t('deleteConfirm')),
+            h('button', { className: 'asx-btn', disabled: locked, onClick: () => setBatchPlan(null) }, t('cancel'))) : null,
           leftovers > 0
             ? h(
                 'div',
@@ -388,10 +472,10 @@ window.__ModuleLoader__.load({
                   ? h(
                       'div',
                       { className: 'asx-actions' },
-                      h('button', { type: 'button', className: 'asx-btn is-danger', disabled: purging, onClick: runPurge }, purging ? t('purging') : t('purgeConfirm').replace('{n}', String(leftovers))),
-                      h('button', { type: 'button', className: 'asx-btn', disabled: purging, onClick: () => setPurgeAsk(false) }, t('cancel')),
+                      h('button', { type: 'button', className: 'asx-btn is-danger', disabled: locked, onClick: runPurge }, purging ? t('purging') : t('purgeConfirm').replace('{n}', String(leftovers))),
+                      h('button', { type: 'button', className: 'asx-btn', disabled: locked, onClick: () => setPurgeAsk(false) }, t('cancel')),
                     )
-                  : h('button', { type: 'button', className: 'asx-btn', disabled: purging, onClick: () => setPurgeAsk(true) }, t('purgeLeftovers')),
+                  : h('button', { type: 'button', className: 'asx-btn', disabled: locked, onClick: () => setPurgeAsk(true) }, t('purgeLeftovers')),
               )
             : null,
           notice
@@ -412,7 +496,9 @@ window.__ModuleLoader__.load({
                     key: entry.id,
                     entry,
                     t,
-                    busy: busyId === entry.id,
+                    busy: locked,
+                    selected: selectedIds.includes(entry.id),
+                    onSelect: () => changeSelection(selectedIds.includes(entry.id) ? selectedIds.filter(id => id !== entry.id) : [...selectedIds, entry.id]),
                     confirming: confirmId === entry.id,
                     deletionPlan: deletionPlans[entry.id],
                     error: errors[entry.id],

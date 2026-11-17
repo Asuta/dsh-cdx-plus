@@ -1182,7 +1182,11 @@ function showComment(edit = null) {
     const ok = edit
       ? changeNote(targetSession, target.id, comment)
       : insertQuote(targetSession, target.text, comment, target.code, target.source, target.range)
-    if (ok) { hideBar(); window.getSelection()?.removeAllRanges?.() }
+    if (ok) {
+      hideBar(); window.getSelection()?.removeAllRanges?.()
+      // Let the annotation popup unmount before returning to this session's editor.
+      window.requestAnimationFrame(() => inputShellFor(targetSession)?.focus())
+    }
   }
   sendBtn.addEventListener('click', submit)
   cancelBtn.addEventListener('click', () => {
@@ -1193,6 +1197,7 @@ function showComment(edit = null) {
     if (event.isComposing || event.keyCode === 229) return
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
+      event.stopPropagation()
       submit()
     } else if (event.key === 'Escape') {
       event.preventDefault()

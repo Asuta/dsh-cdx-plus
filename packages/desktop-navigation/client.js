@@ -1139,6 +1139,15 @@ window.__ModuleLoader__.load({
 			const state = rowState(row);
 			const label = statusLabel(row, t);
 			const [menuOpen, setMenuOpen] = (0, react.useState)(false);
+			const [menuPoint, setMenuPoint] = (0, react.useState)(undefined);
+			(0, react.useEffect)(() => {
+				if (!menuOpen) return;
+				// Contextual Menu ignores outside right-clicks. Close in capture before
+				// another row opens its menu, even when its handler stops propagation.
+				const close = () => setMenuOpen(false);
+				document.addEventListener("contextmenu", close, true);
+				return () => document.removeEventListener("contextmenu", close, true);
+			}, [menuOpen]);
 			const recentHover = react.useContext(RecentHoverContext);
 			const active = menuOpen;
 			const rowClass = [
@@ -1153,6 +1162,7 @@ window.__ModuleLoader__.load({
 					className: "desktop-navigation-recent-anchor",
 					children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
 						className: rowClass,
+						onContextMenu: (event) => { event.preventDefault(); event.stopPropagation(); recentHover.dismiss(); setMenuPoint({ x: event.clientX, y: event.clientY }); setMenuOpen(true); },
 						role: "treeitem",
 						tabIndex: 0,
 						"data-workspace": showWorkspace ? "" : void 0,
@@ -1215,6 +1225,8 @@ window.__ModuleLoader__.load({
 										children: [
 											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Menu, {
 												open: menuOpen,
+												anchorPoint: menuPoint,
+												contextual: menuPoint !== undefined,
 												onClose: () => {
 													setMenuOpen(false);
 												},
@@ -1225,7 +1237,7 @@ window.__ModuleLoader__.load({
 													className: RecentSessions_module_css_default.iconButton,
 													"aria-label": t("actions.session.aria", { name: row.title }),
 													onClick: () => {
-														setMenuOpen((open) => !open);
+														setMenuPoint(undefined); setMenuOpen((open) => !open);
 													},
 													children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconEllipsisOutlineRegular, {})
 												}),

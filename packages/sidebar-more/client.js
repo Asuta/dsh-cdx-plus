@@ -257,7 +257,8 @@ window.__ModuleLoader__.load({
                 renderSlot: props.renderSlot, renderFactorySlot: props.renderFactorySlot,
                 t: props.t, requestSessionRename: props.requestSessionRename,
                 useContextMenuTarget: props.useContextMenuTarget,
-              }), [props.renderSlot, props.renderFactorySlot, props.t, props.requestSessionRename, props.useContextMenuTarget])
+                useContextMenu: props.useContextMenu,
+              }), [props.renderSlot, props.renderFactorySlot, props.t, props.requestSessionRename, props.useContextMenuTarget, props.useContextMenu])
               React.useLayoutEffect(() => {
                 nativeRowBridge.publish(bridge)
                 return () => nativeRowBridge.release(bridge)
@@ -431,7 +432,7 @@ window.__ModuleLoader__.load({
     function PinnedRow({ row, current, label, onOpen, onUnpin, native, now }) {
       const classes = nativeRowClasses()
       // During native owner startup/reload keep the original safe minimal row.
-      if (!native || !classes || typeof native.renderFactorySlot !== 'function' || typeof native.useContextMenuTarget !== 'function') return React.createElement('li', { className: 'sm-pin-item' },
+      if (!native || !classes || typeof native.renderFactorySlot !== 'function' || typeof native.useContextMenuTarget !== 'function' || typeof native.useContextMenu !== 'function') return React.createElement('li', { className: 'sm-pin-item' },
         React.createElement('div', { className: 'sm-pin-row sm-pin-fallback', role: 'treeitem', tabIndex: 0, 'aria-selected': current, onClick: () => onOpen(row.id), onKeyDown: e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen(row.id) } } },
           React.createElement('span', { className: 'sm-pin-title' }, row.title || label('untitled')),
           React.createElement('button', { type: 'button', className: 'sm-pin-action', 'aria-label': label('unpin'), onClick: e => { e.stopPropagation(); onUnpin(row.id) } }, React.createElement(primitives.IconPinFillRegular))))
@@ -439,6 +440,7 @@ window.__ModuleLoader__.load({
     }
 
     function NativePinnedRow({ row, current, onOpen, native, now, classes }) {
+      const { getTriggerProps } = native.useContextMenu()
       const menuOpen = native.useContextMenuTarget(target => target?.kind === 'session' && target.value.sessionId === row.id)
       const titleRef = React.useRef(null)
       const frame = React.useRef(0)
@@ -471,6 +473,7 @@ window.__ModuleLoader__.load({
       }
       const status = React.createElement(React.Fragment, null, React.createElement(primitives.StateDot, { state: primary.state }), statuses.map(item => React.createElement('span', { key: item.label, className: classes.visuallyHidden }, item.label)))
       const anchor = React.createElement('div', {
+        ...getTriggerProps({ kind: 'session', value: { sessionId: row.id, displayTitle: row.title } }),
         className: [classes.sessionRow, current && classes.selected, menuOpen && classes.menuOpen, 'sm-pin-native-row'].filter(Boolean).join(' '),
         'data-row-key': `session:${row.id}`, 'data-sm-native-row': '', role: 'treeitem', tabIndex: 0, 'aria-selected': current,
         onClick: () => onOpen(row.id), onPointerEnter: enterTitle, onPointerLeave: leaveTitle,
