@@ -1135,19 +1135,13 @@ window.__ModuleLoader__.load({
 		*   after the running one, so its `li` carries the gap between the two states.
 		* @returns the row element.
 		*/
-		function RecentRowItem({ row, now, t, actions, onArchive, showWorkspace, separatesGroups }) {
+		function RecentRowItem({ row, now, t, actions, onArchive, showWorkspace, separatesGroups, useContextMenu, useContextMenuTarget, renderFactorySlot }) {
 			const state = rowState(row);
 			const label = statusLabel(row, t);
-			const [menuOpen, setMenuOpen] = (0, react.useState)(false);
-			const [menuPoint, setMenuPoint] = (0, react.useState)(undefined);
-			(0, react.useEffect)(() => {
-				if (!menuOpen) return;
-				// Contextual Menu ignores outside right-clicks. Close in capture before
-				// another row opens its menu, even when its handler stops propagation.
-				const close = () => setMenuOpen(false);
-				document.addEventListener("contextmenu", close, true);
-				return () => document.removeEventListener("contextmenu", close, true);
-			}, [menuOpen]);
+			const menuOpen = useContextMenuTarget(target => target?.kind === "session" && target.value.sessionId === row.id);
+const { getTriggerProps } = useContextMenu();
+const target = { kind: "session", value: { sessionId: row.id, displayTitle: row.title } };
+const trigger = getTriggerProps(target);
 			const recentHover = react.useContext(RecentHoverContext);
 			const active = menuOpen;
 			const rowClass = [
@@ -1161,8 +1155,7 @@ window.__ModuleLoader__.load({
 				children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {
 					className: "desktop-navigation-recent-anchor",
 					children: /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("div", {
-						className: rowClass,
-						onContextMenu: (event) => { event.preventDefault(); event.stopPropagation(); recentHover.dismiss(); setMenuPoint({ x: event.clientX, y: event.clientY }); setMenuOpen(true); },
+						className: rowClass, onContextMenu: event => { recentHover.dismiss(); trigger.onContextMenu?.(event); },
 						role: "treeitem",
 						tabIndex: 0,
 						"data-workspace": showWorkspace ? "" : void 0,
@@ -1185,7 +1178,7 @@ window.__ModuleLoader__.load({
 							event.dataTransfer.setData("text/plain", row.id);
 						},
 						onKeyDown: (event) => {
-							if (event.key !== "Enter" && event.key !== " ") return;
+							if (event.target !== event.currentTarget) return; trigger.onKeyDown?.(event); if (event.defaultPrevented || (event.key !== "Enter" && event.key !== " ")) return;
 							event.preventDefault();
 							actions.open(row.id);
 						},
@@ -1223,49 +1216,8 @@ window.__ModuleLoader__.load({
 											event.stopPropagation();
 										},
 										children: [
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Menu, {
-												open: menuOpen,
-												anchorPoint: menuPoint,
-												contextual: menuPoint !== undefined,
-												onClose: () => {
-													setMenuOpen(false);
-												},
-												portal: true,
-												closeOnPointerLeave: true,
-												anchor: /* @__PURE__ */ (0, react_jsx_runtime.jsx)("button", {
-													type: "button",
-													className: RecentSessions_module_css_default.iconButton,
-													"aria-label": t("actions.session.aria", { name: row.title }),
-													onClick: () => {
-														setMenuPoint(undefined); setMenuOpen((open) => !open);
-													},
-													children: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconEllipsisOutlineRegular, {})
-												}),
-												items: [
-													{
-														id: "pin",
-														label: t(row.pinned ? "menu.unpinSession" : "menu.pinSession"),
-														icon: row.pinned ? /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconPinFillRegular, {}) : /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconPinOutlineRegular, {})
-													},
-													{
-														id: "fork",
-														label: t("menu.fork"),
-														icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconBranchOutlineRegular, {})
-													},
-													{
-														id: "archive",
-														label: t("menu.archiveSession"),
-														icon: /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconArchiveOutlineRegular, { size: 14 })
-													}
-												],
-												onSelect: (id) => {
-													setMenuOpen(false);
-													if (id === "pin") (row.pinned ? actions.unpin : actions.pin)(row.id);
-													else if (id === "fork") actions.fork(row.id);
-													else onArchive(row);
-												}
-											}),
-											/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
+											renderFactorySlot("contextMenu.button", { target, label: t("actions.session.aria", { name: row.title }), className: RecentSessions_module_css_default.iconButton }),
+/* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.Tooltip, {
 												label: t("actions.archive"),
 												side: "bottom",
 												align: "end",
@@ -1365,7 +1317,7 @@ window.__ModuleLoader__.load({
 		* @param props - composed slot props (owner wide flag, standard kit hooks, injected actions, locale seat).
 		* @returns the section element, or null while the rail is collapsed or no session holds history.
 		*/
-		function RecentSessions({ wide, t, useSessions, useSessionStatus, useWorkspaces, open, archive, stopAndArchive, pin, unpin, fork }) {
+		function RecentSessions({ wide, t, useSessions, useSessionStatus, useWorkspaces, open, archive, stopAndArchive, pin, unpin, fork, useContextMenu, useContextMenuTarget, renderFactorySlot }) {
 			const list = useSessions((snapshot) => snapshot);
 			const status = useSessionStatus((snapshot) => snapshot);
 			const workspaces = useWorkspaces((snapshot) => snapshot);
@@ -1511,7 +1463,7 @@ window.__ModuleLoader__.load({
 							onClick: () => {
 								setRecentFolded((current) => !current);
 							},
-							children: [t("section.recent"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { className: recentFolded ? RecentSessions_module_css_default.chevron : `${RecentSessions_module_css_default.chevron} ${RecentSessions_module_css_default.chevronOpen}` })]
+							children: [t("section.recent"), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconChevronRightOutlineRegular, { size: 14, className: recentFolded ? RecentSessions_module_css_default.chevron : `${RecentSessions_module_css_default.chevron} ${RecentSessions_module_css_default.chevronOpen}` })]
 						}), /* @__PURE__ */ (0, react_jsx_runtime.jsx)(ViewOptionsMenu, {
 							showWorkspace,
 							onToggleWorkspace: () => {
@@ -1530,7 +1482,7 @@ window.__ModuleLoader__.load({
 							now,
 							t,
 							actions,
-							onArchive: archiveRow,
+							onArchive: archiveRow, useContextMenu, useContextMenuTarget, renderFactorySlot,
 							showWorkspace,
 							separatesGroups: index > 0 && visibleRows[index - 1]?.running === true && !row.running
 						}, row.id)), !recentFolded && visibleRows.length < rows.length && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("li", {
@@ -1618,7 +1570,7 @@ window.__ModuleLoader__.load({
 			"slots",
 			"locale",
 			"uiSession",
-			"uiWorkspace"
+			"uiWorkspace", "contextMenus"
 		];
 		/**
 		* Client plugin body: contribute the 最近 section to the sidebar foot. The
@@ -1636,7 +1588,7 @@ window.__ModuleLoader__.load({
 				id: "recent",
 				order: 30,
 				locale: NS,
-				inject: () => recentActions(ctx.uiWorkspace)
+				inject: () => ({ ...recentActions(ctx.uiWorkspace), hooks: { contextMenuTarget: ctx.contextMenus.active } })
 			}, RecentSessions));
 		}
 		//#endregion
@@ -1837,11 +1789,12 @@ function installNavigation(ctx) {
   ctx.effect(() => {
     const tag = document.createElement('style');
     tag.dataset.pluginCss = 'dsh-asuta-desktop-navigation/recent-layout.css';
-    tag.textContent = '[data-slot="sidebar.recent.section"] > [class*="_header"] { box-sizing: border-box; padding-left: var(--dsh-sidebar-row-padding, 12px); padding-right: 1px; }';
+    tag.textContent = '[data-slot="sidebar.recent.section"] > [class*="_header"] { box-sizing: border-box; width:var(--recent-toolbar-width, 100%); padding-left: var(--dsh-sidebar-row-padding, 12px); padding-right: 1px; }';
     tag.textContent += '.desktop-navigation-recent-anchor{position:relative;display:block}.aalpzW_row .aalpzW_rowActions{display:none}.aalpzW_row:hover .aalpzW_rowActions,.aalpzW_rowActive .aalpzW_rowActions{display:inline-flex}.aalpzW_row:hover .aalpzW_time,.aalpzW_row:hover .aalpzW_pinIndicator,.aalpzW_rowActive .aalpzW_time,.aalpzW_rowActive .aalpzW_pinIndicator{display:none}';
     document.head.appendChild(tag);
     return () => { tag.remove(); };
   }, 'desktop-navigation: align recent section header');
+  ctx.effect(() => installRecentHeaderAlignment(), 'desktop-navigation: follow native toolbar geometry');
   ctx.effect(() => installRecentRenameBridge(ctx), 'desktop-navigation: native recent rename bridge');
   installChatNavigation(ctx, (sessionId) => createNativeOpener({
     cwd: () => ctx.get('sessions')?.list?.getSnapshot()?.byId?.[sessionId]?.cwd,
@@ -1858,6 +1811,38 @@ function installNavigation(ctx) {
       return result;
     },
   }), message => reportClientStage('navigation-render-error', message), react);
+}
+
+// The native workspace owns a scroll gutter and trailing slot. Follow its actual
+// action edge instead of duplicating those implementation-specific offsets.
+function installRecentHeaderAlignment() {
+  let frame = 0, header = null, observed = []
+  const sync = () => {
+    frame = 0
+    const native = document.querySelector('[data-sidebar-workspace-header]')
+    const next = document.querySelector('[data-pc-header]') || document.querySelector('[data-slot="sidebar.recent.section"] > [class*="_header"]')
+    if (header !== next) header?.style.removeProperty('--recent-toolbar-width')
+    header = next
+    const actions = native?.querySelector('[class*="_headerActions"]')
+    const nodes = [native, actions, header?.parentElement].filter(Boolean)
+    if (nodes.some((node, i) => node !== observed[i]) || nodes.length !== observed.length) {
+      resize.disconnect(); nodes.forEach(node => resize.observe(node)); observed = nodes
+    }
+    if (!header || !actions || !actions.getBoundingClientRect().width) return
+    const width = actions.getBoundingClientRect().right - header.getBoundingClientRect().left + 1
+    if (width > 0) header.style.setProperty('--recent-toolbar-width', width + 'px')
+  }
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(sync) }
+  const resize = new ResizeObserver(schedule)
+  const mutations = new MutationObserver(schedule)
+  mutations.observe(document.body, { childList: true, subtree: true })
+  window.addEventListener('resize', schedule)
+  schedule()
+  return () => {
+    cancelAnimationFrame(frame); resize.disconnect(); mutations.disconnect()
+    window.removeEventListener('resize', schedule)
+    header?.style.removeProperty('--recent-toolbar-width')
+  }
 }
 
 const RecentHoverContext = react.createContext(null);
@@ -1948,7 +1933,7 @@ function RecentMotionList({ folded, rows, now, t, className, children }) {
   return react.createElement(RecentHoverContext.Provider, { value: hover },
     react.createElement('div', { className: 'desktop-navigation-recent-motion', 'data-open': shown && !folded ? '' : undefined, 'aria-hidden': folded ? 'true' : undefined, ref: element => { if (element) element.inert = folded; } },
       react.createElement('div', { className: 'desktop-navigation-recent-clip' }, mounted ? react.createElement('ul', { className }, children) : null),
-      react.createElement('style', null, '.desktop-navigation-recent-motion{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 180ms ease,opacity 140ms ease}.desktop-navigation-recent-motion[data-open]{grid-template-rows:1fr;opacity:1}.desktop-navigation-recent-clip{min-height:0;overflow:hidden}.desktop-navigation-recent-card{--dsw-hovercard-bg:#2C2C2E;position:fixed;position-anchor:--dsh-recent-hover-anchor;left:calc(anchor(right) + 8px);top:anchor(top);position-try-fallbacks:--dsh-recent-bottom;z-index:100;box-sizing:border-box;width:244px;padding:12px 16px;border-radius:var(--dsw-radius-lg);background:var(--dsw-hovercard-bg);box-shadow:var(--dsw-shadow-lv3);cursor:pointer}@position-try --dsh-recent-bottom{top:auto;bottom:8px}.desktop-navigation-recent-card:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.desktop-navigation-recent-copied{color:#fff;font-size:14px;line-height:20px;text-align:center}.aalpzW_chevron{transition:transform 180ms ease!important}@media(prefers-reduced-motion:reduce){.desktop-navigation-recent-motion,.aalpzW_chevron,[data-dsh-recent-section-chevron]{transition:none!important}}')),
+      react.createElement('style', null, '.desktop-navigation-recent-motion{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 180ms ease,opacity 140ms ease}.desktop-navigation-recent-motion[data-open]{grid-template-rows:1fr;opacity:1}.desktop-navigation-recent-clip{min-height:0;overflow:hidden}.desktop-navigation-recent-card{--dsw-hovercard-bg:#2C2C2E;position:fixed;position-anchor:--dsh-recent-hover-anchor;left:calc(anchor(right) + 8px);top:anchor(top);position-try-fallbacks:--dsh-recent-bottom;z-index:100;box-sizing:border-box;width:244px;padding:12px 16px;border-radius:var(--dsw-radius-lg);background:var(--dsw-hovercard-bg);box-shadow:var(--dsw-shadow-lv3);cursor:pointer}@position-try --dsh-recent-bottom{top:auto;bottom:8px}.desktop-navigation-recent-card:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.desktop-navigation-recent-copied{color:#fff;font-size:14px;line-height:20px;text-align:center}.aalpzW_chevron{transition:transform 150ms var(--ds-ease-in-out)!important}@media(prefers-reduced-motion:reduce){.desktop-navigation-recent-motion,.aalpzW_chevron,[data-dsh-recent-section-chevron]{transition:none!important}}')),
     card && react_dom.createPortal(react.createElement('div', {
       className: 'desktop-navigation-recent-card',
       role: 'button', tabIndex: 0,

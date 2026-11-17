@@ -1,3 +1,4 @@
+import { patchRecentMenu } from './recent-menu.patch.mjs';
 import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 const root = new URL('./', import.meta.url);
@@ -36,19 +37,7 @@ replaceOnce('setHovered(false);', 'recentHover.leave(row.id);');
 replaceOnce('draggable: true,', 'onPointerDownCapture: () => recentHover.dismiss(),\n\t\t\t\t\t\tdraggable: true,');
 replaceOnce('const [hovered, setHovered] = (0, react.useState)(false);', 'const recentHover = react.useContext(RecentHoverContext);');
 replaceOnce('const active = hovered || menuOpen;', 'const active = menuOpen;');
-replaceOnce('const [menuOpen, setMenuOpen] = (0, react.useState)(false);', 'const [menuOpen, setMenuOpen] = (0, react.useState)(false);\n\t\t\tconst [menuPoint, setMenuPoint] = (0, react.useState)(undefined);');
-replaceOnce('const [menuPoint, setMenuPoint] = (0, react.useState)(undefined);', `const [menuPoint, setMenuPoint] = (0, react.useState)(undefined);
-			(0, react.useEffect)(() => {
-				if (!menuOpen) return;
-				// Contextual Menu ignores outside right-clicks. Close in capture before
-				// another row opens its menu, even when its handler stops propagation.
-				const close = () => setMenuOpen(false);
-				document.addEventListener("contextmenu", close, true);
-				return () => document.removeEventListener("contextmenu", close, true);
-			}, [menuOpen]);`);
-replaceOnce('className: rowClass,', 'className: rowClass,\n\t\t\t\t\t\tonContextMenu: (event) => { event.preventDefault(); event.stopPropagation(); recentHover.dismiss(); setMenuPoint({ x: event.clientX, y: event.clientY }); setMenuOpen(true); },');
-replaceOnce('open: menuOpen,', 'open: menuOpen,\n\t\t\t\t\t\t\t\t\t\t\t\tanchorPoint: menuPoint,\n\t\t\t\t\t\t\t\t\t\t\t\tcontextual: menuPoint !== undefined,');
-replaceOnce('setMenuOpen((open) => !open);', 'setMenuPoint(undefined); setMenuOpen((open) => !open);');
+patchRecentMenu(client, replaceOnce);
 replaceOnce('!active && /* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {', '/* @__PURE__ */ (0, react_jsx_runtime.jsx)("span", {');
 replaceOnce('!active && row.pinned &&', 'row.pinned &&');
 replaceOnce('active && /* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {', '/* @__PURE__ */ (0, react_jsx_runtime.jsxs)("span", {');

@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "42e24534af0097a8335d14b1108521a38999993b",
+  "sourceCommit": "ef8f316c06c9635911b962361155a658ad5dacad",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.3",
   "dshCompatibility": ">=0.2.2-rc.2",
@@ -29,7 +29,7 @@
     {
       "directory": "archived-sessions",
       "name": "dsh-asuta-archived-sessions",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "title": "归档会话管理",
       "rowId": "archived-sessions",
       "bundleConfig": false
@@ -53,7 +53,7 @@
     {
       "directory": "desktop-navigation",
       "name": "dsh-asuta-desktop-navigation",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "title": "桌面导航",
       "rowId": "desktop-enhancements",
       "bundleConfig": false
@@ -109,7 +109,7 @@
     {
       "directory": "projectless-chat",
       "name": "dsh-asuta-projectless-chat",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "title": "无工作区对话",
       "rowId": "projectless-chat",
       "bundleConfig": false
@@ -149,7 +149,7 @@
     {
       "directory": "sidebar-more",
       "name": "dsh-asuta-sidebar-more",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "title": "侧栏整理",
       "rowId": "sidebar-more",
       "bundleConfig": false

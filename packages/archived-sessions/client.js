@@ -30,6 +30,7 @@ window.__ModuleLoader__.load({
       title: 'Archived sessions',
       count: '{n} archived',
       archiveOrder: 'Most recently archived first',
+      dragHint: 'Hold and drag across rows to select. Start on a selected row to deselect.',
       selectAll: 'Select all', selected: '{n} selected', selectRow: 'Select {title}',
       restoreSelected: 'Restore selected', deleteSelected: 'Delete selected permanently',
       batchConfirm: 'Permanently delete {n} conversations, including {a} additional linked side chats. This cannot be undone.',
@@ -66,6 +67,7 @@ window.__ModuleLoader__.load({
       title: '已归档会话',
       count: '已归档 {n} 条',
       archiveOrder: '按归档先后排序，最近归档在前',
+      dragHint: '按住鼠标划过条目可连续选择；从已选条目开始拖动可取消选择。',
       selectAll: '全选', selected: '已选择 {n} 条', selectRow: '选择 {title}',
       restoreSelected: '恢复所选', deleteSelected: '彻底删除所选',
       batchConfirm: '将永久删除 {n} 条对话，其中包含额外关联的 {a} 条侧边对话，无法撤销。',
@@ -165,6 +167,8 @@ window.__ModuleLoader__.load({
 .asx-list{display:flex;flex-direction:column;gap:8px}
 .asx-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--dsw-alias-border-l2);border-radius:12px}
 .asx-row.is-busy{opacity:.6}
+.asx-list[data-drag-selecting]{user-select:none}
+.asx-row[data-selected]{background:var(--dsw-alias-interactive-bg-hover)}
 .asx-main{flex:1;min-width:0}
 .asx-title{font-size:13px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .asx-sub{font-size:11px;color:var(--dsw-alias-label-secondary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -181,6 +185,99 @@ window.__ModuleLoader__.load({
 .asx-empty{padding:40px 0;text-align:center;font-size:13px;color:var(--dsw-alias-label-secondary)}
 .asx-empty-hint{font-size:12px;margin-top:6px;opacity:.8}
 `
+
+    // Mouse painting only changes selection. Action buttons never start a gesture.
+    function installArchiveDragSelection(root, readState) {
+      let drag = null, frame = 0, suppressClick = false, clickTimer = 0
+      const doc = root.ownerDocument, win = doc.defaultView
+      const stop = () => {
+        if (drag?.active) {
+          suppressClick = true
+          win.clearTimeout(clickTimer)
+          clickTimer = win.setTimeout(() => { suppressClick = false }, 0)
+        }
+        drag = null
+        root.removeAttribute('data-drag-selecting')
+        win.cancelAnimationFrame(frame)
+      }
+      const paint = (fromY, toY) => {
+        if (!drag || readState().locked) { stop(); return }
+        const bounds = root.getBoundingClientRect()
+        if (drag.x < bounds.left || drag.x > bounds.right) return
+        let changed = false
+        for (const row of root.querySelectorAll('[data-archive-id]')) {
+          const rect = row.getBoundingClientRect()
+          if (rect.bottom < Math.min(fromY, toY) || rect.top > Math.max(fromY, toY)) continue
+          const id = row.dataset.archiveId
+          if (drag.visited.has(id)) continue
+          drag.visited.add(id)
+          if (drag.select) drag.ids.add(id)
+          else drag.ids.delete(id)
+          changed = true
+        }
+        if (changed) readState().changeSelection([...drag.ids])
+      }
+      const tick = () => {
+        if (!drag?.active || readState().locked) { stop(); return }
+        const scroll = drag.scroll
+        const bounds = scroll.getBoundingClientRect()
+        const top = Math.max(0, bounds.top), bottom = Math.min(win.innerHeight, bounds.bottom)
+        const rootBounds = root.getBoundingClientRect()
+        if (drag.x >= rootBounds.left && drag.x <= rootBounds.right) {
+          const delta = drag.y < top + 36 ? -10 : drag.y > bottom - 36 ? 10 : 0
+          if (delta) { scroll.scrollTop += delta; paint(drag.y, drag.y) }
+        }
+        if (drag) frame = win.requestAnimationFrame(tick)
+      }
+      const down = event => {
+        if (event.button !== 0 || event.pointerType !== 'mouse' || readState().locked) return
+        if (event.target.closest('button,a,[role="button"],.asx-actions')) return
+        const row = event.target.closest('[data-archive-id]')
+        if (!row || !root.contains(row)) return
+        stop()
+        suppressClick = false
+        const ids = new Set(readState().selectedIds)
+        let scroll = root.parentElement
+        while (scroll && !/(auto|scroll)/.test(win.getComputedStyle(scroll).overflowY)) scroll = scroll.parentElement
+        drag = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY,
+          ids, visited: new Set(), select: !ids.has(row.dataset.archiveId), active: false, scroll: scroll || doc.scrollingElement }
+        // Prevent native text dragging without taking over a checkbox's click.
+        event.preventDefault()
+      }
+      const move = event => {
+        if (!drag || event.pointerId !== drag.pointerId) return
+        if (!(event.buttons & 1) || readState().locked) { stop(); return }
+        const previousY = drag.y
+        drag.x = event.clientX; drag.y = event.clientY
+        if (!drag.active) {
+          if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) < 4) return
+          drag.active = true
+          root.setAttribute('data-drag-selecting', '')
+          paint(drag.startY, drag.y)
+          frame = win.requestAnimationFrame(tick)
+        } else paint(previousY, drag.y)
+        event.preventDefault()
+      }
+      const end = event => { if (drag && event.pointerId === drag.pointerId) stop() }
+      const click = event => {
+        if (suppressClick) { event.preventDefault(); event.stopImmediatePropagation(); suppressClick = false }
+      }
+      root.addEventListener('pointerdown', down)
+      root.addEventListener('click', click, true)
+      doc.addEventListener('pointermove', move, { passive: false })
+      doc.addEventListener('pointerup', end)
+      doc.addEventListener('pointercancel', end)
+      win.addEventListener('blur', stop)
+      return () => {
+        stop(); win.clearTimeout(clickTimer)
+        root.removeEventListener('pointerdown', down)
+        root.removeEventListener('click', click, true)
+        doc.removeEventListener('pointermove', move)
+        doc.removeEventListener('pointerup', end)
+        doc.removeEventListener('pointercancel', end)
+        win.removeEventListener('blur', stop)
+      }
+    }
 
     function SessionRow({ entry, t, busy, selected, onSelect, confirming, deletionPlan, error, onRestore, onAskDelete, onCancelDelete, onConfirmDelete }) {
       const title = entry.missing
@@ -205,7 +302,7 @@ window.__ModuleLoader__.load({
 
       return h(
         'div',
-        { className: busy ? 'asx-row is-busy' : 'asx-row' },
+        { className: busy ? 'asx-row is-busy' : 'asx-row', 'data-archive-id': entry.id, 'data-selected': selected ? '' : undefined },
         h('input', { type: 'checkbox', checked: selected, disabled: busy, onChange: onSelect, 'aria-label': t('selectRow').replace('{title}', title) }),
         h(
           'div',
@@ -278,6 +375,12 @@ window.__ModuleLoader__.load({
       }, [entries])
       const changeSelection = ids => { setSelected(ids); setBatchPlan(null); setConfirmId(null) }
       const locked = batchBusy || busyId !== null || purging
+      const listRef = React.useRef(null)
+      const selectionRef = React.useRef(null)
+      selectionRef.current = { locked, selectedIds, changeSelection }
+      React.useEffect(() => {
+        if (listRef.current) return installArchiveDragSelection(listRef.current, () => selectionRef.current)
+      }, [entries.length > 0])
 
       const setError = (id, message) => {
         setErrors((previous) => ({ ...previous, [id]: message }))
@@ -451,7 +554,7 @@ window.__ModuleLoader__.load({
             h('span', { className: 'asx-count' }, formatCount(t('count'), entries.length)),
           ),
           h('p', { className: 'asx-note' }, t('deleteNote')),
-          h('p', { className: 'asx-note' }, t('archiveOrder')),
+          h('p', { className: 'asx-note' }, t('archiveOrder'), h('br'), t('dragHint')),
           entries.length > 0 ? h('div', { className: 'asx-leftovers' },
             h('label', null, h('input', { type: 'checkbox', checked: selectedIds.length === entries.length, disabled: locked,
               ref: node => { if (node) node.indeterminate = selectedIds.length > 0 && selectedIds.length < entries.length },
@@ -490,7 +593,7 @@ window.__ModuleLoader__.load({
               )
             : h(
                 'div',
-                { className: 'asx-list' },
+                { className: 'asx-list', ref: listRef },
                 entries.map((entry) =>
                   h(SessionRow, {
                     key: entry.id,

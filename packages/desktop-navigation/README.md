@@ -10,6 +10,8 @@ Installed in the current profile as `dsh-asuta-desktop-navigation` through a loc
 
 ## Behavior
 
+Recent's right-click and More button use the host's shared session menu, including rename, copy Session ID, native open actions and the host's permission checks. Its toolbar follows the native workspace action edge when the sidebar resizes; section chevrons use the same 14px geometry.
+
 Existing Chat blue file links retain the original StoredEntry, component inputs, child declarations, store, hooks, localization, and error/retry surface. A guarded wrapper around that entry's component changes only its `openFile` prop. Relative paths use the viewed Session's current workspace. A directory opens directly in Explorer; a file reveals its containing directory and selects the file. HTTP(S), arbitrary schemes, UNC shares, device paths, control characters, alternate data streams, and unresolved relative paths are rejected. Line anchors such as `#L24-L30` are removed from filesystem targets.
 
 A small authenticated Host route, `POST /desktop-navigation/path-info`, performs read-only metadata checks through the composed `fs` capability and refuses absent/unsupported targets. It verifies a local Host mapping and revalidates the canonical path. The Client then calls the existing native `remote.session.openWorkspacePath` operation: directories use ordinary open and files use `action: reveal`. Paths never become shell commands. This bundle contains no subprocess launches and no alternative URL opener.

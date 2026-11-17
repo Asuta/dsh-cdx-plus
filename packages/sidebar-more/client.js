@@ -72,8 +72,9 @@ window.__ModuleLoader__.load({
          and this toggle spans the whole row, so a pill would read as a stray
          control next to 「工作区」/「最近」. Keyboard focus stays visible. */
       .sm-pin-toggle:focus-visible { outline: 1px solid var(--dsw-alias-label-tertiary); outline-offset: 1px; }`,
-      `.sm-pin-chevron { width: 16px; height: 16px; flex: none; transform: rotate(0deg); transition: transform 120ms ease; }`,
+      `.sm-pin-chevron { width: 14px; height: 14px; flex: none; transform: rotate(0deg); transition: transform 150ms var(--ds-ease-in-out); }`,
       `.sm-pin-chevron-open { transform: rotate(90deg); }`,
+      '@media(prefers-reduced-motion:reduce){.sm-pin-chevron{transition:none}}',
       `.sm-pin-list { display: flex; flex-direction: column; gap: 1px; margin: 0; padding: 0;
         list-style: none; max-height: 268px; overflow-y: auto; overscroll-behavior: contain;
         scrollbar-width: thin; }`,

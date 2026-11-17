@@ -84,11 +84,12 @@ function installNavigation(ctx) {
   ctx.effect(() => {
     const tag = document.createElement('style');
     tag.dataset.pluginCss = 'dsh-asuta-desktop-navigation/recent-layout.css';
-    tag.textContent = '[data-slot="sidebar.recent.section"] > [class*="_header"] { box-sizing: border-box; padding-left: var(--dsh-sidebar-row-padding, 12px); padding-right: 1px; }';
+    tag.textContent = '[data-slot="sidebar.recent.section"] > [class*="_header"] { box-sizing: border-box; width:var(--recent-toolbar-width, 100%); padding-left: var(--dsh-sidebar-row-padding, 12px); padding-right: 1px; }';
     tag.textContent += '.desktop-navigation-recent-anchor{position:relative;display:block}.aalpzW_row .aalpzW_rowActions{display:none}.aalpzW_row:hover .aalpzW_rowActions,.aalpzW_rowActive .aalpzW_rowActions{display:inline-flex}.aalpzW_row:hover .aalpzW_time,.aalpzW_row:hover .aalpzW_pinIndicator,.aalpzW_rowActive .aalpzW_time,.aalpzW_rowActive .aalpzW_pinIndicator{display:none}';
     document.head.appendChild(tag);
     return () => { tag.remove(); };
   }, 'desktop-navigation: align recent section header');
+  ctx.effect(() => installRecentHeaderAlignment(), 'desktop-navigation: follow native toolbar geometry');
   ctx.effect(() => installRecentRenameBridge(ctx), 'desktop-navigation: native recent rename bridge');
   installChatNavigation(ctx, (sessionId) => createNativeOpener({
     cwd: () => ctx.get('sessions')?.list?.getSnapshot()?.byId?.[sessionId]?.cwd,
@@ -105,6 +106,38 @@ function installNavigation(ctx) {
       return result;
     },
   }), message => reportClientStage('navigation-render-error', message), react);
+}
+
+// The native workspace owns a scroll gutter and trailing slot. Follow its actual
+// action edge instead of duplicating those implementation-specific offsets.
+function installRecentHeaderAlignment() {
+  let frame = 0, header = null, observed = []
+  const sync = () => {
+    frame = 0
+    const native = document.querySelector('[data-sidebar-workspace-header]')
+    const next = document.querySelector('[data-pc-header]') || document.querySelector('[data-slot="sidebar.recent.section"] > [class*="_header"]')
+    if (header !== next) header?.style.removeProperty('--recent-toolbar-width')
+    header = next
+    const actions = native?.querySelector('[class*="_headerActions"]')
+    const nodes = [native, actions, header?.parentElement].filter(Boolean)
+    if (nodes.some((node, i) => node !== observed[i]) || nodes.length !== observed.length) {
+      resize.disconnect(); nodes.forEach(node => resize.observe(node)); observed = nodes
+    }
+    if (!header || !actions || !actions.getBoundingClientRect().width) return
+    const width = actions.getBoundingClientRect().right - header.getBoundingClientRect().left + 1
+    if (width > 0) header.style.setProperty('--recent-toolbar-width', width + 'px')
+  }
+  const schedule = () => { if (!frame) frame = requestAnimationFrame(sync) }
+  const resize = new ResizeObserver(schedule)
+  const mutations = new MutationObserver(schedule)
+  mutations.observe(document.body, { childList: true, subtree: true })
+  window.addEventListener('resize', schedule)
+  schedule()
+  return () => {
+    cancelAnimationFrame(frame); resize.disconnect(); mutations.disconnect()
+    window.removeEventListener('resize', schedule)
+    header?.style.removeProperty('--recent-toolbar-width')
+  }
 }
 
 const RecentHoverContext = react.createContext(null);
@@ -195,7 +228,7 @@ function RecentMotionList({ folded, rows, now, t, className, children }) {
   return react.createElement(RecentHoverContext.Provider, { value: hover },
     react.createElement('div', { className: 'desktop-navigation-recent-motion', 'data-open': shown && !folded ? '' : undefined, 'aria-hidden': folded ? 'true' : undefined, ref: element => { if (element) element.inert = folded; } },
       react.createElement('div', { className: 'desktop-navigation-recent-clip' }, mounted ? react.createElement('ul', { className }, children) : null),
-      react.createElement('style', null, '.desktop-navigation-recent-motion{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 180ms ease,opacity 140ms ease}.desktop-navigation-recent-motion[data-open]{grid-template-rows:1fr;opacity:1}.desktop-navigation-recent-clip{min-height:0;overflow:hidden}.desktop-navigation-recent-card{--dsw-hovercard-bg:#2C2C2E;position:fixed;position-anchor:--dsh-recent-hover-anchor;left:calc(anchor(right) + 8px);top:anchor(top);position-try-fallbacks:--dsh-recent-bottom;z-index:100;box-sizing:border-box;width:244px;padding:12px 16px;border-radius:var(--dsw-radius-lg);background:var(--dsw-hovercard-bg);box-shadow:var(--dsw-shadow-lv3);cursor:pointer}@position-try --dsh-recent-bottom{top:auto;bottom:8px}.desktop-navigation-recent-card:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.desktop-navigation-recent-copied{color:#fff;font-size:14px;line-height:20px;text-align:center}.aalpzW_chevron{transition:transform 180ms ease!important}@media(prefers-reduced-motion:reduce){.desktop-navigation-recent-motion,.aalpzW_chevron,[data-dsh-recent-section-chevron]{transition:none!important}}')),
+      react.createElement('style', null, '.desktop-navigation-recent-motion{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 180ms ease,opacity 140ms ease}.desktop-navigation-recent-motion[data-open]{grid-template-rows:1fr;opacity:1}.desktop-navigation-recent-clip{min-height:0;overflow:hidden}.desktop-navigation-recent-card{--dsw-hovercard-bg:#2C2C2E;position:fixed;position-anchor:--dsh-recent-hover-anchor;left:calc(anchor(right) + 8px);top:anchor(top);position-try-fallbacks:--dsh-recent-bottom;z-index:100;box-sizing:border-box;width:244px;padding:12px 16px;border-radius:var(--dsw-radius-lg);background:var(--dsw-hovercard-bg);box-shadow:var(--dsw-shadow-lv3);cursor:pointer}@position-try --dsh-recent-bottom{top:auto;bottom:8px}.desktop-navigation-recent-card:focus-visible{outline:var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}.desktop-navigation-recent-copied{color:#fff;font-size:14px;line-height:20px;text-align:center}.aalpzW_chevron{transition:transform 150ms var(--ds-ease-in-out)!important}@media(prefers-reduced-motion:reduce){.desktop-navigation-recent-motion,.aalpzW_chevron,[data-dsh-recent-section-chevron]{transition:none!important}}')),
     card && react_dom.createPortal(react.createElement('div', {
       className: 'desktop-navigation-recent-card',
       role: 'button', tabIndex: 0,

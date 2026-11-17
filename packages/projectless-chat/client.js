@@ -18,8 +18,10 @@ window.__ModuleLoader__.load({
     const CSS = [
       '.pc-new{display:inline-flex;align-items:center;justify-content:center;flex:none;width:28px;height:28px;padding:0;border:0;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:0;transition:opacity 120ms ease;-webkit-app-region:no-drag}',
       '[data-pc-header]:hover .pc-new,[data-pc-ungrouped]:hover .pc-new{opacity:1}',
-      '.pc-new-ungrouped{margin-left:auto;width:24px;height:24px}',
+      '.pc-new-ungrouped{margin:-4px -4px -4px auto;width:24px;height:24px;border-radius:var(--dsw-radius-xs);color:var(--dsw-alias-label-tertiary)}',
       '.pc-new:hover,.pc-button:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.pc-new-ungrouped:hover{background:transparent;color:var(--dsw-alias-label-primary)}',
+      '.pc-new-ungrouped:focus-visible{outline-offset:-2px}',
       '.pc-new:focus-visible,.pc-button:focus-visible,.pc-input:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:2px}',
       '.pc-new:disabled{cursor:default}.pc-button:disabled,[data-pc-header]:hover .pc-new:disabled,[data-pc-ungrouped]:hover .pc-new:disabled{opacity:.5;cursor:default}',
       '.pc-setting{padding:18px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}',
@@ -247,7 +249,7 @@ window.__ModuleLoader__.load({
         finally { pending.current = false; if (alive.current) setBusy(false) }
       }
       const button = (inUngrouped = false) => h('button', { type: 'button', className: 'pc-new' + (inUngrouped ? ' pc-new-ungrouped' : ''), 'data-projectless-new': '', 'aria-label': busy ? t('creating') : t('create'), title: t('create'), disabled: busy, onClick: event => { event.stopPropagation(); void create() }, onKeyDown: event => { if (event.key === 'Enter' || event.key === ' ') event.stopPropagation() } },
-        h(IconNewChatOutlineRegular, { size: inUngrouped ? 14 : 16 }))
+        h(IconNewChatOutlineRegular, { size: 14 }))
       return h(React.Fragment, null, anchor ? createPortal(button(), anchor) : wide ? h('button', { type: 'button', className: 'pc-button', disabled: busy, onClick: create }, busy ? t('creating') : t('create')) : null,
         ungrouped ? createPortal(button(true), ungrouped) : null,
         error ? createPortal(h('div', { className: 'pc-failure', role: 'alert' }, h('p', { className: 'pc-error' }, t('error') + error), h('button', { type: 'button', className: 'pc-button', onClick: create }, t('retry')), h('button', { type: 'button', className: 'pc-button', onClick: () => setError('') }, t('close'))), document.body) : null)

@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-desktop-navigation",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "type": "module",
   "description": "Open local file paths from DSH conversations and rename recent chats with a double click. · 从 DSH 对话打开本地文件路径，并通过双击重命名最近对话。",
   "license": "MIT",
@@ -24,6 +24,7 @@
     "icon.svg",
     "vendor/*",
     "README.md",
+    "recent-menu.patch.mjs",
     "LICENSE*",
     "NOTICE*",
     "THIRD_PARTY_NOTICES.md"
@@ -47,7 +48,8 @@
         "@deepseek-ai/dsh-client-ui-slots",
         "@deepseek-ai/dsh-client-ui-workspace",
         "@deepseek-ai/dsh-client-ui-chat",
-        "@deepseek-ai/dsh-api-remotes"
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-ui-context-menu"
       ]
     }
   },
