@@ -1,0 +1,404 @@
+/**
+ * Windows native approval notifications for DSH Desktop.
+ *
+ * Electron's renderer notification copies only title/message/tag/icon/silent
+ * and drops `PlatformNotificationData::actions` before it reaches the Windows
+ * toast platform (verified on Electron 44 in issue #33), so the page cannot put
+ * 同意 / 拒绝 on a toast. This host half posts the toast through WinRT instead:
+ *
+ *   page POST → lib/win-toast.ps1 (ToastNotificationManager) → toast with
+ *   protocol buttons → click runs the registered `dsh-notify-me://` handler
+ *   (a generated VBS script) → it appends the clicked URL to an actions
+ *   directory and raises DSH via dsh://open → the page's GET probe (or its
+ *   short poll while a decision is pending) hands the action to decidePending().
+ *
+ * The route only exists on the packaged Windows desktop shell. Tokens are
+ * single use, bound to one approval key and expire after three minutes. The
+ * protocol handler is registered under HKCU\Software\Classes before the first
+ * toast is posted; it survives app updates because it points at the actions
+ * directory, not at a binary.
+ *
+ * The toast carries its own AUMID. One posted under another app's AUMID is
+ * activated through that app: Windows looks the AUMID up under
+ * `HKCU\Software\Classes\AppUserModelId` and, when it names a CustomActivator,
+ * hands every activation — body click and buttons alike — to that COM server,
+ * so `activationType="protocol"` in the XML is never consulted. The DSH desktop
+ * shell registers such an activator for `electron.app.DeepSeek Harness`, which
+ * is why the approval buttons only dismissed the toast and the VBS handler
+ * never ran (issue #41). dsh-notify-me registers its own AUMID with a CLSID
+ * that has no LocalServer32: the documented "no COM activator" fallback, where
+ * protocol activation is still dispatched for unpackaged apps (at the cost of
+ * toast inputs and in-process activation, neither of which is used here).
+ *
+ * That fallback exists on Windows 11 only, so the route reports enabled:false on
+ * Windows 10 and the page falls back to its own notifications (see
+ * WIN_ACTIVATION_BUILD below).
+ */
+
+import { spawn, execFile } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { homedir, release } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { randomBytes } from "node:crypto";
+
+import { guardRequest, readBody, respond } from "./page-bridge.js";
+
+export const WIN_TOAST_ROUTE = "/__dsh-notify-me/win-toast";
+// The app identity the toasts are posted under, and the stub COM activator it
+// names. Exported so the smoke test can pin them: posting under the DSH shell's
+// AUMID is what silently ate every button click (issue #41).
+export const AUMID = "dsh-notify-me";
+export const ACTIVATOR_CLSID = "{F0C6A9D2-4B7E-4D1A-9C53-8E2B6F7A0D41}";
+const AUMID_DISPLAY_NAME = "DSH Notify Me";
+const HEADER = "x-dsh-notify-me-win";
+const HEADER_VALUE = "toast";
+const PROTOCOL = "dsh-notify-me";
+const TOAST_GROUP = "dsh-notify-me";
+const ACTION_TTL_MS = 3 * 60 * 1000;
+const MAX_TOKENS = 8;
+const MAX_ACTIONS = 20;
+const SCRIPT_PATH = fileURLToPath(new URL("./win-toast.ps1", import.meta.url));
+// The "no COM / stub CLSID" activation path only ever shipped in the Windows 11
+// branch: on Windows 10 a toast posted under a stub-activator AUMID pops up and
+// is dismissed on click, with the activation never dispatched (microsoft-ui-xaml
+// #1939 — fixed in build 18967, which became Windows 11; nothing was backported
+// to the 19041/19045 servicing branch). Windows 10 therefore gets no native
+// approval toast at all rather than buttons that cannot answer (issue #41).
+const WIN_ACTIVATION_BUILD = 22000;
+
+function str(value, limit) {
+  return typeof value === "string" ? value.slice(0, limit) : "";
+}
+
+function systemPath(parts) {
+  const root = process.env.SystemRoot || process.env.WINDIR || "C:\\Windows";
+  return join.apply(null, [root].concat(parts));
+}
+
+function powershellPath() {
+  return systemPath(["System32", "WindowsPowerShell", "v1.0", "powershell.exe"]);
+}
+
+function wscriptPath() {
+  return systemPath(["System32", "wscript.exe"]);
+}
+
+/** Major service build of the running Windows (`10.0.19045` → 19045). */
+function windowsBuild() {
+  try {
+    const build = Number(release().split(".")[2]);
+    return Number.isFinite(build) ? build : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * The protocol handler: record the clicked URL, then raise DSH.
+ *
+ * The script stays pure ASCII: the actions directory is resolved from
+ * %LOCALAPPDATA% when the click happens rather than baked into the file. A
+ * profile path like C:\Users\<中文名>\... written as UTF-8 without a BOM is
+ * decoded by WSH with the system ANSI code page, which ate the backslash after
+ * the user name and made FolderExists fail with 800A004C (issue #36). Even so
+ * the file is written as UTF-16LE with a BOM: any non-ASCII that ever reaches
+ * it would then decode correctly.
+ */
+function actionsDirExpression(actionsDir) {
+  const defaultDir = process.env.LOCALAPPDATA
+    ? join(process.env.LOCALAPPDATA, "dsh-notify-me", "actions")
+    : "";
+  if (defaultDir && actionsDir.toLowerCase() === defaultDir.toLowerCase()) {
+    return 'sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\\dsh-notify-me\\actions"';
+  }
+  return '"' + actionsDir + '"';
+}
+
+function handlerVbs(actionsDir) {
+  return [
+    "' Generated by dsh-notify-me. Records a toast action click and raises DSH.",
+    "Option Explicit",
+    "Dim fso, sh, url, dir, name, out",
+    'Set fso = CreateObject("Scripting.FileSystemObject")',
+    'Set sh = CreateObject("WScript.Shell")',
+    "url = WScript.Arguments(0)",
+    "dir = " + actionsDirExpression(actionsDir),
+    "If Not fso.FolderExists(dir) Then fso.CreateFolder(dir)",
+    "name = fso.GetTempName()",
+    "Set out = fso.CreateTextFile(dir & \"\\\" & name, True)",
+    "out.Write url",
+    "out.Close",
+    'sh.Run "dsh://open", 0, False',
+    "",
+  ].join("\r\n");
+}
+
+/** UTF-16LE with a BOM: WSH must not decode the handler with the ANSI code page. */
+function writeHandlerScript(vbsPath, actionsDir) {
+  const body = Buffer.from(handlerVbs(actionsDir), "utf16le");
+  writeFileSync(vbsPath, Buffer.concat([Buffer.from([0xff, 0xfe]), body]));
+}
+
+/**
+ * Register the route — only on the packed Windows desktop shell.
+ * @param webCtx - cordis context holding `webServer`.
+ * @param config - `{ enabled }`.
+ * @param shared - `{ bindHost, allowedOrigins }`.
+ * @param logger - cordis logger.
+ * @param deps - test seams: `{ spawn, execFile, dir, psPath, scriptPath, aumid, now }`.
+ */
+export function mountWinToast(webCtx, config, shared, logger, deps = {}) {
+  if (process.platform !== "win32" || typeof process.versions.electron !== "string") return;
+  const spawnFn = typeof deps.spawn === "function" ? deps.spawn : spawn;
+  const execFileFn = typeof deps.execFile === "function" ? deps.execFile : execFile;
+  const baseDir = typeof deps.dir === "string" && deps.dir
+    ? deps.dir
+    : join(process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local"), "dsh-notify-me");
+  const actionsDir = join(baseDir, "actions");
+  const vbsPath = join(baseDir, "notify-handler.vbs");
+  const psPath = typeof deps.psPath === "string" && deps.psPath ? deps.psPath : powershellPath();
+  const scriptPath = typeof deps.scriptPath === "string" && deps.scriptPath ? deps.scriptPath : SCRIPT_PATH;
+  const aumid = typeof deps.aumid === "string" && deps.aumid ? deps.aumid : AUMID;
+  const nowFn = typeof deps.now === "function" ? deps.now : function () { return Date.now(); };
+  const osBuild = typeof deps.osBuild === "number" ? deps.osBuild : windowsBuild();
+  const canActivate = !(osBuild > 0 && osBuild < WIN_ACTIVATION_BUILD);
+  const available = canActivate && config.enabled !== false && existsSync(psPath) && existsSync(scriptPath);
+  const unavailable = canActivate
+    ? (config.enabled === false ? "disabled" : "helper-missing")
+    : "windows-10";
+  if (config.enabled !== false && !canActivate) {
+    logger?.info?.("dsh-notify-me: Windows " + osBuild + " cannot dispatch toast activations for unpackaged apps, native approval toasts stay off");
+  } else if (config.enabled !== false && !available) {
+    logger?.warn?.("dsh-notify-me: Windows toast helper unavailable, approval alerts keep the page channel");
+  }
+
+  const tokens = Object.create(null);
+  const ids = Object.create(null);
+  let appReady = null;
+  let seq = 0;
+
+  function runPowerShell(extraArgs) {
+    return new Promise((resolve) => {
+      let child;
+      try {
+        child = spawnFn(psPath, ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", scriptPath].concat(extraArgs), {
+          windowsHide: true,
+          stdio: ["ignore", "ignore", "pipe"],
+        });
+      } catch (error) {
+        resolve({ ok: false, detail: "spawn-failed" });
+        return;
+      }
+      let stderr = "";
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        try { child.kill(); } catch (e) {}
+        resolve({ ok: false, detail: "timeout" });
+      }, 20000);
+      try {
+        child.stderr.setEncoding("utf8");
+        child.stderr.on("data", (chunk) => { stderr += chunk; });
+      } catch (e) {}
+      child.on("error", () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve({ ok: false, detail: "spawn-error" });
+      });
+      child.on("close", (code) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve({ ok: code === 0, detail: stderr.trim().slice(0, 200) || "exit-" + code });
+      });
+    });
+  }
+
+  // Registers everything a protocol-activated toast needs from this side: the
+  // `dsh-notify-me://` handler, the app identity the toast is posted under, and
+  // the empty CLSID that identity names (see the module comment). Once per
+  // plugin instance, current-user rights only.
+  function registerToastApp() {
+    if (appReady) return appReady;
+    appReady = (async () => {
+      try {
+        mkdirSync(actionsDir, { recursive: true });
+        writeHandlerScript(vbsPath, actionsDir);
+      } catch (e) {
+        return false;
+      }
+      const command = '"' + wscriptPath() + '" "' + vbsPath + '" "%1"';
+      const appKey = "HKCU\\Software\\Classes\\AppUserModelId\\" + aumid;
+      const commands = [
+        ["add", "HKCU\\Software\\Classes\\" + PROTOCOL, "/ve", "/d", "URL:DSH Notify Me", "/f"],
+        ["add", "HKCU\\Software\\Classes\\" + PROTOCOL, "/v", "URL Protocol", "/d", "", "/f"],
+        ["add", "HKCU\\Software\\Classes\\" + PROTOCOL + "\\shell\\open\\command", "/ve", "/d", command, "/f"],
+        // Own AUMID: the name Windows shows on the toast, and the activator it
+        // points at. The CLSID is registered empty on purpose — with no
+        // LocalServer32 behind it Windows cannot hand an activation to a COM
+        // server, so the protocol in the XML is dispatched instead (#41).
+        ["add", appKey, "/v", "DisplayName", "/d", AUMID_DISPLAY_NAME, "/f"],
+        ["add", appKey, "/v", "CustomActivator", "/d", ACTIVATOR_CLSID, "/f"],
+        ["add", "HKCU\\Software\\Classes\\CLSID\\" + ACTIVATOR_CLSID, "/f"],
+      ];
+      for (let i = 0; i < commands.length; i++) {
+        const args = commands[i];
+        const ok = await new Promise((resolve) => {
+          try { execFileFn("reg", args, (error) => resolve(!error)); } catch (e) { resolve(false); }
+        });
+        if (!ok) return false;
+      }
+      return true;
+    })();
+    return appReady;
+  }
+
+  function makeToken(approvalKey, sessionId) {
+    const token = randomBytes(16).toString("hex");
+    tokens[token] = { key: approvalKey, sessionId: sessionId, expiresAt: nowFn() + ACTION_TTL_MS };
+    const keys = Object.keys(tokens);
+    if (keys.length > MAX_TOKENS) {
+      keys.sort((a, b) => tokens[a].expiresAt - tokens[b].expiresAt);
+      for (let i = 0; i < keys.length - MAX_TOKENS; i++) delete tokens[keys[i]];
+    }
+    return token;
+  }
+
+  function nextHistoryTag() {
+    seq += 1;
+    return "dsh" + seq.toString(36) + randomBytes(3).toString("hex");
+  }
+
+  function parseActionUrl(raw) {
+    let url;
+    try { url = new URL(String(raw || "").trim()); } catch (e) { return null; }
+    if (url.protocol !== PROTOCOL + ":") return null;
+    const action = (url.hostname || "").toLowerCase();
+    if (action === "open") {
+      // A body click without a session still means "raise the window"; keep the
+      // action so the page can run the host-route raise with nothing to open.
+      // It used to be dropped here, and a no-session toast fell back to the
+      // dsh://open launch that never raised anything (issue #40).
+      return { action: "open", sessionId: str(url.searchParams.get("session"), 200) };
+    }
+    if (action !== "approve" && action !== "reject") return null;
+    const rec = tokens[str(url.searchParams.get("token"), 200)];
+    if (!rec) return null;
+    delete tokens[str(url.searchParams.get("token"), 200)];
+    if (nowFn() > rec.expiresAt) return null;
+    return { action: action, key: rec.key, sessionId: rec.sessionId };
+  }
+
+  function takeActions() {
+    let files;
+    try { files = readdirSync(actionsDir); } catch (e) { return []; }
+    files.sort();
+    const out = [];
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].charAt(0) === ".") continue;
+      const full = join(actionsDir, files[i]);
+      let text = "";
+      try { text = readFileSync(full, "utf8"); } catch (e) { continue; }
+      try { unlinkSync(full); } catch (e) {}
+      const parsed = parseActionUrl(text);
+      if (parsed && out.length < MAX_ACTIONS) out.push(parsed);
+    }
+    return out;
+  }
+
+  function removeToast(historyTag) {
+    const payload = Buffer.from(JSON.stringify({ aumid: aumid }), "utf8").toString("base64");
+    return runPowerShell(["-Base64", payload, "-RemoveTag", historyTag]);
+  }
+
+  const handler = (req, res) => {
+    const method = req.method ?? "GET";
+    if (method !== "GET" && method !== "POST") {
+      respond(res, 405, { ok: false, reason: "method-not-allowed" });
+      return;
+    }
+    const guard = guardRequest(req, {
+      bindHost: shared.bindHost,
+      allowedOrigins: shared.allowedOrigins,
+      connection: shared.connection,
+    });
+    if (guard !== null) {
+      respond(res, guard.status, { ok: false, reason: guard.reason });
+      return;
+    }
+    if (method === "GET") {
+      respond(res, 200, { ok: true, enabled: available, reason: available ? "" : unavailable, actions: available ? takeActions() : [] });
+      return;
+    }
+    if (!available) {
+      respond(res, 501, { ok: false, reason: unavailable });
+      return;
+    }
+    if (req.headers[HEADER] !== HEADER_VALUE) {
+      respond(res, 403, { ok: false, reason: "forbidden" });
+      return;
+    }
+    void readBody(req, 16 * 1024).then(async (body) => {
+      let note;
+      try { note = JSON.parse(body.ok ? body.text : ""); } catch (e) { note = null; }
+      if (!note || Array.isArray(note) || typeof note !== "object") {
+        respond(res, 400, { ok: false, reason: "invalid-json" });
+        return;
+      }
+      // Withdraw an already-posted toast (back at the page / auto-dismiss).
+      if (typeof note.remove === "string" && note.remove.length > 0) {
+        const pageTag = str(note.remove, 200);
+        const historyTag = ids[pageTag] || pageTag;
+        delete ids[pageTag];
+        const result = await removeToast(historyTag);
+        respond(res, result.ok ? 200 : 502, result);
+        return;
+      }
+      if (typeof note.title !== "string") {
+        respond(res, 400, { ok: false, reason: "invalid-json" });
+        return;
+      }
+      const pageTag = str(note.tag, 200);
+      const historyTag = nextHistoryTag();
+      if (pageTag) ids[pageTag] = historyTag;
+      const approvalKey = str(note.approvalKey, 200);
+      // Before the toast is shown, not after: Windows has to know this AUMID
+      // when the activation comes back, and a body click needs the handler even
+      // when the toast has no buttons at all.
+      await registerToastApp();
+      let approveToken = "";
+      let rejectToken = "";
+      if (approvalKey) {
+        approveToken = makeToken(approvalKey, str(note.sessionId, 200));
+        rejectToken = makeToken(approvalKey, str(note.sessionId, 200));
+      }
+      const payload = {
+        aumid: aumid,
+        title: str(note.title, 200),
+        body: str(note.body, 1000),
+        tag: historyTag,
+        session: str(note.sessionId, 200),
+        approveToken: approveToken,
+        rejectToken: rejectToken,
+        approveText: str(note.approveText, 40) || "同意",
+        rejectText: str(note.rejectText, 40) || "拒绝",
+        sound: note.sound === true,
+      };
+      const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64");
+      const result = await runPowerShell(["-Base64", encoded]);
+      if (result.ok) {
+        respond(res, 200, { ok: true, enabled: true, id: historyTag, token: approveToken || "" });
+      } else {
+        respond(res, 502, result);
+      }
+    }).catch(() => {});
+  };
+
+  webCtx.effect(
+    () => webCtx.webServer.register({ kind: "exact", path: WIN_TOAST_ROUTE, handler }),
+    "dsh-notify-me: Windows toast route",
+  );
+}

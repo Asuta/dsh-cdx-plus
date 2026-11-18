@@ -262,6 +262,27 @@
     "CHANGELOG.md": "7cb7094a9a1cc3396a6fe137fe92b8a29b2363b9a32840e23a34f391770fb571",
     "RELEASE_STATUS.md": "f7a5269a4c85fec69a3e5fe24de67358cbe33924776e81aefb485eb46ec2954f",
     "MARKETPLACE.md": "3b8c1880bcda2d396ba8198eb9372905ae24d1cb8333fc9c1777bbd7675c467b",
-    "docs/images/README.md": "8e986dfd86244ad45c7e0e57c70e1233edfd755faadee04a69680cf968fee462"
+    "docs/images/README.md": "8e986dfd86244ad45c7e0e57c70e1233edfd755faadee04a69680cf968fee462",
+    "packages/dsh-notify-me/LICENSE": "8f422219b857ba77ddc3937ef75fe5694ab60c50b4c1f76695de91f29202e564",
+    "packages/dsh-notify-me/NOTICE": "2fa44ad0353d57facdb46b5c43a661ceac3f602296bf0ee5fa5aa55d424f2fc1",
+    "packages/dsh-notify-me/README.md": "b287f68a5ae0a0363f2844339311b58157cd044c8cc23d88d5899b8c31ee7894",
+    "packages/dsh-notify-me/cordis.patch.yml": "98fee070d720bbb857065e2be3b21b54ceff55bbea087759940e1a14c2a5234a",
+    "packages/dsh-notify-me/docs/console-config.en.md": "c0b8ea8da0ff9ee1520c8829f750331eb865c4cd4b4c01a44186242fd2d029eb",
+    "packages/dsh-notify-me/docs/console-config.md": "ea876112fa9e3e0256a5feb864c792e330b89bdd50c60fc524102d32b4296568",
+    "packages/dsh-notify-me/icon.svg": "14519c688cec35ac3cf474f9ecf329e3d2b7cecf8531633a3f2c95fc6beb8712",
+    "packages/dsh-notify-me/lib/client.js": "4ca47eefe616514a460277b22ee695951d7cda9cb179974bdb5b007785e04b47",
+    "packages/dsh-notify-me/lib/focus-window.ps1": "5718de1643bf1a3cc4dde2bff4d96bdeea3faf66c6faddaee6d68efbfe4ee01e",
+    "packages/dsh-notify-me/lib/host-fallback.js": "50151f891246b7f419a3a3d02e13d7b556022dcf939f7b8b17f404cb6be60282",
+    "packages/dsh-notify-me/lib/index.js": "4c0dfa44ffe25eb622f91005d637401aa899c91876d19198f32ca3299c704f5a",
+    "packages/dsh-notify-me/lib/mac-notify.js": "4b4c1d8c1dce2fa6e7890d0e45513daee7b61ec0226adff7b3c443eff4e2ac84",
+    "packages/dsh-notify-me/lib/page-bridge.js": "fd724e199558988e5be8c79c7c2ba3e1000bb0a4ec77661fd112b5e7ca1576e5",
+    "packages/dsh-notify-me/lib/relay.js": "27d6619bcd74a3ec79641c4d92abcd4c72021aff39b5c6cc3cc4873ee6a11836",
+    "packages/dsh-notify-me/lib/win-toast.js": "a220cfde0c33ee083a878d27817f1037ec671c1dab2cf48f8831f7e5c35e3e9a",
+    "packages/dsh-notify-me/lib/win-toast.ps1": "41ff3eaf145a0476bd1ebe23bbf341dfc53fb64826b7f3aed1579cbcb8f238f9",
+    "packages/dsh-notify-me/macos/DSHNotify.swift": "4f1de161c992efa43e8860f509e8481d02f853c581f4bb7de6a4458b9c0f5e19",
+    "packages/dsh-notify-me/macos/build.sh": "4c7a1c7de26361a0879b3767dc5d8edf21a2f31505efde3174cd28215bed7698",
+    "packages/dsh-notify-me/locale/zh.json": "7cef652737927552a05700e71c616c14333e074ed819d18308797d7fd367b316",
+    "packages/dsh-notify-me/locale/en.json": "afaee7f53f97af7793533e22470c9c6d5cb120cbfa9aa8ea3662d04b6ad1ca63",
+    "packages/dsh-notify-me/package.json": "880b06be516db4195f6be774c7d740ab9eff24d90bdcfaa444e4dbea8121340c"
   }
 }
