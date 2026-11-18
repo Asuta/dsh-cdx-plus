@@ -28,7 +28,7 @@ async function contents(buffer) {
   return files;
 }
 function normalizedText(name, data) {
-  if (!/[.](?:js|mjs|json|md|txt|yml|yaml|css|svg|html|ts|tsx)$/.test(name) && !/^(?:LICENSE|NOTICE)(?:[.].*)?$/.test(path.posix.basename(name))) return null;
+  if (!/[.](?:js|mjs|json|md|txt|yml|yaml|css|svg|html|ts|tsx|ps1)$/.test(name) && !/^(?:LICENSE|NOTICE)(?:[.].*)?$/.test(path.posix.basename(name))) return null;
   try {
     return new TextDecoder('utf-8', { fatal: true }).decode(data).replaceAll(String.fromCharCode(13, 10), String.fromCharCode(10));
   } catch { return null; }
