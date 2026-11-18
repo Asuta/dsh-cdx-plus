@@ -2,7 +2,7 @@
 
 npm: `dsh-asuta-cdx-plus` · GitHub: `Asuta/dsh-cdx-plus`
 
-**A DeepSeek Harness plugin suite with 18 independently switchable features.**
+**A DeepSeek Harness plugin suite with 20 independently switchable features.**
 
 Bring familiar Codex-style interactions to DeepSeek Harness (DSH): quote selected text, explore a question in a side chat, create Git worktrees with local environments, and review code with an independent agent.
 
@@ -62,9 +62,9 @@ Enter /review and select uncommitted changes, a base branch, a specific commit o
 
 ## Install and get started
 
-**Repository version: 0.1.9. Compatibility baseline: DSH 0.2.2-rc.3.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
+**Repository version: 0.1.10. Compatibility baseline: DSH 0.2.2-rc.3.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
 
-All 19 packages since 0.1.6 allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified runtime baseline remains DSH 0.2.2-rc.3; future API changes may still require fixes. Install 0.1.6 or later to apply the relaxed range. Installing the suite includes all 18 plugins.
+The suite and its plugins allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified runtime baseline remains DSH 0.2.2-rc.3; future API changes may still require fixes. Install 0.1.6 or later to apply the relaxed range. Installing the suite includes all 20 plugins.
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
@@ -85,7 +85,7 @@ Requires Git, Node.js 24+ with npm, and DSH 0.2.2-rc.3.
     cd dsh-cdx-plus
     node scripts/pack.mjs --local-preview
 
-The last output line names a fresh local suite .tgz. Keep its directory and all 18 sibling feature tarballs: the preview uses local dependencies and cannot be shared as a single tarball.
+The last output line names a fresh local suite .tgz. Keep its directory and all 20 sibling feature tarballs: the preview uses local dependencies and cannot be shared as a single tarball.
 
 In a new PowerShell window, use a separate data directory and install into a test web profile:
 
@@ -101,7 +101,7 @@ The local suite is private and intended only for testing. Use the npm installati
 
 *Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
 
-## All 18 features
+## All 20 features
 
 Each component has its own switch. Some integrations need both components enabled, such as opening a side chat from a quote or moving a conversation through agent tools.
 
@@ -112,10 +112,12 @@ Each component has its own switch. Some integrations need both components enable
 | [Conversation tools](packages/conversation-workbench/) | Give DSH agents on-demand tools to find and read conversations, manage workspaces, move sessions and inspect PR checks. | dsh-asuta-conversation-workbench |
 | [Desktop navigation](packages/desktop-navigation/) | Open local file paths from DSH conversations and rename recent chats with a double click. | dsh-asuta-desktop-navigation |
 | [Mermaid diagrams](packages/dsh-mermaid-renderer/) | Render Mermaid code as readable diagrams in DSH conversations. | dsh-asuta-mermaid-renderer |
+| [DS Notify Me](packages/dsh-notify-me/) | Get alerts when DSH needs attention or finishes a background reply, with sounds, native notifications and optional external delivery. | dsh-asuta-notify-me |
 | [Embedded browser](packages/dsh-sidebrowser/) | Browse in the DSH desktop sidebar and let agents operate pages and inspect console, network and styles. | dsh-asuta-sidebrowser |
 | [Git changes](packages/git-diff/) | Inspect staged, unstaged, uncommitted and branch diffs beside a DSH conversation. | dsh-asuta-git-diff |
 | [Hide new-chat button](packages/hide-new-session/) | Hide the new-chat button at the top of the DSH sidebar for a simpler navigation area. | dsh-asuta-hide-new-session |
 | [Edit message history](packages/history-edit/) | Edit plain-text message history in DSH and regenerate the response. | dsh-asuta-history-edit |
+| [Composer model group](packages/model-group-label/) | Show the active model group and model name in the composer. | dsh-asuta-model-group-label |
 | [Project activity](packages/project-activity/) | Show conversation activity beside collapsed DSH project headings. | dsh-asuta-project-activity |
 | [Chats without a workspace](packages/projectless-chat/) | Start DSH conversations outside a workspace and configure their default working directory. | dsh-asuta-projectless-chat |
 | [Remember reasoning effort](packages/reasoning-effort-memory/) | Remember the last DSH reasoning-effort setting for each provider and model. | dsh-asuta-reasoning-effort-memory |

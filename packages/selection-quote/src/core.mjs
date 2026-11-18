@@ -457,7 +457,7 @@ export function findSerializedQuotes(text) {
     for (let cursor = index; cursor < lines.length; cursor += 1) {
       const candidate = lines[cursor].replace(/^>\s?/u, '')
       if (REF_LINE.test(candidate)) { endLine = cursor; break }
-      if (cursor > index && (candidate.trim() === '' || /^\s*\u275D/u.test(candidate))) break
+      if (cursor > index && ((candidate.trim() === '' && !lines[cursor].startsWith('>')) || /^\s*\u275D/u.test(candidate))) break
     }
     if (endLine === -1) continue
     const start = offsets[index]

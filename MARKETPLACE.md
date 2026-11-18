@@ -8,9 +8,9 @@ DSH CDX Plus — Codex 风格体验增强
 
 ## 简介
 
-为 DeepSeek Harness（DSH）补齐 Codex 风格交互与开发工作流。选中引用、侧边对话、Git 工作树环境、代码审查等 18 项功能，一个合集，按需启停。
+为 DeepSeek Harness（DSH）补齐 Codex 风格交互与开发工作流。选中引用、侧边对话、Git 工作树环境、代码审查等 20 项功能，一个合集，按需启停。
 
-Codex-inspired plugin suite for DeepSeek Harness (DSH): selection quotes, side chats, Git worktree environments and code review, with 18 independently switchable features.
+Codex-inspired plugin suite for DeepSeek Harness (DSH): selection quotes, side chats, Git worktree environments and code review, with 20 independently switchable features.
 
 ## 详细介绍
 
@@ -30,7 +30,7 @@ Codex-inspired plugin suite for DeepSeek Harness (DSH): selection quotes, side c
 
 - 发行仓库：https://github.com/Asuta/dsh-cdx-plus
 - 合集包名：dsh-asuta-cdx-plus
-- 当前发布版本：0.1.9
+- 当前发布版本：0.1.10
 - [中文介绍](README.md)、[English](README_EN.md)
 - [选中引用](docs/images/selection-quotes.png)、[工作树环境](docs/images/worktree-environments.png)、[代码审查](docs/images/review-scope.png)
 - 关键词：DSH、DeepSeek Harness、Codex、Codex-inspired、插件合集、Git worktree、代码审查、侧边对话

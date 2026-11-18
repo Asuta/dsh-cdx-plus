@@ -479,7 +479,11 @@ function showComment(edit = null) {
     const ok = edit
       ? changeNote(targetSession, target.id, comment)
       : insertQuote(targetSession, target.text, comment, target.code, target.source, target.range)
-    if (ok) { hideBar(); window.getSelection()?.removeAllRanges?.() }
+    if (ok) {
+      hideBar(); window.getSelection()?.removeAllRanges?.()
+      // Let the annotation popup unmount before returning to this session's editor.
+      window.requestAnimationFrame(() => inputShellFor(targetSession)?.focus())
+    }
   }
   sendBtn.addEventListener('click', submit)
   cancelBtn.addEventListener('click', () => {
@@ -490,6 +494,7 @@ function showComment(edit = null) {
     if (event.isComposing || event.keyCode === 229) return
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
+      event.stopPropagation()
       submit()
     } else if (event.key === 'Escape') {
       event.preventDefault()
@@ -582,70 +587,31 @@ function onBarClick(event) {
   commitSelection(String(target.getAttribute('data-action') || ''))
 }
 
-function quoteBadge(quote) {
-  if (quote === null || quote.ref === undefined) return null
-  const wrapper = document.createElement('span')
-  wrapper.className = 'dsq-sent-annotation'
-  wrapper.dataset.dsqSentAnnotation = 'true'
-
-  const badge = document.createElement('button')
-  badge.type = 'button'
-  badge.className = 'dsq-sent-annotation-badge'
-  badge.setAttribute('aria-label', label('annotationCount'))
-  badge.textContent = '▤ ' + label('annotationCount')
-  badge.addEventListener('click', (event) => {
-    event.preventDefault()
-    jumpToRow(quote.ref)
-  })
-
-  const card = document.createElement('span')
-  card.className = 'dsq-sent-annotation-card'
-  card.setAttribute('role', 'tooltip')
-  const quoteTitle = document.createElement('span')
-  quoteTitle.className = 'dsq-sent-annotation-title'
-  quoteTitle.textContent = label('selectedText') + ':'
-  const quoteText = document.createElement('span')
-  quoteText.className = 'dsq-sent-annotation-text'
-  quoteText.textContent = quote.quote
-  card.append(quoteTitle, quoteText)
-  if (quote.comment !== '') {
-    const commentTitle = document.createElement('span')
-    commentTitle.className = 'dsq-sent-annotation-title'
-    commentTitle.textContent = label('userComment') + ':'
-    const commentText = document.createElement('span')
-    commentText.className = 'dsq-sent-annotation-text'
-    commentText.textContent = quote.comment
-    card.append(commentTitle, commentText)
+const SENT_ANNOTATION_NODE = 'selectionQuoteAnnotation'
+const sentAnnotationRule = {
+  id: SENT_ANNOTATION_NODE,
+  // At the same offset, take precedence over DSH's generic blockquote rule (-10).
+  order: -11,
+  match(text, from) {
+    const match = findSerializedQuotes(text).find(entry => entry.start >= from)
+    if (match !== undefined) {
+      return { id: SENT_ANNOTATION_NODE, start: match.start, end: match.end, data: match.quote }
+    }
   }
-  wrapper.append(badge, card)
-  return wrapper
 }
 
-function replaceQuoteRange(row, start, end, quote) {
-  const walker = document.createTreeWalker(row, NodeFilter.SHOW_TEXT)
-  const nodes = []
-  let length = 0
-  while (walker.nextNode()) {
-    const node = walker.currentNode
-    nodes.push({ node, start: length, end: length + node.nodeValue.length })
-    length += node.nodeValue.length
-  }
-  const point = (position, isEnd) => {
-    const item = nodes.find((entry) => position >= entry.start && (position < entry.end || (isEnd && position === entry.end)))
-    if (item === undefined) return null
-    return [item.node, Math.max(0, Math.min(item.node.nodeValue.length, position - item.start))]
-  }
-  const first = point(start, false)
-  const last = point(end, true)
-  if (first === null || last === null) return false
-  const range = document.createRange()
-  range.setStart(first[0], first[1])
-  range.setEnd(last[0], last[1])
-  const badge = quoteBadge(quote)
-  if (badge === null) return false
-  range.deleteContents()
-  range.insertNode(badge)
-  return true
+function SentAnnotation({ node }) {
+  const h = react.createElement
+  const { quote, comment, ref } = node.data
+  return h('span', { className: 'dsq-sent-annotation', 'data-dsq-sent-annotation': 'true' },
+    h('button', { type: 'button', className: 'dsq-sent-annotation-badge', 'aria-label': label('annotationCount'),
+      onClick: event => { event.preventDefault(); jumpToRow(ref) } }, '▤ ' + label('annotationCount')),
+    h('span', { className: 'dsq-sent-annotation-card', role: 'tooltip' },
+      h('span', { className: 'dsq-sent-annotation-title' }, label('selectedText') + ':'),
+      h('span', { className: 'dsq-sent-annotation-text' }, quote),
+      comment !== '' && h(react.Fragment, null,
+        h('span', { className: 'dsq-sent-annotation-title' }, label('userComment') + ':'),
+        h('span', { className: 'dsq-sent-annotation-text' }, comment))))
 }
 
 function installRuntime() {
@@ -658,47 +624,10 @@ function installRuntime() {
   window.addEventListener('scroll', onScrollOrResize, true)
   window.addEventListener('resize', onScrollOrResize, true)
   bar.addEventListener('click', onBarClick)
-  const rowsIn = (root) => {
-    const rows = new Set()
-    const element = root?.nodeType === 3 ? root.parentElement : root
-    if (element?.matches?.('[data-chat-anchor-key],[data-chat-node-key]')) rows.add(element)
-    const row = element?.closest?.('[data-chat-anchor-key],[data-chat-node-key]')
-    if (row !== null && row !== undefined) rows.add(row)
-    for (const nested of element?.querySelectorAll?.('[data-chat-anchor-key],[data-chat-node-key]') || []) rows.add(nested)
-    return rows
-  }
-  const decorateRow = (row) => {
-    if (row === null || typeof row.querySelectorAll !== 'function') return
-    if (row.getAttribute('data-chat-flow-kind') !== 'user') return
-    // The row also contains message actions and a timestamp. Their text is
-    // concatenated with the final q1 line, so parse only the user-text body.
-    const body = row.querySelector('[data-slot="conversation.user.text.node"]')?.parentElement
-    if (body === undefined || body === null) return
-    const matches = findSerializedQuotes(body.textContent || '')
-    for (const match of matches.reverse()) replaceQuoteRange(body, match.start, match.end, match.quote)
-  }
-  const hideExistingWire = () => {
-    for (const row of rowsIn(document.body)) decorateRow(row)
-  }
-  hideExistingWire()
-  const wireObserver = typeof MutationObserver === 'undefined' ? null : new MutationObserver((records) => {
-    const rows = new Set()
-    for (const record of records) {
-      for (const row of rowsIn(record.target)) rows.add(row)
-      for (const added of record.addedNodes || []) {
-        for (const row of rowsIn(added)) rows.add(row)
-      }
-    }
-    for (const row of rows) decorateRow(row)
-  })
-  if (wireObserver !== null && document.body !== null) {
-    wireObserver.observe(document.body, { childList: true, characterData: true, subtree: true })
-  }
   runtimeDisposer = () => {
     document.removeEventListener('mouseup', onDocumentMouseUp, true)
     document.removeEventListener('keyup', onDocumentKeyUp, true)
     document.removeEventListener('mousedown', onDocumentMouseDown, true)
-    wireObserver?.disconnect()
     window.removeEventListener('scroll', onScrollOrResize, true)
     window.removeEventListener('resize', onScrollOrResize, true)
     if (bar !== null) {
@@ -731,9 +660,9 @@ function releaseRuntimeOnce() {
 const CSS = [
   '[data-composer-chip="selectionQuoteNotes"]{display:none;}',
   '.dsq-sent-annotation{position:relative;display:inline-block;vertical-align:middle;margin:2px 0;z-index:4;}',
-  '.dsq-sent-annotation-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--dsw-alias-border-l2,#5b5b5b);border-radius:999px;background:rgba(255,255,255,.08);color:inherit;font:inherit;font-size:13px;line-height:1.35;cursor:pointer;}',
+  '.dsq-sent-annotation-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--dsw-alias-border-l2,#5b5b5b);border-radius:999px;background:rgba(255,255,255,.08);color:inherit;font:inherit;font-size:13px;line-height:1.35;white-space:nowrap;cursor:pointer;}',
   '.dsq-sent-annotation:hover .dsq-sent-annotation-badge,.dsq-sent-annotation:focus-within .dsq-sent-annotation-badge{border-color:#c98160;box-shadow:0 0 0 1px #c98160;}',
-  '.dsq-sent-annotation-card{position:absolute;display:none;right:0;bottom:calc(100% + 8px);width:min(480px,calc(100vw - 40px));max-height:min(360px,55vh);overflow:auto;box-sizing:border-box;padding:14px 16px;border:1px solid var(--dsw-alias-border-l2,#555);border-radius:14px;background:linear-gradient(var(--dsw-alias-bg-layer-2,#303238),var(--dsw-alias-bg-layer-2,#303238)),#303238;box-shadow:0 8px 28px #0005;color:var(--dsw-alias-label-primary,#e8eaed);white-space:normal;z-index:2147483003;}',
+  '.dsq-sent-annotation-card{position:absolute;display:none;right:0;bottom:100%;width:min(480px,calc(100vw - 40px));max-height:min(360px,55vh);overflow:auto;box-sizing:border-box;padding:14px 16px;border:1px solid var(--dsw-alias-border-l2,#555);border-radius:14px;background:linear-gradient(var(--dsw-alias-bg-layer-2,#303238),var(--dsw-alias-bg-layer-2,#303238)),#303238;box-shadow:0 8px 28px #0005;color:var(--dsw-alias-label-primary,#e8eaed);white-space:normal;z-index:2147483003;}',
   '.dsq-sent-annotation:hover .dsq-sent-annotation-card,.dsq-sent-annotation:focus-within .dsq-sent-annotation-card{display:flex;flex-direction:column;gap:5px;}',
   '.dsq-sent-annotation-title{font-size:12px;font-weight:600;color:var(--dsw-alias-label-tertiary,#aaa);}',
   '.dsq-sent-annotation-text{font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:5px;}',
@@ -1241,7 +1170,7 @@ function OverlaySlot(props) {
  * Entry
  * -------------------------------------------------------------------------- */
 
-const inject = ['slots', 'locale', 'inputTriggers']
+const inject = ['slots', 'locale', 'inputTriggers', 'uiConversation']
 
 function apply(ctx) {
   if (typeof document === 'undefined' || typeof window === 'undefined') return
@@ -1260,6 +1189,9 @@ function apply(ctx) {
   ctx.effect(() => holdSource(), 'selection-quote: reference source')
   ctx.effect(() => installRuntime(), 'selection-quote: runtime')
   ctx.effect(() => registerShortcuts(ctx), 'selection-quote: shortcuts')
+  ctx.slots.inject('conversation.user.text.node', () => ctx.slots.register(
+    { name: 'conversation.user.text.node', key: SENT_ANNOTATION_NODE, priority: 100 }, SentAnnotation))
+  ctx.effect(() => ctx.uiConversation.userText.register(sentAnnotationRule), 'selection-quote: sent annotations')
 
   const installPage = (hostCtx) => {
     try {

@@ -9,6 +9,13 @@ window.__ModuleLoader__.load({
       '.he-action:disabled{opacity:.5;cursor:default}',
       '.he-editor{position:relative;display:flex;flex-direction:column;gap:8px;margin:4px 0 0 auto;width:min(100%,880px);border-radius:20px;background:var(--dsw-alias-interactive-bg-hover-solid,#303030);padding:14px 16px 12px;box-sizing:border-box;-webkit-app-region:no-drag}',
       '.he-editor textarea{box-sizing:border-box;display:block;width:100%;min-height:112px;max-height:360px;resize:vertical;border:0;background:transparent;color:var(--dsw-alias-label-primary,#fff);font:inherit;font-size:15px;line-height:1.55;outline:none;padding:2px 1px}',
+      '.he-annotations{align-self:flex-start;max-width:100%;color:var(--dsw-alias-label-secondary,#aaa);font-size:13px}',
+      '.he-annotations summary{width:fit-content;max-width:100%;box-sizing:border-box;padding:5px 10px;border:1px solid var(--dsw-alias-border-l2,#5b5b5b);border-radius:10px;background:var(--dsw-specific-selector,#ffffff12);cursor:pointer}',
+      '.he-annotations[open]{align-self:stretch}',
+      '.he-annotation-list{display:grid;gap:8px;max-height:min(240px,40vh);overflow:auto;margin-top:8px}',
+      '.he-annotation{display:grid;gap:5px;min-width:0;margin:0;padding:10px 12px;border:1px solid var(--dsw-alias-border-l2,#5b5b5b);border-radius:10px;background:var(--dsw-specific-selector,#ffffff12)}',
+      '.he-annotation dt{font-weight:600;color:var(--dsw-alias-label-secondary,#aaa)}',
+      '.he-annotation dd{margin:0;color:var(--dsw-alias-label-primary,#fff);white-space:pre-wrap;overflow-wrap:anywhere}',
       '.he-command-list{position:absolute;z-index:20;left:0;right:0;bottom:calc(100% + 8px);max-height:400px;overflow:auto;padding:6px;border:1px solid var(--dsw-alias-border-secondary,#444);border-radius:14px;background:var(--dsw-alias-interactive-bg-primary,#252525);box-shadow:0 8px 28px #0008}',
       '.he-command-section{min-height:23px;padding:5px 8px 2px;color:var(--dsw-alias-label-tertiary,#999);font-size:11px;line-height:16px}',
       '.he-command-option{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:6px 8px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-primary,#fff);text-align:left;font:inherit;font-size:13px;line-height:20px;cursor:pointer}',
@@ -25,7 +32,9 @@ window.__ModuleLoader__.load({
       '.he-attachment-remove{position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;background:#222c;color:white;cursor:pointer}',
       '.he-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px}',
       '.he-footer-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}',
-      '.he-add-image{flex:none;width:36px;height:36px;padding:0;border-radius:50%;background:var(--dsw-alias-interactive-bg-hover,#414141);font-size:21px}',
+      '.he-add-image{display:inline-grid;place-items:center;flex:none;width:36px;height:36px;padding:0;border-radius:50%;background:var(--dsw-alias-interactive-bg-hover,#414141)}',
+      '.he-add-image::before,.he-add-image::after{content:"";grid-area:1/1;width:12px;height:2px;border-radius:1px;background:currentColor}',
+      '.he-add-image::after{transform:rotate(90deg)}',
       '.he-file-input{display:none}',
       '.he-lightbox{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:28px;background:rgba(0,0,0,.82);cursor:zoom-out;-webkit-app-region:no-drag}',
       '.he-lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 16px 60px rgba(0,0,0,.6);cursor:default}',
@@ -35,6 +44,104 @@ window.__ModuleLoader__.load({
       '.he-error{color:var(--dsw-alias-state-error-primary,#f66);margin:4px 0;white-space:pre-wrap}',
       '[data-history-edit-shadowed]{display:none!important}',
     ].join(String.fromCharCode(10))
+
+    // Read only complete selection-quote blocks. Keeping the raw block lets history-edit
+    // work on existing messages even when the selection-quote plugin is turned off.
+    function projectAnnotations(raw) {
+      const annotations = []
+      let text = ''
+      let cursor = 0
+      const blocks = /^> ❝[^\r\n]*(?:\r?\n>(?! ❝| ※[^\r\n]*│q1:)[^\r\n]*)*\r?\n> ※[^\r\n│]*│q1:([A-Za-z0-9_-]+)[ \t]*$/gmu
+      for (const match of raw.matchAll(blocks)) {
+        try {
+          const bytes = Uint8Array.from(atob(match[1].replace(/-/g, '+').replace(/_/g, '/')), ch => ch.charCodeAt(0))
+          const ref = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes))
+          if (ref?.v !== 1 || typeof ref.s !== 'string' || ref.s === '' || typeof ref.k !== 'string' || ref.k === '' ||
+            typeof ref.t !== 'string' || !Number.isSafeInteger(ref.n) || ref.n < 0 ||
+            !['data-chat-anchor-key', 'data-chat-node-key'].includes(ref.a)) continue
+        } catch { continue }
+        let start = match.index
+        let end = start + match[0].length
+        // Drop the surrounding blank lines from quote-only edges of the editor.
+        if (end === raw.length || /^\s*$/u.test(raw.slice(end))) {
+          start -= /(?:\r?\n)+$/u.exec(raw.slice(cursor, start))?.[0].length ?? 0
+        }
+        const before = raw.slice(cursor, start)
+        if (text !== '' || before.trim() !== '') text += before.replace(/\r\n?/gu, '\n')
+        end += /^(?:\r?\n)+/u.exec(raw.slice(end))?.[0].length ?? 0
+        const lines = match[0].split(/\r?\n/u).slice(0, -1).map(line => line.replace(/^> ?/u, ''))
+          .filter(line => !/^\s*※\s*(?:指令|Instruction)(?:\s|[:：]|$)/u.test(line))
+        lines[0] = lines[0].replace(/^❝ ?/u, '')
+        const commentIndex = lines.findIndex((line, index) => index > 0 && /^\s*❞/u.test(line))
+        const unescape = line => line.replace(/^(\s*)\\([\\❞※])/u, '$1$2')
+        const quote = (commentIndex < 0 ? lines : lines.slice(0, commentIndex)).map(unescape).join('\n')
+        const comment = commentIndex < 0 ? '' : [lines[commentIndex].replace(/^\s*❞ ?/u, ''), ...lines.slice(commentIndex + 1)].map(unescape).join('\n')
+        annotations.push({ offset: text.length, raw: match[0], quote, comment })
+        cursor = end
+      }
+      return { text: text + raw.slice(cursor).replace(/\r\n?/gu, '\n'), annotations }
+    }
+
+    function updateAnnotationOffsets(target) {
+      const before = target.annotationText
+      const after = target.input.value
+      if (before === after || target.annotations.length === 0) return
+      let start = 0
+      while (start < before.length && start < after.length && before[start] === after[start]) start++
+      let oldEnd = before.length
+      let newEnd = after.length
+      while (oldEnd > start && newEnd > start && before[oldEnd - 1] === after[newEnd - 1]) { oldEnd--; newEnd-- }
+      for (const annotation of target.annotations) {
+        const offset = annotation.offset
+        if (offset === 0 || offset < start) continue
+        annotation.offset = offset === before.length ? after.length : offset >= oldEnd ? offset + newEnd - oldEnd : start
+      }
+      target.annotationText = after
+    }
+
+    function messageWithAnnotations(target, original) {
+      updateAnnotationOffsets(target)
+      const text = target.input.value
+      if (target.annotations.length === 0) return text
+      if (text === target.originalBody && target.annotations.every((note, i) => note.offset === target.originalOffsets[i])) return original
+      let result = ''
+      let cursor = 0
+      for (const note of target.annotations) {
+        result += text.slice(cursor, note.offset)
+        if (result && !result.endsWith('\n')) result += '\n\n'
+        result += note.raw + '\n\n'
+        cursor = note.offset
+      }
+      return result + text.slice(cursor)
+    }
+
+    function annotationPreview(annotations) {
+      const details = document.createElement('details')
+      details.className = 'he-annotations'
+      const summary = document.createElement('summary')
+      summary.textContent = annotations.length + ' 条注释'
+      const list = document.createElement('div')
+      list.className = 'he-annotation-list'
+      list.tabIndex = 0
+      list.setAttribute('role', 'region')
+      list.setAttribute('aria-label', '原消息引用和批注')
+      function add(card, title, content) {
+        const label = document.createElement('dt')
+        label.textContent = title
+        const value = document.createElement('dd')
+        value.textContent = content
+        card.append(label, value)
+      }
+      for (const [index, annotation] of annotations.entries()) {
+        const card = document.createElement('dl')
+        card.className = 'he-annotation'
+        add(card, annotations.length === 1 ? '引用原文' : '引用 ' + (index + 1), annotation.quote)
+        if (annotation.comment) add(card, '批注', annotation.comment)
+        list.append(card)
+      }
+      details.append(summary, list)
+      return details
+    }
 
     function message(ctx, sessionId, key, visibleSeqs) {
       const binding = ctx.sessions.binding(sessionId)
@@ -51,7 +158,7 @@ window.__ModuleLoader__.load({
         else return null
       }
       if (!text.trim() && imageCount === 0) return null
-      const messageId = data.id
+      const messageId = data.messageId ?? data.id
       const rpcId = data.source.rpcId
       if (typeof messageId !== 'string' && typeof rpcId !== 'string') return null
       const intake = binding.eventSource.getSnapshot().entries
@@ -109,8 +216,10 @@ window.__ModuleLoader__.load({
           }
 
           function saveDraft(target) {
+            updateAnnotationOffsets(target)
             drafts.set(target.key, {
               text: target.input.value,
+              annotationOffsets: target.annotations.map(note => note.offset),
               files: target.pendingImages.map(image => image.file),
               removedOriginalImages: [...target.removedOriginalImages],
             })
@@ -420,6 +529,8 @@ window.__ModuleLoader__.load({
               if (controller.signal.aborted || editor !== target || request !== target.commandRequest) return
               closeCommandList(target)
               target.error.textContent = reason instanceof Error ? reason.message : String(reason)
+            } finally {
+              if (target.commandAbort === controller) target.commandAbort = null
             }
           }
 
@@ -495,7 +606,10 @@ window.__ModuleLoader__.load({
           }
 
           function mountEditor(row, sessionId, key, original, saved) {
-            const initialDraft = saved ?? { text: original.text, files: [], removedOriginalImages: [] }
+            const { text: originalBody, annotations } = projectAnnotations(original.text)
+            const originalOffsets = annotations.map(note => note.offset)
+            const initialDraft = saved ?? { text: originalBody, files: [], removedOriginalImages: [] }
+            for (const [index, note] of annotations.entries()) note.offset = saved?.annotationOffsets?.[index] ?? note.offset
             const element = document.createElement('div')
             element.className = 'he-editor'
             const input = document.createElement('textarea')
@@ -623,7 +737,6 @@ window.__ModuleLoader__.load({
             const attach = document.createElement('button')
             attach.type = 'button'
             attach.className = 'he-action he-inline he-add-image'
-            attach.textContent = '+'
             attach.setAttribute('aria-label', '添加图片')
             attach.title = '添加图片'
             attach.addEventListener('click', () => fileInput.click())
@@ -640,10 +753,12 @@ window.__ModuleLoader__.load({
             submit.textContent = '重新生成'
             footerActions.append(cancel, submit)
             footer.append(attach, footerActions, fileInput)
+            if (annotations.length > 0) element.append(annotationPreview(annotations))
             element.append(input, attachmentRail, commandList, error, footer)
             row.append(element)
             editor = {
               row, element, input, commandList, error,
+              originalBody, originalOffsets, annotations, annotationText: input.value,
               sessionId,
               key: draftKey(sessionId, original.seq),
               candidates: [],
@@ -697,7 +812,16 @@ window.__ModuleLoader__.load({
                 closeCommandList(current)
                 return
               }
-              if (commandList.hidden || current.candidates.length === 0) return
+              if (event.key === 'Enter' && (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey)) return
+              if (commandList.hidden || current.candidates.length === 0) {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  // A slash lookup can still be loading with its menu closed.
+                  const slash = slashMatch(input)
+                  if (!event.repeat && slash?.position !== 'leading' && !(slash && current.commandAbort)) submit.click()
+                }
+                return
+              }
               if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                 event.preventDefault()
                 const direction = event.key === 'ArrowDown' ? 1 : -1
@@ -719,7 +843,7 @@ window.__ModuleLoader__.load({
                 await regenerate(
                   sessionId,
                   original,
-                  input.value,
+                  messageWithAnnotations(current, original.text),
                   pendingImages.map(image => image.file),
                   [...removedOriginalImages].sort((a, b) => a - b),
                 )

@@ -45,17 +45,17 @@ function counts(patch) {
 }
 
 export async function summary(cwd) {
-  const repo = await catalog(cwd)
-  const base = repo.head || EMPTY_TREE
-  const numbers = splitPaths(await git(repo.root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', '--numstat', '-z', base, '--']))
-  const untracked = splitPaths(await git(repo.root, ['ls-files', '--others', '--exclude-standard', '-z']))
+  const root = (await git(cwd, ['rev-parse', '--show-toplevel'])).trim()
+  const base = (await git(root, ['rev-parse', '--verify', 'HEAD']).catch(() => '')).trim() || EMPTY_TREE
+  const numbers = splitPaths(await git(root, ['diff', '--no-ext-diff', '--no-textconv', '--no-renames', '--numstat', '-z', base, '--']))
+  const untracked = splitPaths(await git(root, ['ls-files', '--others', '--exclude-standard', '-z']))
   let additions = 0, deletions = 0
   for (const entry of numbers) {
     const match = /^(\d+|-)\t(\d+|-)\t/.exec(entry)
     if (match) { additions += Number(match[1]) || 0; deletions += Number(match[2]) || 0 }
   }
   for (const path of untracked) {
-    const file = resolve(repo.root, path)
+    const file = resolve(root, path)
     const info = await lstat(file).catch(error => { if (error.code === 'ENOENT') return null; throw error })
     if (!info?.isFile() || info.isSymbolicLink() || info.size > LIMIT) continue
     const data = await readFile(file)

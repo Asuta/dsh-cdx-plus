@@ -80,18 +80,51 @@ window.__ModuleLoader__.load({
         ),
       )
     }
-    function Trigger({ ctx }) {
-      const sessionId = useSnapshot(ctx.sidebarRight.mounted)
-      const [value, setValue] = React.useState(null)
-      React.useEffect(() => {
-        setValue(null)
-        if (!sessionId) return
-        const controller = new AbortController()
-        const update = event => { if (event.detail?.sessionId === sessionId) setValue(event.detail.value) }
-        window.addEventListener('git-diff:updated', update)
-        call('summary', { sessionId }, controller.signal).then(setValue).catch(() => {})
-        return () => { controller.abort(); window.removeEventListener('git-diff:updated', update) }
-      }, [sessionId])
+    function createSummaryStore(mounted) {
+      const listeners = new Set()
+      let snapshot = { sessionId: null, value: null }, pending = null
+      const update = (sessionId, value) => {
+        if (snapshot.sessionId === sessionId && snapshot.value?.additions === value?.additions && snapshot.value?.deletions === value?.deletions) return
+        snapshot = { sessionId, value }
+        for (const listener of listeners) listener()
+      }
+      const abort = () => { pending?.abort(); pending = null }
+      const refresh = () => {
+        const sessionId = mounted.getSnapshot() || null
+        if (snapshot.sessionId !== sessionId) { abort(); update(sessionId, null) }
+        if (!sessionId || document.hidden || pending) return
+        const controller = pending = new AbortController()
+        call('summary', { sessionId }, controller.signal).then(value => {
+          if (pending === controller) update(sessionId, value)
+        }).catch(() => {}).finally(() => { if (pending === controller) pending = null })
+      }
+      const onUpdated = event => {
+        const { sessionId, value } = event.detail ?? {}
+        if (!sessionId || sessionId !== snapshot.sessionId) return
+        abort()
+        update(sessionId, value)
+      }
+      return {
+        getSnapshot: () => snapshot,
+        subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener) },
+        start() {
+          const unsubscribe = mounted.subscribe(refresh)
+          const timer = window.setInterval(refresh, 10_000)
+          window.addEventListener('git-diff:updated', onUpdated)
+          window.addEventListener('focus', refresh)
+          document.addEventListener('visibilitychange', refresh)
+          refresh()
+          return () => {
+            unsubscribe(); abort(); window.clearInterval(timer)
+            window.removeEventListener('git-diff:updated', onUpdated)
+            window.removeEventListener('focus', refresh)
+            document.removeEventListener('visibilitychange', refresh)
+          }
+        },
+      }
+    }
+    function Trigger({ ctx, store }) {
+      const { sessionId, value } = useSnapshot(store)
       if (!sessionId) return null
       return h('div', { className: 'gd-toolbar gd-toolbar-fallback' },
         h('button', { type: 'button', className: 'gd-trigger', title: '查看 Git 变更', 'aria-label': '查看 Git 变更', onClick: () => ctx.sidebarRight.openTabIn(sessionId, KIND) },
@@ -101,11 +134,11 @@ window.__ModuleLoader__.load({
         ) : null),
         h('div', { className: 'gd-toolbar-actions', 'data-git-diff-actions': sessionId }))
     }
-    function installTabTrigger(ctx) {
+    function installTabTrigger(ctx, store) {
       const mounts = new Map()
       let scheduled = false, disposed = false
       const selector = '[data-conversation-tabs]'
-      let sessionId = ctx.sidebarRight.mounted.getSnapshot(), summary = null
+      let { sessionId, value: summary } = store.getSnapshot()
       const renderSummary = button => {
         button.replaceChildren('变更')
         if (!summary) return
@@ -116,21 +149,14 @@ window.__ModuleLoader__.load({
           button.appendChild(count)
         }
       }
-      const updateSummary = value => {
-        summary = value
-        for (const button of mounts.values()) renderSummary(button)
-      }
-      const refreshSummary = () => {
-        sessionId = ctx.sidebarRight.mounted.getSnapshot()
-        for (const button of mounts.values()) button.nextElementSibling.dataset.gitDiffActions = sessionId || ''
-        updateSummary(null)
-        const target = sessionId
-        if (target) call('summary', { sessionId: target }).then(value => {
-          if (!disposed && sessionId === target) updateSummary(value)
-        }).catch(() => {})
-      }
-      const onUpdated = event => {
-        if (event.detail?.sessionId === sessionId) updateSummary(event.detail.value)
+      const update = () => {
+        const snapshot = store.getSnapshot()
+        sessionId = snapshot.sessionId
+        summary = snapshot.value
+        for (const button of mounts.values()) {
+          button.nextElementSibling.dataset.gitDiffActions = sessionId || ''
+          renderSummary(button)
+        }
       }
       const scan = () => {
         scheduled = false
@@ -180,15 +206,12 @@ window.__ModuleLoader__.load({
         }
       })
       observer.observe(document.body, { childList: true, subtree: true })
-      const unsubscribe = ctx.sidebarRight.mounted.subscribe(refreshSummary)
-      window.addEventListener('git-diff:updated', onUpdated)
-      refreshSummary()
+      const unsubscribe = store.subscribe(update)
       scan()
       return () => {
         disposed = true
         observer.disconnect()
         unsubscribe()
-        window.removeEventListener('git-diff:updated', onUpdated)
         for (const button of mounts.values()) button.parentElement?.remove()
         mounts.clear()
       }
@@ -196,14 +219,16 @@ window.__ModuleLoader__.load({
     return {
       inject: ['slots', 'sidebarRight', 'sidebarRightTabs'],
       apply(ctx) {
+        const store = createSummaryStore(ctx.sidebarRight.mounted)
+        ctx.effect(store.start, 'git-diff: refresh summary')
         ctx.effect(() => { const style = document.createElement('style'); style.dataset.plugin = 'dsh-asuta-git-diff'; style.textContent = CSS; document.head.appendChild(style); return () => style.remove() }, 'git-diff: styles')
         ctx.effect(() => ctx.sidebarRightTabs.register({
           id: TAB_ID, kind: KIND, patterns: ['sidebar://git-diff', 'sidebar://git-diff/**'], title: () => '变更',
           guide: [{ id: 'new', order: 42, title: () => '变更', description: () => '查看当前工作目录的 Git 差异' }],
         }), 'git-diff: tab type')
         ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: TAB_ID }, props => h(Panel, { ...props, ctx }))), 'git-diff: panel')
-        ctx.effect(() => ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({ name: 'conversation.session.header.actions', id: 'git-diff.trigger', order: 24 }, props => h(Trigger, { ...props, ctx }))), 'git-diff: single-view trigger')
-        ctx.effect(() => installTabTrigger(ctx), 'git-diff: tab-row trigger')
+        ctx.effect(() => ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({ name: 'conversation.session.header.actions', id: 'git-diff.trigger', order: 24 }, props => h(Trigger, { ...props, ctx, store }))), 'git-diff: single-view trigger')
+        ctx.effect(() => installTabTrigger(ctx, store), 'git-diff: tab-row trigger')
       },
     }
   },

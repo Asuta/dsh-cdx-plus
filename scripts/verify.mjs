@@ -37,10 +37,11 @@ for (const directory of manifest.packages) {
   }
 }
 const suite = packages.find(pkg => pkg.name === manifest.suite);
-if (!suite || manifest.features.length !== 18) errors.push('Expected a suite containing all 18 features');
+const featureCount = manifest.features.length;
+if (!suite || !featureCount || packages.length !== featureCount + 1 || Object.keys(suite.dependencies || {}).length !== featureCount) errors.push('Expected one suite and one package per feature');
 const patch = await fs.readFile(path.join(root, 'packages/suite/cordis.patch.yml'), 'utf8');
 const rowIds = [...patch.matchAll(/^\s*- id:\s*([^\s#]+)\s*$/gm)].map(match => match[1]);
-if (rowIds.length !== 19 || new Set(rowIds).size !== 19) errors.push('Suite must declare 18 independent rows plus its own manager');
+if (rowIds.length !== featureCount + 1 || new Set(rowIds).size !== rowIds.length) errors.push('Suite must declare independent feature rows plus its own manager');
 for (const feature of manifest.features) {
   const pkg = packages.find(pkg => pkg.name === feature.name);
   if (!pkg || suite?.dependencies[feature.name] !== pkg.version) errors.push('Missing or unpinned suite dependency: ' + feature.name);
@@ -50,6 +51,6 @@ if (errors.length) {
   console.error(errors.join('\n'));
   process.exitCode = 1;
 } else {
-  console.log('Verified 19 package manifests, 18 independent feature rows, browser module IDs and portable dependencies.');
+  console.log('Verified ' + packages.length + ' package manifests, ' + featureCount + ' independent feature rows, browser module IDs and portable dependencies.');
   console.log('This is structural validation; runtime acceptance and licensing are tracked in RELEASE_STATUS.md.');
 }

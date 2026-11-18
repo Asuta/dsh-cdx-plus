@@ -1,0 +1,64 @@
+{
+  "name": "dsh-asuta-model-group-label",
+  "version": "0.1.10",
+  "type": "module",
+  "description": "Show the active model group and model name in the composer. · 在输入栏的模型按钮显示分组名称/模型名称。",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "icon.svg",
+    "locale/*.json",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "dsh": ">=0.2.2-rc.2",
+    "node": "^22.19.0 || >=24"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-model-selection",
+        "@deepseek-ai/dsh-client-ui-primitives",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
+    "directory": "packages/model-group-label"
+  },
+  "homepage": "https://github.com/Asuta/dsh-cdx-plus/tree/main/packages/model-group-label",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cdx-plus",
+    "model-selection",
+    "model-group",
+    "composer"
+  ],
+  "license": "MIT",
+  "icon": "./icon.svg"
+}

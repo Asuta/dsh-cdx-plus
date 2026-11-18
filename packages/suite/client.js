@@ -45,6 +45,14 @@ window.__ModuleLoader__.load({
     "bundleConfig": false
   },
   {
+    "directory": "dsh-notify-me",
+    "name": "dsh-asuta-notify-me",
+    "version": "0.1.10",
+    "title": "DS Notify Me 通知提醒",
+    "rowId": "cdx-notify-me",
+    "bundleConfig": false
+  },
+  {
     "directory": "dsh-sidebrowser",
     "name": "dsh-asuta-sidebrowser",
     "version": "0.1.6",
@@ -55,7 +63,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "git-diff",
     "name": "dsh-asuta-git-diff",
-    "version": "0.1.6",
+    "version": "0.1.10",
     "title": "Git 变更",
     "rowId": "local-git-diff",
     "bundleConfig": false
@@ -71,9 +79,17 @@ window.__ModuleLoader__.load({
   {
     "directory": "history-edit",
     "name": "dsh-asuta-history-edit",
-    "version": "0.1.6",
+    "version": "0.1.10",
     "title": "历史消息编辑",
     "rowId": "local-history-edit",
+    "bundleConfig": false
+  },
+  {
+    "directory": "model-group-label",
+    "name": "dsh-asuta-model-group-label",
+    "version": "0.1.10",
+    "title": "输入栏模型分组",
+    "rowId": "model-group-label",
     "bundleConfig": false
   },
   {
@@ -103,7 +119,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "selection-quote",
     "name": "dsh-asuta-selection-quote",
-    "version": "0.1.8",
+    "version": "0.1.10",
     "title": "选中引用",
     "rowId": "selection-quote",
     "bundleConfig": false
