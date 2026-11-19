@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "sourceCommit": "04c148c53a1f1f13d79d2bec4fe605432c4c457b",
+  "sourceCommit": "bc0616ea8dc7501588f5ce3208eadfac334c86ae",
   "files": {
     "packages/archived-sessions/client.js": "29c94be991b252b033c7afb72d9e1fc31c9cb6297f876e4e84c65d48c336e83f",
     "packages/archived-sessions/cordis.patch.yml": "703795278e0d423babc5365197ba923919aaccd5f801e3770450d76712d5d9b3",
@@ -277,7 +277,7 @@
     "package.json": "96598d128336e1559103fd68bcd7f11e5fd32337114ec70118bf19400db63fdb",
     ".gitignore": "c3bd92ac3093f601f5246291b7972b04390af0e08bda766d6af09782d44b8c9f",
     ".gitattributes": "f15a56b198ad18fd3f131642ffee0709574e8252c58af85de92ff5dcb4208ed8",
-    "release-manifest.json": "32a809d51e9dff6242e465608315049af93d803ee51b41429474f897a861b9e8",
+    "release-manifest.json": "15b12cd4f25b0a01020275e3cfc0b4712a317b6c5e768c30dd5f98d9374af3bb",
     "scripts/verify.mjs": "3b714e64e527038f163a6a834e2e4fc75f9876cc21552506ce1f94a39352f485",
     "scripts/pack.mjs": "5c746808e865f7e240b8e1fad5d0a5fd7bf571b2faaa459a216655d5a986a123",
     "scripts/publish.mjs": "2dade5d62e3f642af6e658f2b92e4ea63a3ccf1ae0eb916b58a433774f830afc",
@@ -291,7 +291,7 @@
     "README.md": "23abe0758efce6ecf49ff5b08e1a579fbc0054107c69eec7921ffdb7fef600e8",
     "README_EN.md": "7cb6fa7103fc5877c36732ee5d9c01a43af8de6a1405163e121cd8f8b9763f12",
     "CHANGELOG.md": "e82650156beafe8986d23ec808156bcb9e175237da1f7fde1e5912a2339eef2f",
-    "RELEASE_STATUS.md": "f0f599c3d9f9af512ea0f28c76edcb0b1c49dfd7b5b31f0517e2f82274048e4d",
+    "RELEASE_STATUS.md": "19b849ce7b84d9e4a0294398a144d6bd1db4472e3687b417ad88501b80789e1f",
     "MARKETPLACE.md": "29a9545a143356714f74ca5c3ca557b61665e154479f97b857ba9716a46818f6",
     "docs/images/README.md": "8e986dfd86244ad45c7e0e57c70e1233edfd755faadee04a69680cf968fee462"
   }
