@@ -5,7 +5,7 @@ description: 在 DSH Desktop 的官方侧边栏内读取网页、点击、输入
 
 # 侧边栏浏览器工作流
 
-使用当前会话的官方浏览器，用户与 Agent 操作同一页面。工具为 `browser_*`。此指引只适用于浏览器任务，不接管已有搜索和 HTTP 读取工具。
+使用当前会话的官方浏览器，用户与 Agent 操作同一页面。先调用 `search_browser_tools {}` 获取全部操作及参数。下方的工具名是 `operation`：执行时继续调用 `search_browser_tools`，传入最新的 `discoveryId`、`operation` 和 `arguments`。目录过期时重新调用 `search_browser_tools {}`。此指引只适用于浏览器任务，不接管已有搜索和 HTTP 读取工具。
 
 1. 先明确目标内容或成功条件。调用 `browser_tabs` 找到目标页；需要新页面时用 `browser_navigate`。多个标签必须指定 tabId。
 2. 用 `browser_snapshot` 观察正文、控件及其 ref；菜单较多时先用唯一 selector/ref 作用于 form/main 等区域。browser_read 的 maxChars 只限制文字/HTML，元素列表使用 maxElements。按当前状态判断下一步，不根据猜测的页面结构连续操作。

@@ -25,7 +25,9 @@ dsh plugin --profile web add ./plugins/dsh-asuta-sidebrowser
 /dsh-asuta-sidebrowser 读取当前侧边栏网页，先观察页面，再根据我的任务操作，每一步核对结果。
 ```
 
-亦可直接要求 Agent 调用 `browser_tabs` 和 `browser_snapshot`。新建网页使用 `browser_navigate`。多个标签时明确 tabId。
+普通会话只向模型提供 `search_browser_tools`。需要使用侧栏浏览器时，无参数调用会返回全部 19 项操作的名称、说明、参数和一个 `discoveryId`。目录只出现在工具回复里，不加入模型的可用工具清单。
+
+执行时继续调用 `search_browser_tools`，传入最新的 `discoveryId`、`operation`（如 `browser_tabs`）和 `arguments`。会话重新加载或上下文压缩成功后，旧编号失效，需重新无参数查询。你也可以直接说「打开侧栏浏览器并读取页面」。多个标签时请明确 `tabId`。
 
 ## 看见 Agent 的操作
 

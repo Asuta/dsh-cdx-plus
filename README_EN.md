@@ -62,9 +62,9 @@ Enter /review and select uncommitted changes, a base branch, a specific commit o
 
 ## Install and get started
 
-**Repository version: 0.1.10. Compatibility baseline: DSH 0.2.2-rc.3.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
+**Repository version: 0.1.11. Compatibility baseline: DSH 0.2.2-rc.5.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
 
-The suite and its plugins allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified runtime baseline remains DSH 0.2.2-rc.3; future API changes may still require fixes. Install 0.1.6 or later to apply the relaxed range. Installing the suite includes all 20 plugins.
+The suite and its plugins allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified runtime baseline remains DSH 0.2.2-rc.5; future API changes may still require fixes. Install 0.1.6 or later to apply the relaxed range. Installing the suite includes all 20 plugins.
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
@@ -79,7 +79,7 @@ Start with three workflows:
 <details>
 <summary>Try it now: build a local suite from the release source</summary>
 
-Requires Git, Node.js 24+ with npm, and DSH 0.2.2-rc.3.
+Requires Git, Node.js 24+ with npm, and DSH 0.2.2-rc.5.
 
     git clone https://github.com/Asuta/dsh-cdx-plus.git
     cd dsh-cdx-plus
@@ -154,7 +154,7 @@ This is an independent community project inspired in part by Codex interactions.
 
 ### Can I use it with a newer DSH version?
 
-The declared baseline is DSH 0.2.2-rc.3; future versions are not automatically verified. Check [release status](RELEASE_STATUS.md) before installing. Include DSH and plugin versions plus reproduction steps in bug reports, with private information removed.
+The declared baseline is DSH 0.2.2-rc.5; future versions are not automatically verified. Check [release status](RELEASE_STATUS.md) before installing. Include DSH and plugin versions plus reproduction steps in bug reports, with private information removed.
 
 *Note: the embedded browser sidebar control plugin is based on [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) by guanhaisen; this project builds on that work.*
 

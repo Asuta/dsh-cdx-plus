@@ -64,9 +64,9 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 ## 安装与快速开始
 
-**本仓库版本 0.1.10，适配基线 DSH 0.2.2-rc.3。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
+**本仓库版本 0.1.11，适配基线 DSH 0.2.2-rc.5。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
 
-合集与子插件的 DSH 要求为 `>=0.2.2-rc.2`，允许后续预发布版和正式版继续安装、加载。实际验证基线仍为 DSH 0.2.2-rc.3，未来接口变化可能需要功能适配。安装 0.1.6 或更新版本后，宽松规则生效；一次安装合集即可获得 20 个子插件。
+合集与子插件的 DSH 要求为 `>=0.2.2-rc.2`，允许后续预发布版和正式版继续安装、加载。实际验证基线仍为 DSH 0.2.2-rc.5，未来接口变化可能需要功能适配。安装 0.1.6 或更新版本后，宽松规则生效；一次安装合集即可获得 20 个子插件。
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
@@ -81,7 +81,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 <details>
 <summary>现在想试用：从发行源码生成本地合集</summary>
 
-需要 Git、Node.js 24+（含 npm）及 DSH 0.2.2-rc.3。克隆本公开发行仓库，生成本地试用包：
+需要 Git、Node.js 24+（含 npm）及 DSH 0.2.2-rc.5。克隆本公开发行仓库，生成本地试用包：
 
     git clone https://github.com/Asuta/dsh-cdx-plus.git
     cd dsh-cdx-plus
@@ -156,7 +156,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 ### 升级 DSH 后能继续用吗？
 
-当前声明的适配基线为 DSH 0.2.2-rc.3，不代表所有未来版本都已兼容。安装前查看[发布状态](RELEASE_STATUS.md)；反馈问题时请附 DSH 版本、插件版本和复现步骤，并隐去私密信息。
+当前声明的适配基线为 DSH 0.2.2-rc.5，不代表所有未来版本都已兼容。安装前查看[发布状态](RELEASE_STATUS.md)；反馈问题时请附 DSH 版本、插件版本和复现步骤，并隐去私密信息。
 
 *说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
 
