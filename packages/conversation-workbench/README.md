@@ -25,7 +25,7 @@ search_threads 按需直接扫描主对话的完整历史消息正文（包含�
 
 冷会话在确认宿主提供的当前日志位置及 v4 格式后，逐行读取 JSONL；Zstd 日志逐帧解压，避免只读到首帧。找到第一条命中后停止继续读取该文件。旧格式和未知格式在读取前直接排除，不调用宿主迁移；目录状态与实际文件格式变化时也不回退到旧格式读取。已加载且已有当前逻辑表示的会话优先使用宿主内存；当前格式的其他存储后端、文件移动或解压失败仍可回退到宿主完整历史读取。只使用 Node 内置能力，无需安装 ripgrep 或其他依赖。
 
-searchBackend 为 direct-scan，不再有 indexing 状态或 60 秒建索引等待。scannedSessions 统计本页实际尝试读取的候选（包括确认下一页的额外命中）；unsupportedFormatSessions 统计当前游标之后、所选工作区范围内被排除的格式不支持会话；unreadableSessions 统计本页读取失败的会话；skippedSessions 为两者之和。任何排除或读取失败都会返回 status: partial、incomplete: true，并说明未覆盖的原因；反复搜索不会纳入旧格式会话。权限、资源耗尽和取消错误会直接报错。取消后关闭流式读取并停止调度后续会话；宿主已开始且不支持取消的读取可能仍会完成，最多 4 条。原始会话日志不被插件改写。搜索不对命中之后的日志做完整性校验。读取量较大时搜索仍需时间，少见关键词或无命中查询需要扫描全部支持格式的候选；工作区筛选可缩小范围。
+searchBackend 为 direct-scan，无需等待建索引。scannedSessions 统计本页尝试读取的受支持会话（包括确认下一页的额外命中）。不受支持的格式静默排除，不计入统计，也不影响结果状态。unreadableSessions 和 skippedSessions 均统计本页受支持但读取失败的会话；仅当出现这类失败时，返回 status: partial、incomplete: true 和读取失败说明。权限、资源耗尽和取消错误会直接报错。取消后关闭流式读取并停止调度后续会话；宿主已开始且不支持取消的读取可能仍会完成，最多 4 条。原始会话日志不被插件改写。搜索不对命中之后的日志做完整性校验。读取量较大时搜索仍需时间，少见关键词或无命中查询需要扫描全部支持格式的候选；工作区筛选可缩小范围。
 
 read_thread 使用当前 DSH 的 sessionQuery.readSession 读取完整日志，支持已加载及未打开的会话；不使用已移除的 sessionController.inspect，也不以缺少轮次边界的模型上下文代替完整历史。默认 compact: true，只返回 turns[].items，默认读取最新 1 轮，turnLimit 范围 1–10；下一页把 page.nextCursor 传回 cursor。默认 includeOutputs: false，需要工具调用和输出时显式开启。maxOutputCharsPerItem 默认 2000 字符，适用于每项消息的总文本；紧凑模式的整页项目预算为 40000 字符，超长轮次保留最新项目并明确报告 omittedItems 和截断信息，非文本内容返回类型及有长度限制的位置，不嵌入图片数据。compact: false 恢复旧版 events 结构且取消整页预算；此模式省略分页参数时，limit 控制最近事件数量。宿主读取冷会话时仍需先读取完整日志。
 

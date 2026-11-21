@@ -23,7 +23,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "conversation-workbench",
     "name": "dsh-asuta-conversation-workbench",
-    "version": "0.1.11",
+    "version": "0.1.14",
     "title": "对话管理工具",
     "rowId": "conversation-workbench",
     "bundleConfig": false

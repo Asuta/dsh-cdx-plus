@@ -52,14 +52,9 @@ export async function scanSessionMessages(ctx, { records, query, limit, signal }
   const sessions = ctx.get?.('sessions')
   const persistence = ctx.get?.('sessionPersistence')
   const unsupportedFormat = Symbol('unsupported format')
-  let unsupported = 0
   // Exclude unsupported cold logs before scheduling any stat/read/migration.
   // A live session already has a current logical representation in memory.
-  records = records.filter(record => {
-    if (record.live || sessions?.get(record.header.id) || !isUnsupportedSearchFormat(record)) return true
-    unsupported++
-    return false
-  })
+  records = records.filter(record => record.live || sessions?.get(record.header.id) || !isUnsupportedSearchFormat(record))
   async function scanOne(record) {
     await yieldToLoop(undefined, { signal: requestSignal })
     const id = record.header.id
@@ -98,7 +93,6 @@ export async function scanSessionMessages(ctx, { records, query, limit, signal }
     while (next < records.length && pending.size < Math.min(4, limit + 1 - hits.length)) {
       requestSignal.throwIfAborted()
       const index = next++
-      scanned++
       pending.set(index, scanOne(records[index]).then(snippet => ({ snippet }), error => {
         if (mustPropagate(error) || requestSignal.aborted) stop.abort(error)
         return { error }
@@ -112,13 +106,15 @@ export async function scanSessionMessages(ctx, { records, query, limit, signal }
       const result = await pending.get(index)
       pending.delete(index)
       requestSignal.throwIfAborted()
-      if (result.error) skipped++
-      else if (result.snippet === unsupportedFormat) unsupported++
-      else if (result.snippet !== null) hits.push({ sessionId: records[index].header.id, snippet: result.snippet })
+      if (result.snippet !== unsupportedFormat) {
+        scanned++
+        if (result.error) skipped++
+        else if (result.snippet !== null) hits.push({ sessionId: records[index].header.id, snippet: result.snippet })
+      }
       if (hits.length > limit) break
       fill()
     }
-    return { hits, skipped, unsupported, scanned, hasMore: hits.length > limit }
+    return { hits, skipped, scanned, hasMore: hits.length > limit }
   } finally {
     stop.abort()
     await Promise.all(pending.values())

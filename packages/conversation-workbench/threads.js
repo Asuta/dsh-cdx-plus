@@ -116,15 +116,12 @@ export async function searchThreads(ctx, { query, limit = 20, workspaceId, curso
     }
   })
   const nextCursor = found.hasMore ? Buffer.from(JSON.stringify({ query: query.trim(), workspaceId: workspaceId ?? null, backend: 'direct-scan', after: items.at(-1).sessionId })).toString('base64url') : null
-  const skippedSessions = found.skipped + found.unsupported
-  const messages = []
-  if (found.unsupported) messages.push(`${found.unsupported} sessions use unsupported storage formats and were intentionally excluded without reading or migrating their histories. Retrying the same search will not include them.`)
-  if (found.skipped) messages.push(`${found.skipped} sessions could not be read; results do not cover their contents.`)
+  const skippedSessions = found.skipped
   return { items, hasMore: nextCursor !== null, nextCursor, searchBackend: 'direct-scan',
-    scannedSessions: found.scanned, skippedSessions, unsupportedFormatSessions: found.unsupported,
+    scannedSessions: found.scanned, skippedSessions,
     unreadableSessions: found.skipped, incomplete: skippedSessions > 0,
     status: skippedSessions ? 'partial' : 'ready',
-    ...(messages.length ? { message: messages.join(' ') } : {}),
+    ...(skippedSessions ? { message: `${found.skipped} sessions could not be read; results do not cover their contents.` } : {}),
   }
 }
 
