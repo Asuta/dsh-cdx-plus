@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "1fed3ceaa4a1144f3fd36e5cf77dbc910ae215ac",
+  "sourceCommit": "dd0f6a581dbd3950599d6b1c7d89054446793ec7",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.5",
   "dshCompatibility": ">=0.2.2-rc.2",
@@ -71,7 +71,7 @@
     {
       "directory": "dsh-notify-me",
       "name": "dsh-asuta-notify-me",
-      "version": "0.1.11",
+      "version": "0.1.13",
       "title": "DS Notify Me 通知提醒",
       "rowId": "cdx-notify-me",
       "bundleConfig": false

@@ -47,7 +47,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "dsh-notify-me",
     "name": "dsh-asuta-notify-me",
-    "version": "0.1.11",
+    "version": "0.1.13",
     "title": "DS Notify Me 通知提醒",
     "rowId": "cdx-notify-me",
     "bundleConfig": false

@@ -2832,9 +2832,10 @@
       // Visibility was already checked at completion and must not change the decision.
       if (!config.enabled || isSessionMuted(sessionId)) return;
       var d = texts();
+      deliver("done", sessionLabel || d.doneTitle, snippet || d.doneBody, sessionId, null);
+      // The desktop preview is local; keep the existing external copy.
       var body = sessionLabel || d.doneBody;
-      deliverAndForward("done", d.doneTitle, snippet ? body + "\n" + snippet : body,
-        sessionId, null, externalSnippet ? body + "\n" + externalSnippet : body);
+      try { dispatchExternal("done", d.doneTitle, externalSnippet ? body + "\n" + externalSnippet : body, sessionId); } catch (e) {}
     }
     // Every "reply finished" report funnels through here, so the edge path and
     // the completionUnread level flag cannot double-alert one completion. The
@@ -2853,17 +2854,19 @@
       var binding;
       try { binding = sessions.binding(sessionId); } catch (e) {}
       var preview = previewOfBinding(binding);
-      if (preview || snippet || !sessionId || typeof sessions.using !== "function" || binding) {
-        fireDone(sessionLabel, preview || snippet, sessionId, snippet);
+      if (preview !== null || !sessionId || typeof sessions.using !== "function") {
+        fireDone(sessionLabel, preview ?? snippet, sessionId, snippet);
         return;
       }
-      // Read the latest history window without changing the selected session.
+      // Status and history arrive on separate feeds. Even a retained binding
+      // can still be opening or waiting for the last event of this turn.
       Promise.resolve().then(function () {
-        return sessions.using(sessionId, { source: "notify-preview", signal: AbortSignal.timeout(1500) }, function (ref) {
-          return previewOfBinding(ref.binding);
+        var signal = AbortSignal.timeout(1500);
+        return sessions.using(sessionId, { source: "notify-preview", signal: signal }, function (ref) {
+          return waitForReplyPreview(ref.binding, signal);
         });
       }).catch(function () { return ""; }).then(function (text) {
-        if (rootCtx === ctx) fireDone(sessionLabel, text, sessionId);
+        if (rootCtx === ctx) fireDone(sessionTitleOf(sessionId) || sessionLabel, text, sessionId, snippet);
       });
     }
     // Test alerts deliberately ignore the visibility rules (attentionHiddenOnly
@@ -2972,6 +2975,8 @@
       }
       return "";
     }
+    // null means the current turn's end has not arrived; an empty string
+    // means it ended without a preview (including aborted turns).
     function previewOfBinding(binding) {
       try {
         var entries = binding?.eventSource?.getSnapshot()?.entries || [];
@@ -2979,21 +2984,48 @@
         for (var i = entries.length - 1; i >= 0; i--) {
           var ev = entries[i].event;
           if (ev.type === "turn/end") {
-            if (turn !== undefined || (ev.data.reason?.kind || ev.data.reason) !== "completed") break;
+            if (turn !== undefined) break;
+            if ((ev.data.reason?.kind || ev.data.reason) !== "completed") return "";
             turn = ev.data.turn;
-          } else if (ev.type === "turn/start" || ev.type === "user/message") break;
-          else if (ev.type === "assistant/message" && turn !== undefined && ev.data.turn === turn) {
+          } else if (ev.type === "turn/start" || (ev.type === "user/message" && turn === undefined)) break;
+          else if (ev.type === "assistant/message" && turn !== undefined && ev.data.turn === turn && !ev.data.interrupted) {
             var content = ev.data.message?.content;
-            if (!Array.isArray(content)) break;
+            if (!Array.isArray(content)) continue;
             var lines = content.filter(function (part) { return part?.type === "text" && typeof part.text === "string"; })
               .map(function (part) { return part.text; }).join("\n").trim().split(/\r?\n/)
               .map(function (line) { return line.trim(); }).filter(Boolean);
+            if (!lines.length) continue;
             var excerpt = lines.slice(0, 3).join("\n"), characters = Array.from(excerpt);
-            return characters.length > 160 ? characters.slice(0, 159).join("") + "…" : excerpt + (lines.length > 3 ? "…" : "");
+            if (characters.length > 160 || (characters.length === 160 && lines.length > 3)) {
+              return characters.slice(0, 159).join("") + "…";
+            }
+            return excerpt + (lines.length > 3 ? "…" : "");
           }
         }
+        return turn === undefined ? null : "";
       } catch (e) {}
-      return "";
+      return null;
+    }
+    function waitForReplyPreview(binding, signal) {
+      var preview = previewOfBinding(binding);
+      var source = binding?.eventSource;
+      if (preview !== null || signal.aborted || typeof source?.subscribe !== "function") return preview || "";
+      return new Promise(function (resolve) {
+        var unsubscribe = source.subscribe(function () {
+          var text = previewOfBinding(binding);
+          if (text !== null) finish(text);
+        });
+        function finish(text) {
+          unsubscribe();
+          signal.removeEventListener("abort", onAbort);
+          resolve(text);
+        }
+        function onAbort() { finish(""); }
+        signal.addEventListener("abort", onAbort, { once: true });
+        // Recheck after subscribing so a newly published turn end cannot be missed.
+        var text = previewOfBinding(binding);
+        if (text !== null || signal.aborted) finish(text || "");
+      });
     }
     function snippetOfLastAssistant(snap) {
       try {
