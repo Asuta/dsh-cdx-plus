@@ -85,13 +85,28 @@ export function apply(ctx) {
   const deletionPlan = async id => lifecycle() ? lifecycle().deletionPlan(id)
     : { ids: [id], detachedIds: [], sideCount: 0, archivedSideCount: 0 }
 
+  function blockingChildren(plan, snapshots) {
+    const scope = new Set(plan.ids), detached = new Set(plan.detachedIds)
+    const counts = { forks: 0, subagents: 0, unrecognized: 0 }
+    for (const { header } of snapshots) {
+      if (!header || !scope.has(header.parentSession) || scope.has(header.id) || detached.has(header.id)) continue
+      if (header.origin === 'subagent') counts.subagents++
+      else if (header.isSeeded && header.delegationDepth > 0) counts.unrecognized++
+      else counts.forks++
+    }
+    return Object.values(counts).some(Boolean) ? counts : null
+  }
+
   async function preview(id) {
     if (!isSafeSessionId(id)) throw new Error('sessionId must be a plain session id')
     const plan = await deletionPlan(id)
+    const snapshots = await storedSnapshots()
+    if (!snapshots.ok) throw new Error(snapshots.message)
+    const blockers = blockingChildren(plan, snapshots.snapshots)
     for (const [token, value] of confirmations) if (Date.now() - value.time > 600000) confirmations.delete(token)
     const confirmation = randomUUID()
     confirmations.set(confirmation, { id, ids: plan.ids, time: Date.now() })
-    return { ...plan, confirmation }
+    return { ...plan, confirmation, blockers }
   }
 
   async function deleteGroup(id, confirmation) {
@@ -109,15 +124,14 @@ export function apply(ctx) {
     const perform = async (current, release = async () => {}, beginMutation = () => {}) => {
       const snapshots = await storedSnapshots()
       if (!snapshots.ok) throw new Error(snapshots.message)
-      const scope = new Set(current.ids)
       const ignore = new Set(current.detachedIds)
       // Preflight the complete group before any ledger or log is changed. Ordinary
       // forks and delegated children retain the existing refusal behavior.
+      const blockers = blockingChildren(current, snapshots.snapshots)
+      if (blockers) throw new Error('This conversation has ordinary branches or subagents; handle them before deleting it.' +
+        ' Branches: ' + blockers.forks + '; subagents or legacy records: ' + blockers.subagents + '; unrecognized: ' + blockers.unrecognized + '.')
       for (const target of current.ids) {
         if (!isSafeSessionId(target)) throw new Error('Invalid child session id')
-        const foreign = snapshots.snapshots.filter(row => row.header?.parentSession === target
-          && !scope.has(row.header.id) && !ignore.has(row.header.id))
-        if (foreign.length) throw new Error('This conversation has ordinary branches or subagents; handle them before deleting it.')
         if ((await locateSessionDirs(target)).length > 1) throw new Error('Duplicate session directories; deletion refused.')
         const activity = await ctx.waterfall('workspace/session-activity', { sessionId: target }, () => Promise.resolve([]))
         if (activity.length) throw new Error('Stop all tasks before deleting this conversation.')

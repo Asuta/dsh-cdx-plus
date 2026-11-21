@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
 import { createHash, randomUUID } from 'node:crypto'
+import { normalizeSelection } from './compaction.js?v=1.0.2'
 
 export const MAX_INSTRUCTION_BYTES = 128 * 1024
 // Match the native instruction loader without relaxing editor/write protections.
@@ -41,11 +42,6 @@ export function createSettingsCore({ home = homePath(), llm, adapter } = {}) {
     else { selection = null; selectionRevision = digest('missing') }
     return selection
   }
-  function normalizeSelection(value) {
-    if (value === null || value === undefined) return null
-    if (!value || typeof value !== 'object' || typeof value.provider !== 'string' || typeof value.model !== 'string' || !value.provider.trim() || !value.model.trim() || value.provider.length > 256 || value.model.length > 512) throw fault('BAD_SELECTION', 'Choose a provider and model, or follow the conversation model')
-    return { provider: value.provider.trim(), model: value.model.trim() }
-  }
   async function instructions({ runtime = false } = {}) {
     const content = await readText(instructionFile, true, { runtime })
     return { path: instructionFile, ...content, revision: digest((content.exists ? 'present:' : 'missing:') + content.text), maxBytes: runtime ? MAX_RUNTIME_INSTRUCTION_BYTES : MAX_INSTRUCTION_BYTES }
@@ -83,5 +79,10 @@ export function createSettingsCore({ home = homePath(), llm, adapter } = {}) {
     }))
     return entries
   }
-  return { load, instructions, saveInstructions, saveCompaction, models, getSelection: () => selection, setAdapter: value => { adapter = value }, snapshot: () => serial(async () => { await load(); return { instructions: await instructions(), compaction: selection, revision: selectionRevision, status: adapter?.status?.() ?? null } }) }
+  async function modelEfforts({ provider, model }) {
+    const target = normalizeSelection({ provider, model })
+    const exact = await llm.resolveModelInfo(target.provider, target.model, AbortSignal.timeout(5000))
+    return (exact.reasoning?.efforts ?? []).map(({ id, name }) => ({ id, name }))
+  }
+  return { load, instructions, saveInstructions, saveCompaction, models, modelEfforts, getSelection: () => selection, setAdapter: value => { adapter = value }, snapshot: () => serial(async () => { await load(); return { instructions: await instructions(), compaction: selection, revision: selectionRevision, status: adapter?.status?.() ?? null } }) }
 }

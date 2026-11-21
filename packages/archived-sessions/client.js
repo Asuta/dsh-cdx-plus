@@ -35,6 +35,7 @@ window.__ModuleLoader__.load({
       restoreSelected: 'Restore selected', deleteSelected: 'Delete selected permanently',
       batchConfirm: 'Permanently delete {n} conversations, including {a} additional linked side chats. This cannot be undone.',
       batchResult: '{n} operations completed; {a} failed.',
+      batchSkipped: '{n} selected conversations skipped because they cannot be deleted yet.',
       empty: 'No archived sessions.',
       emptyHint: 'Sessions you archive appear here.',
       restore: 'Restore',
@@ -51,6 +52,7 @@ window.__ModuleLoader__.load({
       ungrouped: 'Ungrouped',
       deleteNote: 'The session log is deleted from disk permanently; index and cache rows are removed. Project files are never touched.',
       confirmNote: 'This removes the session from every list and deletes its log from disk. It cannot be undone.',
+      blockedDelete: 'Cannot delete yet. Linked conversations: {f} branches, {s} subagent or legacy records, {u} unidentified records.',
       groupConfirm: 'Delete this conversation and {n} side chats ({a} archived) from disk. Independent conversations are kept. This cannot be undone.',
       leftovers: 'Staged copies: {n}',
       leftoverNote: 'Older versions only moved deleted logs to a quarantine folder. Those copies are still on disk.',
@@ -72,6 +74,7 @@ window.__ModuleLoader__.load({
       restoreSelected: '恢复所选', deleteSelected: '彻底删除所选',
       batchConfirm: '将永久删除 {n} 条对话，其中包含额外关联的 {a} 条侧边对话，无法撤销。',
       batchResult: '已完成 {n} 项操作，{a} 项失败。',
+      batchSkipped: '有 {n} 条所选对话暂不能删除，已跳过。',
       empty: '暂无已归档会话。',
       emptyHint: '你归档的会话会出现在这里。',
       restore: '恢复',
@@ -88,6 +91,7 @@ window.__ModuleLoader__.load({
       ungrouped: '未分组',
       deleteNote: '会话日志会从磁盘永久删除，索引与缓存一并清除。绝不触碰你的项目文件。',
       confirmNote: '该会话将从所有列表中消失，日志也会从磁盘删除，无法撤销。',
+      blockedDelete: '暂不能删除：关联普通分支 {f} 条、子代理或旧记录 {s} 条、未识别记录 {u} 条。',
       groupConfirm: '将永久删除该主会话及其 {n} 个侧边对话（其中 {a} 个已归档）的日志。已转为独立会话的对话会保留。无法撤销。',
       leftovers: '隔离残留 {n} 项',
       leftoverNote: '旧版本删除时只把日志移到了隔离目录，这些副本仍在磁盘上。',
@@ -279,6 +283,10 @@ window.__ModuleLoader__.load({
       }
     }
 
+    function describeBlockers(t, blockers) {
+      return t('blockedDelete').replace('{f}', blockers.forks).replace('{s}', blockers.subagents).replace('{u}', blockers.unrecognized)
+    }
+
     function SessionRow({ entry, t, busy, selected, onSelect, confirming, deletionPlan, error, onRestore, onAskDelete, onCancelDelete, onConfirmDelete }) {
       const title = entry.missing
         ? t('unknownSession')
@@ -290,7 +298,7 @@ window.__ModuleLoader__.load({
 
       const actions = confirming
         ? [
-            h('button', { key: 'c', type: 'button', className: 'asx-btn is-danger', disabled: busy, onClick: onConfirmDelete }, busy ? t('deleting') : t('deleteConfirm')),
+            !deletionPlan?.blockers && h('button', { key: 'c', type: 'button', className: 'asx-btn is-danger', disabled: busy, onClick: onConfirmDelete }, busy ? t('deleting') : t('deleteConfirm')),
             h('button', { key: 'x', type: 'button', className: 'asx-btn', disabled: busy, onClick: onCancelDelete }, t('cancel')),
           ]
         : [
@@ -309,7 +317,7 @@ window.__ModuleLoader__.load({
           { className: 'asx-main' },
           h('div', { className: 'asx-title' }, title),
           h('div', { className: 'asx-sub' }, meta),
-          confirming ? h('div', { className: 'asx-warn' }, deletionPlan?.sideCount > 0
+          confirming ? h('div', { className: 'asx-warn' }, deletionPlan?.blockers ? describeBlockers(t, deletionPlan.blockers) : deletionPlan?.sideCount > 0
             ? t('groupConfirm').replace('{n}', deletionPlan.sideCount).replace('{a}', deletionPlan.archivedSideCount) : t('confirmNote')) : null,
           error ? h('div', { className: 'asx-err' }, error) : null,
         ),
@@ -488,10 +496,13 @@ window.__ModuleLoader__.load({
           const covered = new Set(), groups = []
           for (const plan of plans) {
             if (covered.has(plan.id)) continue
+            if (plan.blockers) { setError(plan.id, describeBlockers(t, plan.blockers)); continue }
             groups.push(plan)
             plan.ids.forEach(id => covered.add(id))
           }
-          setBatchPlan({ groups, count: covered.size, additional: [...covered].filter(id => !selectedIds.includes(id)).length })
+          const skipped = selectedIds.filter(id => !covered.has(id)).length
+          if (groups.length) setBatchPlan({ groups, count: covered.size, additional: [...covered].filter(id => !selectedIds.includes(id)).length, skipped })
+          else if (skipped) setNotice({ kind: 'warn', text: t('batchSkipped').replace('{n}', skipped) })
         } catch (error) { setNotice({ kind: 'err', text: formatMessage(t('deleteFailed'), error.message) }) }
         finally { batchLock.current = false; setBatchBusy(false) }
       }
@@ -500,7 +511,9 @@ window.__ModuleLoader__.load({
         if (batchLock.current || locked || (deleting && !batchPlan)) return
         batchLock.current = true; setBatchBusy(true); setConfirmId(null); setNotice(null)
         const targets = deleting ? batchPlan.groups : selectedIds.map(id => ({ id }))
+        const skipped = deleting ? batchPlan.skipped : 0
         const completed = new Set(), warnings = [], deferredRestores = []
+        if (skipped) warnings.push(t('batchSkipped').replace('{n}', skipped))
         let successes = 0, failures = 0
         try {
           for (const plan of targets) {
@@ -563,7 +576,8 @@ window.__ModuleLoader__.load({
             h('button', { className: 'asx-btn', disabled: locked || !selectedIds.length, onClick: () => runBatch(false) }, t('restoreSelected')),
             h('button', { className: 'asx-btn is-danger', disabled: locked || !selectedIds.length, onClick: prepareBatchDelete }, t('deleteSelected'))) : null,
           batchPlan ? h('div', { className: 'asx-leftovers', role: 'alert' },
-            h('span', null, t('batchConfirm').replace('{n}', batchPlan.count).replace('{a}', batchPlan.additional)),
+            h('span', null, t('batchConfirm').replace('{n}', batchPlan.count).replace('{a}', batchPlan.additional),
+              batchPlan.skipped ? ' ' + t('batchSkipped').replace('{n}', batchPlan.skipped) : null),
             h('button', { className: 'asx-btn is-danger', disabled: locked, onClick: () => runBatch(true) }, t('deleteConfirm')),
             h('button', { className: 'asx-btn', disabled: locked, onClick: () => setBatchPlan(null) }, t('cancel'))) : null,
           leftovers > 0

@@ -1,5 +1,5 @@
-import { createSettingsCore, MAX_INSTRUCTION_BYTES } from './core.js?v=1.0.3'
-import { createCompactionAdapter } from './compaction.js?v=1.0.1'
+import { createSettingsCore, MAX_INSTRUCTION_BYTES } from './core.js?v=1.0.4'
+import { createCompactionAdapter } from './compaction.js?v=1.0.2'
 import { createGlobalInstructionsAdapter } from './instructions.js?v=1.0.2'
 import { createSettingsToolExecutor } from './permissions.js?v=1.0.3'
 
@@ -50,6 +50,7 @@ export async function apply(ctx) {
         return { ok: true, ...snapshot, instructionLoaders, globalInstructionStatus: { ...instructionAdapter.status(), instructionReadError }, desktopNavigationStatus: ctx.get('desktopNavigationStatus')?.read?.() ?? null, clientAssets: ctx.get('clientModules')?.graph().entries.filter(entry => ['dsh-asuta-user-agent-settings', 'dsh-asuta-desktop-navigation'].includes(entry.id)) ?? [] }
       }
       case 'models': return { ok: true, providers: await core.models() }
+      case 'model_efforts': return { ok: true, efforts: await core.modelEfforts(args) }
       case 'save_instructions': {
         const instructions = await core.saveInstructions(args)
         await refreshGlobalInstructions()
@@ -80,7 +81,7 @@ export async function apply(ctx) {
       action: { type: 'string', enum: ['read', 'models', 'save_instructions', 'save_compaction'] },
       revision: { type: 'string', description: 'For instruction saves use instructions.revision; for compression saves use the top-level revision from read.' },
       text: { type: 'string', description: 'Complete global AGENTS.md contents for save_instructions, up to 128 KiB UTF-8.' },
-      compaction: { description: 'For save_compaction: null follows each conversation model; otherwise provide its registered provider and model.', oneOf: [{ type: 'null' }, { type: 'object', properties: { provider: { type: 'string' }, model: { type: 'string' } }, required: ['provider', 'model'], additionalProperties: false }] },
+      compaction: { description: 'For save_compaction: null follows each conversation model; otherwise provide its registered provider and model, with an optional supported reasoning effort.', oneOf: [{ type: 'null' }, { type: 'object', properties: { provider: { type: 'string' }, model: { type: 'string' }, reasoningEffort: { type: 'string' } }, required: ['provider', 'model'], additionalProperties: false }] },
     }, required: ['action'], additionalProperties: false },
     output: { schema: { type: 'object', additionalProperties: true }, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
     execute: createSettingsToolExecutor(ctx, operate),

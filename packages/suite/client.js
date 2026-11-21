@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "archived-sessions",
     "name": "dsh-asuta-archived-sessions",
-    "version": "0.1.9",
+    "version": "0.1.10",
     "title": "归档会话管理",
     "rowId": "archived-sessions",
     "bundleConfig": false
@@ -47,7 +47,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "dsh-notify-me",
     "name": "dsh-asuta-notify-me",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "title": "DS Notify Me 通知提醒",
     "rowId": "cdx-notify-me",
     "bundleConfig": false
@@ -87,7 +87,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "model-group-label",
     "name": "dsh-asuta-model-group-label",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "title": "输入栏模型分组",
     "rowId": "model-group-label",
     "bundleConfig": false
@@ -103,7 +103,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "projectless-chat",
     "name": "dsh-asuta-projectless-chat",
-    "version": "0.1.9",
+    "version": "0.1.10",
     "title": "无工作区对话",
     "rowId": "projectless-chat",
     "bundleConfig": false
@@ -135,7 +135,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "sidebar-chat",
     "name": "dsh-asuta-sidebar-chat",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "title": "侧边对话",
     "rowId": "sidebar-chat",
     "bundleConfig": false
@@ -151,7 +151,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "user-agent-settings",
     "name": "dsh-asuta-user-agent-settings",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "title": "Agent 设置",
     "rowId": "user-agent-settings",
     "bundleConfig": false

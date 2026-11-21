@@ -62,7 +62,7 @@ Enter /review and select uncommitted changes, a base branch, a specific commit o
 
 ## Install and get started
 
-**Repository version: 0.1.11. Compatibility baseline: DSH 0.2.2-rc.5.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
+**Repository version: 0.1.12. Compatibility baseline: DSH 0.2.2-rc.5.** The command below installs the latest published npm version. See [RELEASE_STATUS.md](RELEASE_STATUS.md) for release status by version.
 
 The suite and its plugins allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified runtime baseline remains DSH 0.2.2-rc.5; future API changes may still require fixes. Install 0.1.6 or later to apply the relaxed range. Installing the suite includes all 20 plugins.
 

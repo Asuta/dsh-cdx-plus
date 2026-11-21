@@ -248,6 +248,20 @@ window.__ModuleLoader__.load({
         } catch (err) { if (alive.current) setError(err.message) }
         finally { pending.current = false; if (alive.current) setBusy(false) }
       }
+      const launch = React.useRef(create)
+      launch.current = create
+      React.useEffect(() => {
+        function onBrandClick(event) {
+          const button = event.target?.closest?.('button')
+          if (!button || button.disabled || event.defaultPrevented || event.target.closest('[data-copy-version]')) return
+          if (!button.querySelector('[data-slot="sidebar.brand.name"]')) return
+          event.preventDefault()
+          event.stopPropagation()
+          void launch.current()
+        }
+        document.addEventListener('click', onBrandClick, true)
+        return () => document.removeEventListener('click', onBrandClick, true)
+      }, [])
       const button = (inUngrouped = false) => h('button', { type: 'button', className: 'pc-new' + (inUngrouped ? ' pc-new-ungrouped' : ''), 'data-projectless-new': '', 'aria-label': busy ? t('creating') : t('create'), title: t('create'), disabled: busy, onClick: event => { event.stopPropagation(); void create() }, onKeyDown: event => { if (event.key === 'Enter' || event.key === ' ') event.stopPropagation() } },
         h(IconNewChatOutlineRegular, { size: 14 }))
       return h(React.Fragment, null, anchor ? createPortal(button(), anchor) : wide ? h('button', { type: 'button', className: 'pc-button', disabled: busy, onClick: create }, busy ? t('creating') : t('create')) : null,

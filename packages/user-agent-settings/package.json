@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-user-agent-settings",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "peerDependencies": {
     "@deepseek-ai/dsh-sandbox": ">=0.2.2-rc.2"
   },

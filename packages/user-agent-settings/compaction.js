@@ -19,15 +19,18 @@ const OWNED = Symbol.for('user-agent-settings.compaction-adapter.v1')
 
 function failure(code, message) { return Object.assign(new Error(message), { code }) }
 function canonical(value) { return value?.[ORIGINAL] ?? value }
-function normalize(selection) {
-  if (selection === null) return null
+export function normalizeSelection(selection) {
+  if (selection == null) return null
   if (!selection || typeof selection !== 'object' || Array.isArray(selection) ||
-      Object.keys(selection).some(key => key !== 'provider' && key !== 'model') ||
-      typeof selection.provider !== 'string' || !selection.provider.trim() ||
-      typeof selection.model !== 'string' || !selection.model.trim()) {
-    throw failure('INVALID_COMPACTION_MODEL', 'Compaction model must be null or a non-empty {provider, model} pair.')
+      Object.keys(selection).some(key => !['provider', 'model', 'reasoningEffort'].includes(key)) ||
+      typeof selection.provider !== 'string' || !selection.provider.trim() || selection.provider.length > 256 ||
+      typeof selection.model !== 'string' || !selection.model.trim() || selection.model.length > 512 ||
+      (selection.reasoningEffort !== undefined && (typeof selection.reasoningEffort !== 'string' ||
+        selection.reasoningEffort.length > 256 || !selection.reasoningEffort.trim()))) {
+    throw failure('BAD_SELECTION', 'Choose a provider and model with an optional reasoning effort, or follow the conversation model.')
   }
-  return Object.freeze({ provider: selection.provider, model: selection.model })
+  const { provider, model, reasoningEffort } = selection
+  return Object.freeze({ provider: provider.trim(), model: model.trim(), ...(reasoningEffort === undefined ? {} : { reasoningEffort: reasoningEffort.trim() }) })
 }
 
 function inspectEngine(value) {
@@ -134,9 +137,23 @@ export function createCompactionAdapter(ctx, getSelection) {
       patch = { engine, original, descriptor: Object.getOwnPropertyDescriptor(engine, 'summarize'), users: 0 }
       patch.wrapper = function (input, agent, signal) {
         if (disposed) return Reflect.apply(original, this, [input, agent, signal])
-        const selection = normalize(getSelection())
+        const selection = normalizeSelection(getSelection())
         const receiver = Object.create(this)
         Object.defineProperty(receiver, 'config', { value: summaryConfig(this.config, selection) })
+        if (selection?.reasoningEffort !== undefined) {
+          // The native summarizer reads ctx.llm.stream from this receiver.
+          // Inject the effort in this one call, preserving the actual host service.
+          const llm = this.ctx?.llm
+          if (typeof llm?.stream !== 'function') throw failure('COMPACTION_UNSUPPORTED', 'The native compression stream is unavailable.')
+          const callContext = Object.create(this.ctx)
+          Object.defineProperty(callContext, 'llm', { value: { stream(options) {
+            if (options.purpose !== 'compaction' || options.provider !== selection.provider || options.model !== selection.model) {
+              throw failure('COMPACTION_UNSUPPORTED', 'The native compression request does not match the configured model.')
+            }
+            return llm.stream({ ...options, reasoningEffort: selection.reasoningEffort })
+          } } })
+          Object.defineProperty(receiver, 'ctx', { value: callContext })
+        }
         summariesStarted++
         // Per-call receiver preserves the caller's Cordis ctx and cancellation.
         // No mutation, await window, request middleware, or global LLM rewrite.
@@ -204,7 +221,7 @@ export function createCompactionAdapter(ctx, getSelection) {
   function status() {
     let selection = null
     let selectionError = null
-    try { selection = normalize(getSelection()) } catch (error) { selectionError = error.message }
+    try { selection = normalizeSelection(getSelection()) } catch (error) { selectionError = error.message }
     const scopes = [...records.values()].map(record => ({
       kind: record.kind, source: record.source, sessionId: record.id, supported: record.supported, reason: record.reason,
     }))
@@ -222,7 +239,7 @@ export function createCompactionAdapter(ctx, getSelection) {
   }
   async function validate(value) {
     if (disposed) throw failure('COMPACTION_ADAPTER_DISPOSED', 'Compaction adapter is disposed.')
-    const selection = normalize(value)
+    const selection = normalizeSelection(value)
     const report = refresh()
     if (selection !== null && (!report.activeEngines || report.limitations.length)) {
       throw failure('COMPACTION_UNSUPPORTED', report.limitations[0]?.reason ?? 'No supported native compaction service is active.')
@@ -234,8 +251,15 @@ export function createCompactionAdapter(ctx, getSelection) {
       throw failure('COMPACTION_PROVIDER_UNAVAILABLE', 'The selected compaction provider is not registered.')
     }
     const models = await llm.listModels(selection.provider)
-    if (!models.some(model => model.id === selection.model)) {
+    const model = models.find(model => model.id === selection.model)
+    if (!model) {
       throw failure('COMPACTION_MODEL_UNAVAILABLE', 'The selected compaction model is not in the provider model catalog.')
+    }
+    if (selection.reasoningEffort !== undefined) {
+      const exact = await llm.resolveModelInfo(selection.provider, selection.model)
+      if (!exact.reasoning?.efforts?.some(effort => effort.id === selection.reasoningEffort)) {
+        throw failure('COMPACTION_EFFORT_UNAVAILABLE', 'The selected model does not support this reasoning effort.')
+      }
     }
     return selection
   }

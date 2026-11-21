@@ -2698,13 +2698,15 @@
       // the request is already on screen. The caller keeps the tab marker, and
       // flushQuieted() re-delivers the alert once the page is away.
       if (kind === "attention" && quietedByVisibleSession(isCurrent)) return false;
-      if (kind === "done" && doneSuppressed(isCurrent)) return false;
+      deliverAndForward(kind, title, body, sessionId, quick, body);
+      return true;
+    }
+    function deliverAndForward(kind, title, body, sessionId, quick, externalBody) {
       deliver(kind, title, body, sessionId, quick);
       // The alert reached the user locally (or would have, had the tab a
       // voice): mirror the same copy to the outside world. Fire-and-forget —
       // a slow endpoint must never delay or break the local alert.
-      try { dispatchExternal(kind, title, body, sessionId); } catch (e) {}
-      return true;
+      try { dispatchExternal(kind, title, externalBody, sessionId); } catch (e) {}
     }
     // True when this alert must stay silent purely because it is about the
     // session already on screen. Kept separate from fire() so the caller can
@@ -2825,11 +2827,14 @@
       fire("attention", title, body, isCurrent, sessionId, quick);
       return null;
     }
-    function fireDone(sessionLabel, snippet, sessionId) {
+    function fireDone(sessionLabel, snippet, sessionId, externalSnippet) {
+      // Respect an explicit mute or disable while the preview was loading.
+      // Visibility was already checked at completion and must not change the decision.
+      if (!config.enabled || isSessionMuted(sessionId)) return;
       var d = texts();
       var body = sessionLabel || d.doneBody;
-      if (snippet) body = body + "\n" + snippet;
-      fire("done", d.doneTitle, body, !!(sessionId && sessionId === currentSessionId()), sessionId);
+      deliverAndForward("done", d.doneTitle, snippet ? body + "\n" + snippet : body,
+        sessionId, null, externalSnippet ? body + "\n" + externalSnippet : body);
     }
     // Every "reply finished" report funnels through here, so the edge path and
     // the completionUnread level flag cannot double-alert one completion. The
@@ -2841,7 +2846,25 @@
         if (doneFiredAt[sessionId] && now - doneFiredAt[sessionId] < DONE_DEDUPE_MS) return;
         doneFiredAt[sessionId] = now;
       }
-      fireDone(sessionLabel, snippet, sessionId);
+      if (!config.enabled || isSessionMuted(sessionId) || doneSuppressed(sessionId === currentSessionId())) return;
+      var ctx = rootCtx;
+      if (!ctx) return;
+      var sessions = ctx.sessions;
+      var binding;
+      try { binding = sessions.binding(sessionId); } catch (e) {}
+      var preview = previewOfBinding(binding);
+      if (preview || snippet || !sessionId || typeof sessions.using !== "function" || binding) {
+        fireDone(sessionLabel, preview || snippet, sessionId, snippet);
+        return;
+      }
+      // Read the latest history window without changing the selected session.
+      Promise.resolve().then(function () {
+        return sessions.using(sessionId, { source: "notify-preview", signal: AbortSignal.timeout(1500) }, function (ref) {
+          return previewOfBinding(ref.binding);
+        });
+      }).catch(function () { return ""; }).then(function (text) {
+        if (rootCtx === ctx) fireDone(sessionLabel, text, sessionId);
+      });
     }
     // Test alerts deliberately ignore the visibility rules (attentionHiddenOnly
     // / doneHiddenOnly): the whole point of a test button is to prove the
@@ -2947,6 +2970,29 @@
           }
         }
       }
+      return "";
+    }
+    function previewOfBinding(binding) {
+      try {
+        var entries = binding?.eventSource?.getSnapshot()?.entries || [];
+        var turn;
+        for (var i = entries.length - 1; i >= 0; i--) {
+          var ev = entries[i].event;
+          if (ev.type === "turn/end") {
+            if (turn !== undefined || (ev.data.reason?.kind || ev.data.reason) !== "completed") break;
+            turn = ev.data.turn;
+          } else if (ev.type === "turn/start" || ev.type === "user/message") break;
+          else if (ev.type === "assistant/message" && turn !== undefined && ev.data.turn === turn) {
+            var content = ev.data.message?.content;
+            if (!Array.isArray(content)) break;
+            var lines = content.filter(function (part) { return part?.type === "text" && typeof part.text === "string"; })
+              .map(function (part) { return part.text; }).join("\n").trim().split(/\r?\n/)
+              .map(function (line) { return line.trim(); }).filter(Boolean);
+            var excerpt = lines.slice(0, 3).join("\n"), characters = Array.from(excerpt);
+            return characters.length > 160 ? characters.slice(0, 159).join("") + "…" : excerpt + (lines.length > 3 ? "…" : "");
+          }
+        }
+      } catch (e) {}
       return "";
     }
     function snippetOfLastAssistant(snap) {
@@ -5305,6 +5351,7 @@
         }
         return function () {
           disposed = true;
+          if (rootCtx === ctx) rootCtx = null;
           if (retryTimer) clearInterval(retryTimer);
           if (idleTimer) { try { clearTimeout(idleTimer); } catch (e) {} idleTimer = null; }
           for (var i = 0; i < unsubs.length; i++) { try { unsubs[i](); } catch (e) {} }

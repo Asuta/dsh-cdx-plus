@@ -56,7 +56,7 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
     const headers = new Map([...snapshots.map(item => item.header), ...live.map(session => session.header)].map(h => [h.id, h]))
     const threads = { ...state.threads }
     for (const [id, header] of headers) {
-      if (threads[id] || !header.parentSession || !header.isSeeded) continue
+      if (threads[id] || !header.parentSession || (!header.isSeeded && header.origin !== 'subagent')) continue
       // A fork/delegated child can share all header fields. Only our own marker
       // AFTER the inherited prefix is evidence that this plugin created it.
       let value
@@ -65,8 +65,9 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
         continue
       }
       const own = value.events.slice(value.inheritedEventCount ?? 0)
+      if (own.some(event => event.type === 'subagent/descriptor')) continue
       if (!own.some(event => event.type === 'user/message'
-        && event.data?.source?.kind === 'plugin:sidebar-chat')) continue
+        && (event.data?.message?.source ?? event.data?.source)?.kind === 'plugin:sidebar-chat')) continue
       threads[id] = { parentId: header.parentSession, createdAt: header.createdAt, detached: false }
     }
     await save({ ...state, threads })

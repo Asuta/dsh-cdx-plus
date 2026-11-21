@@ -1,6 +1,6 @@
 {
   "name": "dsh-asuta-model-group-label",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "type": "module",
   "description": "Show the active model group and model name in the composer. · 在输入栏的模型按钮显示分组名称/模型名称。",
   "exports": {
