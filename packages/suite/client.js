@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "archived-sessions",
     "name": "dsh-asuta-archived-sessions",
-    "version": "0.1.10",
+    "version": "0.1.15",
     "title": "归档会话管理",
     "rowId": "archived-sessions",
     "bundleConfig": false
@@ -135,7 +135,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "sidebar-chat",
     "name": "dsh-asuta-sidebar-chat",
-    "version": "0.1.7",
+    "version": "0.1.15",
     "title": "侧边对话",
     "rowId": "sidebar-chat",
     "bundleConfig": false

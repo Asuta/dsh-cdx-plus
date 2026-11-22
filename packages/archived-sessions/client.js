@@ -24,6 +24,7 @@ window.__ModuleLoader__.load({
     const PANEL_ID = 'archived-sessions'
     const NS = 'archived-sessions'
     const API = '/archived-sessions/api'
+    const BATCH_LIMIT = 1000
 
     const DICT_EN = {
       panel: 'Archived sessions',
@@ -33,9 +34,11 @@ window.__ModuleLoader__.load({
       dragHint: 'Hold and drag across rows to select. Start on a selected row to deselect.',
       selectAll: 'Select all', selected: '{n} selected', selectRow: 'Select {title}',
       restoreSelected: 'Restore selected', deleteSelected: 'Delete selected permanently',
-      batchConfirm: 'Permanently delete {n} conversations, including {a} additional linked side chats. This cannot be undone.',
+      batchConfirm: 'Permanently delete {n} conversations. This cannot be undone.',
       batchResult: '{n} operations completed; {a} failed.',
       batchSkipped: '{n} selected conversations skipped because they cannot be deleted yet.',
+      batchChecking: 'Checking which conversations can be deleted…',
+      batchProgress: 'Deletion in progress: {n} of {a} operations processed.',
       empty: 'No archived sessions.',
       emptyHint: 'Sessions you archive appear here.',
       restore: 'Restore',
@@ -52,8 +55,9 @@ window.__ModuleLoader__.load({
       ungrouped: 'Ungrouped',
       deleteNote: 'The session log is deleted from disk permanently; index and cache rows are removed. Project files are never touched.',
       confirmNote: 'This removes the session from every list and deletes its log from disk. It cannot be undone.',
-      blockedDelete: 'Cannot delete yet. Linked conversations: {f} branches, {s} subagent or legacy records, {u} unidentified records.',
-      groupConfirm: 'Delete this conversation and {n} side chats ({a} archived) from disk. Independent conversations are kept. This cannot be undone.',
+      confirmGroupNote: 'Permanently delete {n} conversations, including {linked} linked conversations. This cannot be undone.',
+      blockedDelete: 'Could not verify ownership of linked records ({ids}). Check these records before retrying.',
+      activeDelete: 'Conversation {id} is still open or running. Stop its tasks and close it, then try again.',
       leftovers: 'Staged copies: {n}',
       leftoverNote: 'Older versions only moved deleted logs to a quarantine folder. Those copies are still on disk.',
       purgeLeftovers: 'Purge leftovers',
@@ -72,9 +76,11 @@ window.__ModuleLoader__.load({
       dragHint: '按住鼠标划过条目可连续选择；从已选条目开始拖动可取消选择。',
       selectAll: '全选', selected: '已选择 {n} 条', selectRow: '选择 {title}',
       restoreSelected: '恢复所选', deleteSelected: '彻底删除所选',
-      batchConfirm: '将永久删除 {n} 条对话，其中包含额外关联的 {a} 条侧边对话，无法撤销。',
+      batchConfirm: '将永久删除 {n} 条对话，无法撤销。',
       batchResult: '已完成 {n} 项操作，{a} 项失败。',
       batchSkipped: '有 {n} 条所选对话暂不能删除，已跳过。',
+      batchChecking: '正在检查哪些对话可以删除…',
+      batchProgress: '正在删除：已处理 {n} / {a} 项。',
       empty: '暂无已归档会话。',
       emptyHint: '你归档的会话会出现在这里。',
       restore: '恢复',
@@ -91,8 +97,9 @@ window.__ModuleLoader__.load({
       ungrouped: '未分组',
       deleteNote: '会话日志会从磁盘永久删除，索引与缓存一并清除。绝不触碰你的项目文件。',
       confirmNote: '该会话将从所有列表中消失，日志也会从磁盘删除，无法撤销。',
-      blockedDelete: '暂不能删除：关联普通分支 {f} 条、子代理或旧记录 {s} 条、未识别记录 {u} 条。',
-      groupConfirm: '将永久删除该主会话及其 {n} 个侧边对话（其中 {a} 个已归档）的日志。已转为独立会话的对话会保留。无法撤销。',
+      confirmGroupNote: '将永久删除 {n} 条对话，其中包含 {linked} 条关联对话，无法撤销。',
+      blockedDelete: '暂不能删除：无法确认这些关联记录的归属（{ids}）。请先核对这些记录，再重试。',
+      activeDelete: '会话 {id} 仍打开或有任务运行。请停止任务并关闭会话，再重试。',
       leftovers: '隔离残留 {n} 项',
       leftoverNote: '旧版本删除时只把日志移到了隔离目录，这些副本仍在磁盘上。',
       purgeLeftovers: '清理残留',
@@ -128,12 +135,16 @@ window.__ModuleLoader__.load({
           }
 
     /** POST one operation to this plugin's Host route. */
-    async function callHost(method, args) {
-      const response = await fetch(API + '/' + method, {
+    function requestHost(method, args) {
+      return fetch(API + '/' + method, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(args || {}),
       })
+    }
+
+    async function callHost(method, args) {
+      const response = await requestHost(method, args)
       let payload = null
       try {
         payload = await response.json()
@@ -144,6 +155,34 @@ window.__ModuleLoader__.load({
         return { ok: false, error: { message: 'host route returned no JSON (HTTP ' + response.status + ')' } }
       }
       return payload
+    }
+
+    async function streamDelete(plans, onResult) {
+      const response = await requestHost('delete-batch', { plans })
+      if (!response.ok || !response.headers.get('content-type')?.startsWith('application/x-ndjson')) {
+        const payload = await response.json().catch(() => null)
+        throw new Error(payload?.error?.message || 'Could not start batch deletion (HTTP ' + response.status + ')')
+      }
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = '', finished = false
+      try {
+        while (!finished) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          let newline
+          while ((newline = buffer.indexOf('\n')) !== -1) {
+            const result = JSON.parse(buffer.slice(0, newline))
+            buffer = buffer.slice(newline + 1)
+            if (result.done) { finished = true; break }
+            onResult(result)
+          }
+        }
+        if (!finished) throw new Error('Batch deletion response was interrupted')
+      } finally {
+        await reader.cancel().catch(() => {})
+      }
     }
 
     function formatCount(template, n) {
@@ -284,7 +323,13 @@ window.__ModuleLoader__.load({
     }
 
     function describeBlockers(t, blockers) {
-      return t('blockedDelete').replace('{f}', blockers.forks).replace('{s}', blockers.subagents).replace('{u}', blockers.unrecognized)
+      return t('blockedDelete').replace('{ids}', blockers.join(', '))
+    }
+
+    function describeDeleteError(t, error, id) {
+      if (Array.isArray(error?.details?.blockers)) return describeBlockers(t, error.details.blockers)
+      if (error?.code === 'session/active') return t('activeDelete').replace('{id}', error.details?.sessionId ?? id)
+      return formatMessage(t('deleteFailed'), error?.message || 'Delete failed')
     }
 
     function SessionRow({ entry, t, busy, selected, onSelect, confirming, deletionPlan, error, onRestore, onAskDelete, onCancelDelete, onConfirmDelete }) {
@@ -295,6 +340,10 @@ window.__ModuleLoader__.load({
           : entry.title || t('untitled')
 
       const meta = entry.workspaceTitle || t('ungrouped')
+      const deleteCount = deletionPlan?.ids?.length ?? 1
+      const warning = !confirming ? null : deletionPlan?.blockers
+        ? describeBlockers(t, deletionPlan.blockers)
+        : deleteCount > 1 ? t('confirmGroupNote').replace('{n}', deleteCount).replace('{linked}', deleteCount - 1) : t('confirmNote')
 
       const actions = confirming
         ? [
@@ -317,8 +366,7 @@ window.__ModuleLoader__.load({
           { className: 'asx-main' },
           h('div', { className: 'asx-title' }, title),
           h('div', { className: 'asx-sub' }, meta),
-          confirming ? h('div', { className: 'asx-warn' }, deletionPlan?.blockers ? describeBlockers(t, deletionPlan.blockers) : deletionPlan?.sideCount > 0
-            ? t('groupConfirm').replace('{n}', deletionPlan.sideCount).replace('{a}', deletionPlan.archivedSideCount) : t('confirmNote')) : null,
+          warning ? h('div', { className: 'asx-warn' }, warning) : null,
           error ? h('div', { className: 'asx-err' }, error) : null,
         ),
         h('div', { className: 'asx-actions' }, actions),
@@ -342,21 +390,23 @@ window.__ModuleLoader__.load({
       const [selected, setSelected] = React.useState([])
       const [batchPlan, setBatchPlan] = React.useState(null)
       const [batchBusy, setBatchBusy] = React.useState(false)
+      const [batchProgress, setBatchProgress] = React.useState(null)
       const batchLock = React.useRef(false)
+      const batchExecuting = React.useRef(false)
       const refreshPending = React.useCallback(async () => {
         try {
           const result = await callHost('pending', {})
           if (result.ok) setPendingIds(result.value.ids)
         } catch {}
       }, [])
-      React.useEffect(() => { void refreshPending() }, [refreshPending, workspaceSnapshot])
+      React.useEffect(() => { if (!batchExecuting.current) void refreshPending() }, [refreshPending, workspaceSnapshot])
       const refreshLeftovers = React.useCallback(async () => {
         try {
           const result = await callHost('leftovers', {})
           if (result.ok) setLeftovers(result.value.count)
         } catch {}
       }, [])
-      React.useEffect(() => { void refreshLeftovers() }, [refreshLeftovers, workspaceSnapshot])
+      React.useEffect(() => { if (!batchExecuting.current) void refreshLeftovers() }, [refreshLeftovers, workspaceSnapshot])
 
       const entries = React.useMemo(() => {
         const items = workspaceSnapshot.items || []
@@ -422,8 +472,7 @@ window.__ModuleLoader__.load({
         try {
           const result = await callHost('delete', { sessionId: id, confirmation: deletionPlans[id]?.confirmation })
           if (!result.ok) {
-            const message = result.error && result.error.message ? result.error.message : 'unknown error'
-            setError(id, formatMessage(t('deleteFailed'), message))
+            setError(id, describeDeleteError(t, result.error, id))
           } else if (result.value && result.value.warning === 'quarantine-partial') {
             // The row is already gone from every list; keep the partial cleanup
             // visible at page level so it cannot be mistaken for a full delete.
@@ -483,13 +532,15 @@ window.__ModuleLoader__.load({
       const prepareBatchDelete = async () => {
         if (batchLock.current || locked) return
         batchLock.current = true; setBatchBusy(true); setBatchPlan(null); setConfirmId(null); setNotice(null)
+        setBatchProgress({ checking: true })
         try {
           const plans = []
-          for (const id of selectedIds) {
-            clearError(id)
-            const result = await callHost('preview', { sessionId: id })
-            if (!result.ok) { setError(id, result.error?.message || t('deleteFailed')); return }
-            plans.push({ id, ...result.value })
+          for (let offset = 0; offset < selectedIds.length; offset += BATCH_LIMIT) {
+            const sessionIds = selectedIds.slice(offset, offset + BATCH_LIMIT)
+            sessionIds.forEach(clearError)
+            const result = await callHost('preview-batch', { sessionIds })
+            if (!result.ok) throw new Error(result.error?.message || 'Could not inspect deletion scope')
+            plans.push(...result.value.map((plan, i) => ({ id: sessionIds[i], ...plan })))
           }
           // Delete a parent group once when both the parent and its children were selected.
           plans.sort((a, b) => b.ids.length - a.ids.length)
@@ -501,14 +552,15 @@ window.__ModuleLoader__.load({
             plan.ids.forEach(id => covered.add(id))
           }
           const skipped = selectedIds.filter(id => !covered.has(id)).length
-          if (groups.length) setBatchPlan({ groups, count: covered.size, additional: [...covered].filter(id => !selectedIds.includes(id)).length, skipped })
+          if (groups.length) setBatchPlan({ groups, count: covered.size, skipped })
           else if (skipped) setNotice({ kind: 'warn', text: t('batchSkipped').replace('{n}', skipped) })
         } catch (error) { setNotice({ kind: 'err', text: formatMessage(t('deleteFailed'), error.message) }) }
-        finally { batchLock.current = false; setBatchBusy(false) }
+        finally { batchLock.current = false; setBatchBusy(false); setBatchProgress(null) }
       }
 
       const runBatch = async deleting => {
         if (batchLock.current || locked || (deleting && !batchPlan)) return
+        batchExecuting.current = true
         batchLock.current = true; setBatchBusy(true); setConfirmId(null); setNotice(null)
         const targets = deleting ? batchPlan.groups : selectedIds.map(id => ({ id }))
         const skipped = deleting ? batchPlan.skipped : 0
@@ -516,26 +568,47 @@ window.__ModuleLoader__.load({
         if (skipped) warnings.push(t('batchSkipped').replace('{n}', skipped))
         let successes = 0, failures = 0
         try {
-          for (const plan of targets) {
-            if (completed.has(plan.id)) continue
-            clearError(plan.id)
-            try {
-              if (deleting) {
-                const result = await callHost('delete', { sessionId: plan.id, confirmation: plan.confirmation })
-                if (!result.ok) throw new Error(result.error?.message || 'Delete failed')
+          if (deleting) {
+            const byId = new Map(targets.map(plan => [plan.id, plan]))
+            setBatchProgress({ done: 0, total: targets.length })
+            targets.forEach(plan => clearError(plan.id))
+            const onResult = result => {
+              const plan = byId.get(result.sessionId)
+              if (!plan) throw new Error('Unexpected batch deletion result')
+              byId.delete(plan.id)
+              if (result.ok) {
                 ;(result.value?.deletedSessionIds || plan.ids).forEach(id => completed.add(id))
                 if (result.value?.warning) warnings.push(t('deleteIncomplete').replace('{n}', String(result.value.remaining?.length || 0)).replace('{path}', result.value.quarantine || ''))
+                successes++
               } else {
+                failures++
+                setError(plan.id, describeDeleteError(t, result.error, plan.id))
+              }
+              setBatchProgress({ done: successes + failures, total: targets.length })
+            }
+            try {
+              for (let offset = 0; offset < targets.length; offset += BATCH_LIMIT) {
+                const plans = targets.slice(offset, offset + BATCH_LIMIT).map(plan => ({ sessionId: plan.id, confirmation: plan.confirmation }))
+                await streamDelete(plans, onResult)
+              }
+              if (byId.size) throw new Error('Incomplete batch deletion results')
+            } catch (error) {
+              // The host may have finished a group before the connection closed.
+              // Report unknown results separately and refresh before allowing retry.
+              warnings.push(formatMessage(t('deleteFailed'), error.message || String(error)))
+            }
+          } else {
+            for (const plan of targets) {
+              clearError(plan.id)
+              try {
                 if (pendingIds.includes(plan.id)) throw new Error(t('deleting'))
                 if (workspaces.list.getSnapshot().archivedSessionIds.includes(plan.id)) await workspaces.unarchiveSession(plan.id)
                 completed.add(plan.id)
+                successes++
+              } catch (error) {
+                // A linked child can precede its selected parent in the archive list.
+                deferredRestores.push({ plan, error })
               }
-              successes++
-            } catch (error) {
-              // A linked child can precede its selected parent in the archive list.
-              // Retry restores once after all parents had a chance to restore.
-              if (!deleting) deferredRestores.push({ plan, error })
-              else { failures++; setError(plan.id, formatMessage(t('deleteFailed'), error.message)) }
             }
           }
           for (const { plan, error: originalError } of deferredRestores) {
@@ -550,7 +623,7 @@ window.__ModuleLoader__.load({
           try { await sessions.refresh() } catch (error) { warnings.push(formatMessage(t('refreshFailed'), error.message)) }
           await refreshPending(); await refreshLeftovers()
           setNotice({ kind: failures || warnings.length ? 'warn' : 'ok', text: [t('batchResult').replace('{n}', successes).replace('{a}', failures), ...warnings].join(' ') })
-        } finally { batchLock.current = false; setBatchBusy(false) }
+        } finally { batchExecuting.current = false; batchLock.current = false; setBatchBusy(false); setBatchProgress(null) }
       }
 
       return h(
@@ -576,7 +649,7 @@ window.__ModuleLoader__.load({
             h('button', { className: 'asx-btn', disabled: locked || !selectedIds.length, onClick: () => runBatch(false) }, t('restoreSelected')),
             h('button', { className: 'asx-btn is-danger', disabled: locked || !selectedIds.length, onClick: prepareBatchDelete }, t('deleteSelected'))) : null,
           batchPlan ? h('div', { className: 'asx-leftovers', role: 'alert' },
-            h('span', null, t('batchConfirm').replace('{n}', batchPlan.count).replace('{a}', batchPlan.additional),
+            h('span', null, t('batchConfirm').replace('{n}', batchPlan.count),
               batchPlan.skipped ? ' ' + t('batchSkipped').replace('{n}', batchPlan.skipped) : null),
             h('button', { className: 'asx-btn is-danger', disabled: locked, onClick: () => runBatch(true) }, t('deleteConfirm')),
             h('button', { className: 'asx-btn', disabled: locked, onClick: () => setBatchPlan(null) }, t('cancel'))) : null,
@@ -598,6 +671,8 @@ window.__ModuleLoader__.load({
           notice
             ? h('div', { className: notice.kind === 'warn' ? 'asx-warn' : notice.kind === 'err' ? 'asx-err' : 'asx-ok' }, notice.text)
             : null,
+          batchProgress ? h('div', { className: 'asx-note', role: 'status' }, batchProgress.checking
+            ? t('batchChecking') : t('batchProgress').replace('{n}', batchProgress.done).replace('{a}', batchProgress.total)) : null,
           entries.length === 0
             ? h(
                 'div',

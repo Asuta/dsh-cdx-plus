@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "cc09c77238a5fe964b77253d23d6b7d0876a367d",
+  "sourceCommit": "eb4042e0f9388d26c21fbce84521b324e6512a2c",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.5",
   "dshCompatibility": ">=0.2.2-rc.2",
@@ -31,7 +31,7 @@
     {
       "directory": "archived-sessions",
       "name": "dsh-asuta-archived-sessions",
-      "version": "0.1.10",
+      "version": "0.1.15",
       "title": "归档会话管理",
       "rowId": "archived-sessions",
       "bundleConfig": false
@@ -159,7 +159,7 @@
     {
       "directory": "sidebar-chat",
       "name": "dsh-asuta-sidebar-chat",
-      "version": "0.1.7",
+      "version": "0.1.15",
       "title": "侧边对话",
       "rowId": "sidebar-chat",
       "bundleConfig": false

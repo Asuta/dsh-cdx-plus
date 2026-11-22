@@ -11,6 +11,7 @@ const spec = {
       })),
       groups: z.record(z.string(), z.object({
         restoreIds: z.array(z.string()), phase: z.enum(['archiving', 'archived', 'restoring', 'deleting']),
+        deleteIds: z.array(z.string()).optional(),
       })),
     }),
     initial: { threads: {}, groups: {} },
@@ -41,6 +42,7 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
   const putGroup = (id, group) => save({ ...state, groups: { ...state.groups, [id]: group } })
   const dropGroup = async id => { const groups = { ...state.groups }; delete groups[id]; await save({ ...state, groups }) }
   const detachedIds = () => Object.entries(state.threads).filter(([, row]) => row.detached).map(([id]) => id)
+  const isSidebarSource = message => message?.source?.kind === 'plugin:sidebar-chat'
   async function archiveMember(id, options) {
     const row = state.threads[id]
     const wasArchived = archived(id)
@@ -64,10 +66,18 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
         ctx.logger?.warn('sidebar-chat: could not inspect session ' + id + ': ' + error.message)
         continue
       }
-      const own = value.events.slice(value.inheritedEventCount ?? 0)
+      const cut = value.inheritedEventCount ?? (header.isSeeded ? NaN : 0)
+      if (!Number.isSafeInteger(cut) || cut < 0 || cut > value.events.length) continue
+      const own = value.events.slice(cut)
       if (own.some(event => event.type === 'subagent/descriptor')) continue
-      if (!own.some(event => event.type === 'user/message'
-        && (event.data?.message?.source ?? event.data?.source)?.kind === 'plugin:sidebar-chat')) continue
+      // A side chat closed before its first turn may only have the injected
+      // boundary in the next-step inbox, with no corresponding user/message.
+      if (!own.some(event => {
+        if (event.type === 'user/message') return isSidebarSource(event.data?.message ?? event.data)
+        return event.type === 'agent/inbox/spliced' && event.data?.target === 'next-step'
+          && Array.isArray(event.data.inserted)
+          && event.data.inserted.some(message => message?.role === 'user' && isSidebarSource(message))
+      })) continue
       threads[id] = { parentId: header.parentSession, createdAt: header.createdAt, detached: false }
     }
     await save({ ...state, threads })
@@ -260,7 +270,14 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
       })
     },
     async deletionPlan(parentId) {
-      return serial(async () => { await scan(); return plan(parentId) })
+      return (await service.deletionPlans([parentId]))[0]
+    },
+    async deletionPlans(parentIds) {
+      return serial(async () => {
+        await scan()
+        const index = deletionIndex()
+        return parentIds.map(id => plan(id, index))
+      })
     },
     async pendingDeletions() {
       return serial(() => Object.keys(state.groups).filter(id => state.groups[id].phase === 'deleting'))
@@ -268,18 +285,26 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
     async deleteGroup(parentId, expectedIds, operation) {
       return serial(async () => {
         await scan()
-        const current = plan(parentId)
+        const current = plan(parentId, deletionIndex())
         if (JSON.stringify(current.ids) !== JSON.stringify(expectedIds)) throw new Error('The side chat list changed. Review the deletion again.')
         const group = state.groups[parentId]
         let mutationStarted = false
-        await putGroup(parentId, { restoreIds: group?.restoreIds ?? [], phase: 'deleting' })
+        const journal = { restoreIds: group?.restoreIds ?? [], phase: 'deleting', deleteIds: group?.deleteIds }
+        await putGroup(parentId, journal)
         try {
-          const result = await operation(current, release, () => { mutationStarted = true })
+          let scope = new Set(current.ids)
+          const result = await operation(current, release, async ids => {
+            if (ids) {
+              await putGroup(parentId, { ...journal, deleteIds: ids })
+              scope = new Set(ids)
+            }
+            mutationStarted = true
+          })
           const threads = { ...state.threads }
-          for (const id of current.ids) delete threads[id]
-          const groups = Object.fromEntries(Object.entries(state.groups).map(([id, row]) => [id, { ...row, restoreIds: row.restoreIds.filter(child => !current.ids.includes(child)) }]))
+          for (const id of scope) delete threads[id]
+          const groups = Object.fromEntries(Object.entries(state.groups).filter(([id]) => !scope.has(id))
+            .map(([id, row]) => [id, { ...row, restoreIds: row.restoreIds.filter(child => !scope.has(child)) }]))
           await save({ ...state, threads, groups })
-          await dropGroup(parentId)
           return result
         } catch (error) {
           if (!mutationStarted) {
@@ -301,11 +326,23 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
       await domain?.close()
     },
   }
-  function plan(parentId) {
-    const ids = [...members(parentId), parentId].sort()
+  function deletionIndex() {
     // Detached children are ordinary independent conversations, even though an
     // immutable historical header still records the source of their seed.
-    return { ids, detachedIds: detachedIds(), deleting: state.groups[parentId]?.phase === 'deleting', sideCount: ids.length - 1, archivedSideCount: ids.filter(id => id !== parentId && archived(id)).length }
+    const parents = new Map(), children = new Map(), detached = new Set()
+    for (const [id, row] of Object.entries(state.threads)) {
+      if (row.detached) { detached.add(id); continue }
+      parents.set(id, row.parentId)
+      const ids = children.get(row.parentId) ?? []
+      ids.push(id)
+      children.set(row.parentId, ids)
+    }
+    return { parents, children, detached }
+  }
+  function plan(parentId, index) {
+    const ids = [...(index.children.get(parentId) ?? []), parentId].sort()
+    const group = state.groups[parentId]
+    return { ids, index, deleteIds: group?.deleteIds, deleting: group?.phase === 'deleting' }
   }
   async function release(id) {
     const live = agents.get(id)
