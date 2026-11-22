@@ -7,9 +7,13 @@ window.__ModuleLoader__.load({
     const badgeLayout = { display: 'inline-flex', verticalAlign: 'baseline', alignItems: 'center', maxWidth: '100%', gap: 4, whiteSpace: 'nowrap' }
     const storageKey = 'dsh-model-group-label:favorites:v1'
     const rowSelector = 'button[role="menuitemradio"]:has([data-cdx-model-key])'
+    const modelPane = '[role="group"][style*="--dsh-model-anchor:"]'
+    const listSelector = '[role="menu"].scrollable'
+    const modelList = modelPane + ' > ' + listSelector
+    const changedNodeSelector = rowSelector + ', [data-cdx-model-key], ' + listSelector
     function installFavorites(ctx) {
       let favorites = readFavorites(), scheduled = false, stopped = false
-      const stars = new Map(), menus = new Map()
+      const stars = new Map(), menus = new Map(), openingLists = new Map()
       function readFavorites() {
         try { return new Set(JSON.parse(localStorage.getItem(storageKey) || '[]').filter(key => typeof key === 'string')) }
         catch { return new Set() }
@@ -20,7 +24,9 @@ window.__ModuleLoader__.load({
       }
       const css = document.createElement('style')
       css.dataset.plugin = 'dsh-asuta-model-group-label'
-      css.textContent = '[data-menu-group]:has(>[data-cdx-model-row]){position:relative}' +
+      // Keep the native anchor and viewport insets; don't resize to each result set.
+      css.textContent = modelPane + '{width:min(280px,calc(100vw - 24px));height:stretch}' +
+        '[data-menu-group]:has(>[data-cdx-model-row]){position:relative}' +
         '[data-menu-group]>[data-cdx-model-row]{padding-inline-end:34px}' +
         '.cdx-model-star{box-sizing:border-box;width:28px;height:28px;border:0;background:transparent;color:var(--dsw-alias-label-secondary);border-radius:6px;cursor:pointer;font:inherit;font-size:17px}' +
         '[data-menu-group]>.cdx-model-star{position:absolute;inset-inline-end:3px;transform:translateY(calc(-100% - 3px))}' +
@@ -51,6 +57,32 @@ window.__ModuleLoader__.load({
         star.setAttribute('aria-keyshortcuts', 'F2')
         star.addEventListener('click', action)
         return star
+      }
+      function reconcileOpeningLists() {
+        for (const [list, opening] of openingLists) if (!list.isConnected) {
+          opening?.finish()
+          openingLists.delete(list)
+        }
+        for (const list of document.querySelectorAll(modelList)) {
+          if (openingLists.has(list)) continue
+          const pane = list.parentElement
+          const listeners = new AbortController()
+          const interaction = { capture: true, signal: listeners.signal }
+          const finish = () => {
+            listeners.abort()
+            // Remember an interacted-with list until its pane unmounts.
+            if (list.isConnected) openingLists.set(list, null)
+            else openingLists.delete(list)
+          }
+          const reset = () => { if (menus.has(list) && list.scrollTop !== 0) list.scrollTop = 0 }
+          openingLists.set(list, { finish, reset })
+          // DSH may scroll to the selected model again when its catalog reloads.
+          list.addEventListener('scroll', reset, { signal: listeners.signal })
+          pane.addEventListener('pointerdown', finish, interaction)
+          pane.addEventListener('wheel', finish, { ...interaction, passive: true })
+          pane.addEventListener('keydown', finish, interaction)
+          reset()
+        }
       }
       function reconcile() {
         if (stopped) return
@@ -88,6 +120,8 @@ window.__ModuleLoader__.load({
             heading.className = 'cdx-model-favorites-label'; heading.textContent = copy('folder')
             section.append(heading); menu.prepend(section)
             entry = { section, rows: new Map() }; menus.set(menu, entry)
+            // A catalog reload can populate favorites after the picker has mounted.
+            openingLists.get(menu)?.reset()
           }
           for (const [key, item] of entry.rows) if (!rows.some(row => row.key === key)) { item.line.remove(); entry.rows.delete(key) }
           let previous = entry.section.firstElementChild
@@ -112,8 +146,14 @@ window.__ModuleLoader__.load({
             paint(item.star, data.key, data.name)
           }
         }
+        reconcileOpeningLists()
       }
       function onKeyDown(event) {
+        // Focus can remain on the trigger when a picker opens without search.
+        const controlled = event.target.matches?.('button[aria-expanded="true"][aria-controls]')
+          && document.getElementById(event.target.getAttribute('aria-controls'))
+        const list = controlled && controlled.matches(modelPane) && controlled.querySelector(modelList)
+        if (list) openingLists.get(list)?.finish()
         if (event.isComposing || event.keyCode === 229 || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
         const target = event.target
         if (event.key === 'Enter' && target.matches?.('.cdx-model-favorite-choice:not(:disabled)')) {
@@ -157,7 +197,7 @@ window.__ModuleLoader__.load({
       const schedule = () => { if (!scheduled) { scheduled = true; queueMicrotask(() => { scheduled = false; reconcile() }) } }
       const observer = new MutationObserver(records => {
         if (records.some(record => record.type === 'attributes' ? record.target.matches(rowSelector)
-          : [...record.addedNodes, ...record.removedNodes].some(node => node.nodeType === 1 && (node.matches?.(rowSelector) || node.querySelector?.(rowSelector) || node.matches?.('[data-cdx-model-key]') || node.querySelector?.('[data-cdx-model-key]'))))) schedule()
+          : [...record.addedNodes, ...record.removedNodes].some(node => node.nodeType === 1 && (node.matches?.(changedNodeSelector) || node.querySelector?.(changedNodeSelector))))) schedule()
       })
       observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-checked', 'disabled', 'data-cdx-model-key'] })
       const onStorage = event => { if (event.key === storageKey || event.key === null) { favorites = readFavorites(); schedule() } }
@@ -167,6 +207,8 @@ window.__ModuleLoader__.load({
       return () => {
         stopped = true; observer.disconnect(); window.removeEventListener('storage', onStorage); css.remove()
         document.removeEventListener('keydown', onKeyDown, true)
+        for (const opening of openingLists.values()) opening?.finish()
+        openingLists.clear()
         for (const [row, star] of stars) { row.removeAttribute('data-cdx-model-row'); star.remove() }
         for (const { section } of menus.values()) section.remove()
       }

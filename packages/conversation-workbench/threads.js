@@ -316,6 +316,7 @@ export async function waitThreads(ctx, { sessionIds, targets, timeoutMs = 120000
 }
 
 export async function createThread(ctx, { workspaceId, cwd, prompt }, exec) {
+  const text = boundedText(prompt, 'prompt (required first message)', 30000)
   if (workspaceId && cwd) throw new Error('workspaceId and cwd are mutually exclusive')
   if (workspaceId && !ctx.workspaceRegistry.get(workspaceId)) throw new Error('Workspace not found')
   if (!workspaceId && !cwd) {
@@ -324,17 +325,16 @@ export async function createThread(ctx, { workspaceId, cwd, prompt }, exec) {
     workspaceId = holder(ctx, caller.id)?.id
     cwd = workspaceId ? undefined : caller.header.cwd
   }
-  const text = prompt === undefined ? undefined : boundedText(prompt, 'prompt', 30000)
   // DSH may reuse an existing blank session unless an unused identity is supplied.
   const created = await ctx.sessionController.create(workspaceId
     ? { workspaceId, sessionId: 'session-' + randomUUID() }
     : { cwd, sessionId: 'session-' + randomUUID() })
-  if (text === undefined) return { ...created, created: true, promptAccepted: false }
   const requestId = randomUUID()
   try {
     const receipt = await ctx.sessionController.prompt({ requestId, sessionId: created.sessionId, mode: 'queue', content: [{ type: 'text', text }] }, exec?.signal ?? new AbortController().signal)
-    return { ...created, created: true, promptAccepted: receipt.accepted === true, requestId }
+    if (receipt.accepted !== true) throw new Error('DSH did not acknowledge the message')
+    return { ...created, created: true, promptAccepted: true, requestId }
   } catch (error) {
-    throw new Error('Conversation ' + created.sessionId + ' was created, but its initial prompt failed: ' + String(error?.message ?? error))
+    throw new Error('Conversation ' + created.sessionId + ' was created, but its initial prompt was not confirmed: ' + String(error?.message ?? error) + '. Check this conversation before retrying; do not create another one.')
   }
 }

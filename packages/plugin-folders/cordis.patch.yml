@@ -1,0 +1,4 @@
+- insert:
+    - id: plugin-folders
+      name: 'dsh-asuta-plugin-folders'
+      config: {}

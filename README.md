@@ -2,7 +2,7 @@
 
 npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
-**DeepSeek Harness（DSH）插件合集：20 项功能，按需开启或关闭。**
+**DeepSeek Harness（DSH）插件合集：21 项功能，按需开启或关闭。**
 
 习惯了 Codex 的交互方式，希望在 DSH 中使用选中引用、侧边对话、工作树环境和代码审查？DSH CDX Plus 将这些增强能力整理为一个合集，让你更快配置熟悉的开发工作流。
 
@@ -64,9 +64,9 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 ## 安装与快速开始
 
-**本仓库版本 0.1.15，适配基线 DSH 0.2.2-rc.5。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
+**本仓库版本 0.1.16，适配基线 DSH 0.2.2-rc.5。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
 
-合集与子插件的 DSH 要求为 `>=0.2.2-rc.2`，允许后续预发布版和正式版继续安装、加载。实际验证基线仍为 DSH 0.2.2-rc.5，未来接口变化可能需要功能适配。安装 0.1.6 或更新版本后，宽松规则生效；一次安装合集即可获得 20 个子插件。
+合集与子插件的 DSH 要求为 `>=0.2.2-rc.2`，允许后续预发布版和正式版继续安装、加载。实际验证基线仍为 DSH 0.2.2-rc.5，未来接口变化可能需要功能适配。安装 0.1.6 或更新版本后，宽松规则生效；一次安装合集即可获得 21 个子插件。
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
@@ -87,7 +87,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
     cd dsh-cdx-plus
     node scripts/pack.mjs --local-preview
 
-脚本最后会输出一个全新的本地合集 .tgz 路径，同时准备它依赖的 20 个子包。这个目录需要保留；不能只把合集 .tgz 单独发给别人。
+脚本最后会输出一个全新的本地合集 .tgz 路径，同时准备它依赖的 21 个子包。这个目录需要保留；不能只把合集 .tgz 单独发给别人。
 
 为避免影响正在使用的配置，先在新 PowerShell 窗口中设置独立数据目录，然后安装到测试 web profile：
 
@@ -103,7 +103,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 *说明：内置浏览器侧边栏控制插件基于 [guanhaisen/dsh-agent-browser](https://github.com/guanhaisen/dsh-agent-browser) 开发，原作者为 guanhaisen；本项目在其基础上继续开发。*
 
-## 全部 20 项功能
+## 全部 21 项功能
 
 每个组件都有独立开关；部分组合功能需要同时启用相关组件，例如引用跳转侧边对话、Agent 移动会话。
 
@@ -120,6 +120,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 | [隐藏新会话按钮](packages/hide-new-session/) | 隐藏 DSH 侧栏顶部的新会话按钮，精简导航区域。 | dsh-asuta-hide-new-session |
 | [历史消息编辑](packages/history-edit/) | 编辑 DSH 对话中的纯文本历史消息并重新生成回复。 | dsh-asuta-history-edit |
 | [输入栏模型分组](packages/model-group-label/) | 在输入栏的模型按钮显示分组名称/模型名称。 | dsh-asuta-model-group-label |
+| [插件文件夹](packages/plugin-folders/) | 在官方插件页用文件夹整理已安装的插件，支持拖放和跨文件夹搜索；每个安装包只占一张卡。 | dsh-asuta-plugin-folders |
 | [项目活动状态](packages/project-activity/) | 在折叠的 DSH 项目标题旁显示对话运行状态。 | dsh-asuta-project-activity |
 | [无工作区对话](packages/projectless-chat/) | 新建不绑定工作区的 DSH 对话，并配置默认工作目录。 | dsh-asuta-projectless-chat |
 | [记忆思考强度](packages/reasoning-effort-memory/) | 按提供商和模型记住 DSH 上次使用的思考强度。 | dsh-asuta-reasoning-effort-memory |

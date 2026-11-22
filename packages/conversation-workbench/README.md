@@ -29,7 +29,7 @@ searchBackend 为 direct-scan，无需等待建索引。scannedSessions 统计�
 
 read_thread 使用当前 DSH 的 sessionQuery.readSession 读取完整日志，支持已加载及未打开的会话；不使用已移除的 sessionController.inspect，也不以缺少轮次边界的模型上下文代替完整历史。默认 compact: true，只返回 turns[].items，默认读取最新 1 轮，turnLimit 范围 1–10；下一页把 page.nextCursor 传回 cursor。默认 includeOutputs: false，需要工具调用和输出时显式开启。maxOutputCharsPerItem 默认 2000 字符，适用于每项消息的总文本；紧凑模式的整页项目预算为 40000 字符，超长轮次保留最新项目并明确报告 omittedItems 和截断信息，非文本内容返回类型及有长度限制的位置，不嵌入图片数据。compact: false 恢复旧版 events 结构且取消整页预算；此模式省略分页参数时，limit 控制最近事件数量。宿主读取冷会话时仍需先读取完整日志。
 
-create_thread 显式指定新会话 ID，避免 DSH 复用空白会话；可传 prompt 提交首条任务，返回 promptAccepted 与 requestId。提交失败时错误会包含已经创建的会话 ID，便于恢复。
+create_thread 必须提供非空的 prompt 作为首条消息。工具先校验消息，再创建独立会话并提交消息；DSH 接收后返回 promptAccepted 与 requestId，不等待模型回复。提交未获确认时，错误会包含已创建的会话 ID，便于先检查原会话，避免重试时重复创建。
 
 PR 诊断各阶段的参数如下（每次均需传 `pr`；使用 PR 编号时指定仓库 `cwd`）：
 

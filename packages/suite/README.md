@@ -1,8 +1,8 @@
 # DSH CDX Plus — Codex-inspired plugins for DeepSeek Harness
 
-为 DeepSeek Harness（DSH）补齐 Codex 风格交互与开发工作流：选中引用、侧边对话、Git 工作树环境、代码审查等 20 项功能，独立开启或关闭。
+为 DeepSeek Harness（DSH）补齐 Codex 风格交互与开发工作流：选中引用、侧边对话、Git 工作树环境、代码审查等 21 项功能，独立开启或关闭。
 
-Bring familiar Codex-style interactions to DSH with selection quotes, side chats, Git worktree environments and code review. Each of the 20 features has its own switch.
+Bring familiar Codex-style interactions to DSH with selection quotes, side chats, Git worktree environments and code review. Each of the 21 features has its own switch.
 
 部分功能的逻辑参考了对 Codex 桌面版反编译代码的分析，并针对 DSH 插件机制做适配。开发结合聚焦测试与真实界面验收，关注操作细节、流畅性和稳定性；验证范围以发布状态为准，不承诺与 Codex 等同的性能。
 
@@ -12,17 +12,17 @@ Some feature logic draws on analysis of decompiled Codex desktop code and is ada
 
 ## 安装 / Installation
 
-版本 0.1.15，适配 DSH 0.2.2-rc.5。以下命令安装 npm 最新正式版；各版本进度见发行仓库的 RELEASE_STATUS.md。
+版本 0.1.16，适配 DSH 0.2.2-rc.5。以下命令安装 npm 最新正式版；各版本进度见发行仓库的 RELEASE_STATUS.md。
 
-Version 0.1.15 targets DSH 0.2.2-rc.5. Install the latest published npm version with the command below. See RELEASE_STATUS.md in the release repository for version-specific status.
+Version 0.1.16 targets DSH 0.2.2-rc.5. Install the latest published npm version with the command below. See RELEASE_STATUS.md in the release repository for version-specific status.
 
-从 0.1.6 起，合集及全部 20 个子插件允许 DSH `>=0.2.2-rc.2`，包含后续预发布版和正式版。实际验证基线仍为 0.2.2-rc.5；未来接口变化仍可能需要适配。安装 0.1.6 后才应用新的版本规则。
+从 0.1.6 起，合集及全部 21 个子插件允许 DSH `>=0.2.2-rc.2`，包含后续预发布版和正式版。实际验证基线仍为 0.2.2-rc.5；未来接口变化仍可能需要适配。安装 0.1.6 后才应用新的版本规则。
 
-Starting with 0.1.6, the suite and all 20 plugins allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified baseline remains 0.2.2-rc.5; future API changes may still require fixes. Install 0.1.6 or later to apply the new range.
+Starting with 0.1.6, the suite and all 21 plugins allow DSH `>=0.2.2-rc.2`, including later prereleases and stable versions. The verified baseline remains 0.2.2-rc.5; future API changes may still require fixes. Install 0.1.6 or later to apply the new range.
 
     dsh plugin --profile desktop add dsh-asuta-cdx-plus
 
-安装后打开「插件 → DSH CDX Plus」，按需控制 20 项功能。合集提供状态概览、引用与侧边对话的联动提示，以及内置浏览器配置入口；其他参数仍在各功能原有的设置页。
+安装后打开「插件 → DSH CDX Plus」，按需控制 21 项功能。合集提供状态概览、引用与侧边对话的联动提示，以及内置浏览器配置入口；其他参数仍在各功能原有的设置页。
 
 Open Plugins → DSH CDX Plus to toggle components. The suite provides status, integration hints and an embedded-browser settings entry; other settings stay in each feature's own UI.
 

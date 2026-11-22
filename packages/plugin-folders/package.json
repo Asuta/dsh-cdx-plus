@@ -1,0 +1,65 @@
+{
+  "name": "dsh-asuta-plugin-folders",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Organize installed plugins in folders on the Plugins page, drag packages into folders and search across folders. Each installed bundle has one card. · 在官方插件页用文件夹整理已安装的插件，支持拖放和跨文件夹搜索；每个安装包只占一张卡。",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale",
+    "icon.svg",
+    "README.md",
+    "locale/*.json",
+    "LICENSE*",
+    "NOTICE*",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "engines": {
+    "dsh": ">=0.2.2-rc.2",
+    "node": "^22.19.0 || >=24"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Asuta/dsh-cdx-plus.git",
+    "directory": "packages/plugin-folders"
+  },
+  "homepage": "https://github.com/Asuta/dsh-cdx-plus/tree/main/packages/plugin-folders",
+  "bugs": {
+    "url": "https://github.com/Asuta/dsh-cdx-plus/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cdx-plus",
+    "plugin-manager",
+    "folders",
+    "drag-and-drop"
+  ],
+  "license": "MIT"
+}

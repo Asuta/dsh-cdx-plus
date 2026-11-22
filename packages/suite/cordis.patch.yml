@@ -156,6 +156,11 @@
       config: {}
 
 - insert:
+    - id: plugin-folders
+      name: 'dsh-asuta-plugin-folders'
+      config: {}
+
+- insert:
     - id: project-activity
       name: 'dsh-asuta-project-activity'
       config: {}

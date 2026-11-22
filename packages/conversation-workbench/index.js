@@ -66,7 +66,7 @@ export function apply(ctx) {
     return { sessionId, pinned: ctx.workspaceRegistry.pinnedSessionIds.includes(sessionId) }
   })
   reg('archive_project_threads', 'Archive idle conversations in a native workspace. Active conversations remain unarchived and are reported individually.', { workspaceId: id }, ['workspaceId'], args => archiveProjectThreads(ctx, args))
-  reg('create_thread', 'Only create another conversation when the human user requests it. Creates a distinct main conversation and optionally starts an initial prompt. Supply a workspaceId; otherwise use the caller workspace or cwd.', { workspaceId: id, cwd: string, prompt: string }, [], async (args, exec) => createThread(ctx, args, exec))
+  reg('create_thread', 'Only create another conversation when the human user requests it. Creates a distinct main conversation and submits its required first message. Supply a workspaceId or cwd to choose the location; otherwise inherit the caller location.', { workspaceId: id, cwd: string, prompt: { ...string, minLength: 1, maxLength: 30000, description: 'First message to send based on what the user wants done in the new conversation. If the task is unclear, ask the user rather than sending a placeholder.' } }, ['prompt'], async (args, exec) => createThread(ctx, args, exec))
   reg('fork_thread', 'Fork a main conversation at the latest completed turn or a specified event sequence.', { sessionId: id, atSeq: integer }, ['sessionId'], async ({ sessionId, atSeq }) => {
     await target(ctx, sessionId)
     return ctx.sessionController.fork({ sessionId, ...(atSeq === undefined ? {} : { atSeq }) })

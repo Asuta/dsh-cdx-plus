@@ -1,8 +1,8 @@
 {
   "name": "dsh-asuta-cdx-plus",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "type": "module",
-  "description": "Codex-inspired plugin suite for DeepSeek Harness (DSH): quotes, side chats, Git worktrees and code review. 20 independently switchable features. · 为 DeepSeek Harness（DSH）补齐 Codex 风格体验：选中引用、侧边对话、工作树环境与代码审查，20 项功能独立启停。",
+  "description": "Codex-inspired plugin suite for DeepSeek Harness (DSH): quotes, side chats, Git worktrees and code review. 21 independently switchable features. · 为 DeepSeek Harness（DSH）补齐 Codex 风格体验：选中引用、侧边对话、工作树环境与代码审查，21 项功能独立启停。",
   "license": "MIT",
   "icon": "./icon.svg",
   "exports": {
@@ -24,7 +24,7 @@
   "dependencies": {
     "dsh-asuta-archived-sessions": "0.1.15",
     "dsh-asuta-codex-review": "0.1.6",
-    "dsh-asuta-conversation-workbench": "0.1.14",
+    "dsh-asuta-conversation-workbench": "0.1.15",
     "dsh-asuta-desktop-navigation": "0.1.9",
     "dsh-asuta-mermaid-renderer": "0.1.6",
     "dsh-asuta-notify-me": "0.1.13",
@@ -32,7 +32,8 @@
     "dsh-asuta-git-diff": "0.1.10",
     "dsh-asuta-hide-new-session": "0.1.6",
     "dsh-asuta-history-edit": "0.1.10",
-    "dsh-asuta-model-group-label": "0.1.11",
+    "dsh-asuta-model-group-label": "0.1.12",
+    "dsh-asuta-plugin-folders": "0.1.0",
     "dsh-asuta-project-activity": "0.1.6",
     "dsh-asuta-projectless-chat": "0.1.10",
     "dsh-asuta-reasoning-effort-memory": "0.1.6",

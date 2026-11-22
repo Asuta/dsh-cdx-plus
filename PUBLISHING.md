@@ -4,7 +4,7 @@
 
 ## 首次绑定（每个 npm 包一次）
 
-21 个包都需要在 npm 配置 Trusted Publisher：GitHub 仓库 `Asuta/dsh-cdx-plus`，workflow 文件 `publish.yml`，Environment 留空，允许直接 `npm publish`。首次绑定需要维护者安全验证；只允许 stage 的配置仍需逐次人工批准。
+22 个包都需要在 npm 配置 Trusted Publisher：GitHub 仓库 `Asuta/dsh-cdx-plus`，workflow 文件 `publish.yml`，Environment 留空，允许直接 `npm publish`。首次绑定需要维护者安全验证；只允许 stage 的配置仍需逐次人工批准。
 
 也可以使用 npm 11.15.0 的命令（包名替换为对应子包或合集）：
 

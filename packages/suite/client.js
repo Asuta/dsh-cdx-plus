@@ -23,7 +23,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "conversation-workbench",
     "name": "dsh-asuta-conversation-workbench",
-    "version": "0.1.14",
+    "version": "0.1.15",
     "title": "对话管理工具",
     "rowId": "conversation-workbench",
     "bundleConfig": false
@@ -87,9 +87,17 @@ window.__ModuleLoader__.load({
   {
     "directory": "model-group-label",
     "name": "dsh-asuta-model-group-label",
-    "version": "0.1.11",
+    "version": "0.1.12",
     "title": "输入栏模型分组",
     "rowId": "model-group-label",
+    "bundleConfig": false
+  },
+  {
+    "directory": "plugin-folders",
+    "name": "dsh-asuta-plugin-folders",
+    "version": "0.1.0",
+    "title": "插件文件夹",
+    "rowId": "plugin-folders",
     "bundleConfig": false
   },
   {
