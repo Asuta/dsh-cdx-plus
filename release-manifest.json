@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "5456104aef005a336e61ea8d2a34db4a409a8be8",
+  "sourceCommit": "507cb1fd1975a356ce33221ebbaf288c39a65040",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.5",
   "dshCompatibility": ">=0.2.2-rc.2",
@@ -192,7 +192,7 @@
     {
       "directory": "worktree-control",
       "name": "dsh-asuta-worktree-control",
-      "version": "0.1.6",
+      "version": "0.1.17",
       "title": "工作树控制",
       "rowId": "worktree-control",
       "bundleConfig": false

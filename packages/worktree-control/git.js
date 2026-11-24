@@ -1,4 +1,4 @@
-import { execFile } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import { promisify, stripVTControlCharacters } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
@@ -32,8 +32,20 @@ function envForGit(extra = {}) {
 
 export async function git(cwd, args, options = {}) {
   const runtime = COMMAND_CONTEXT.getStore()
-  if (runtime) return runManagedCommand(runtime, cwd, ['git', '--no-pager', '-c', 'core.quotepath=false', '-c', 'core.fsmonitor=false', ...args], options)
-  const { stdout } = await execute('git', ['--no-pager', '-c', 'core.quotepath=false', '-c', 'core.fsmonitor=false', ...args], {
+  const gitArgs = ['--no-pager', '-c', 'core.quotepath=false', '-c', 'core.fsmonitor=false', ...args]
+  if (runtime) return runManagedCommand(runtime, cwd, ['git', ...gitArgs], options)
+  if (options.consumeStdout) {
+    const child = spawn('git', gitArgs, { cwd, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env: envForGit(options.env), timeout: options.timeout ?? 30000 })
+    let detail = ''
+    child.stderr.setEncoding('utf8').on('data', text => { detail = (detail + text).slice(-4000) })
+    const done = new Promise((res, rej) => { child.once('error', rej); child.once('close', res) })
+    try {
+      const [code] = await Promise.all([done, options.consumeStdout(child.stdout)])
+      if (code !== 0) throw new Error('git command failed (' + code + '): ' + detail)
+      return
+    } finally { if (child.exitCode === null && !child.signalCode) child.kill() }
+  }
+  const { stdout } = await execute('git', gitArgs, {
     cwd, windowsHide: true, encoding: 'utf8', timeout: options.timeout ?? 30000,
     maxBuffer: options.maxBuffer ?? LIMIT, env: envForGit(options.env),
   })
@@ -53,19 +65,19 @@ async function runManagedCommand(runtime, cwd, argv, options = {}) {
     child = runtime.ctx.subprocess.spawn({
       argv: wrapped, cwd, env: envForGit(options.env), signal,
       graceMs: 3000,
-      stdio: { stdin: 'ignore', stdout: { maxBytes: options.maxBuffer ?? LIMIT }, stderr: { maxBytes: options.maxBuffer ?? LIMIT } },
+      stdio: { stdin: 'ignore', stdout: options.consumeStdout ? 'pipe' : { maxBytes: options.maxBuffer ?? LIMIT }, stderr: { maxBytes: options.maxBuffer ?? LIMIT } },
     })
-    const outcome = await child.done
+    const [outcome] = await Promise.all([child.done, options.consumeStdout?.(child.stdout)])
     const captured = child.collected
-    const stdout = captured.stdout.readFrom(0)
+    const stdout = options.consumeStdout ? null : captured.stdout.readFrom(0)
     const stderr = captured.stderr.readFrom(0)
     const allowed = options.allowedExitCodes ?? [0]
     if (outcome.exitCode === null || !allowed.includes(outcome.exitCode)) {
-      const detail = stderr.text.trim() || stdout.text.trim()
+      const detail = stderr.text.trim() || stdout?.text.trim() || ''
       throw new Error(argv[0] + ' command failed (' + (outcome.signal ?? outcome.exitCode) + '): ' + detail.slice(-4000))
     }
-    if (stdout.lossy || stderr.lossy) throw new Error('工作树命令输出超过大小上限。')
-    return stdout.text
+    if (stdout?.lossy || stderr.lossy) throw new Error('工作树命令输出超过大小上限。')
+    return stdout?.text
   } finally {
     clearTimeout(timeout)
     if (child) { child.terminate(); await child.waitForExit() }
@@ -231,9 +243,27 @@ function isSnapshotSafe(rawStatus) {
 async function includedPaths(root) {
   const file = resolve(root, '.worktreeinclude')
   const source = await readFile(file, 'utf8').catch(error => error.code === 'ENOENT' ? '' : Promise.reject(error))
-  const matcher = ignore().add(source).add('AGENTS.override.md')
-  const ignored = splitNul(await git(root, ['ls-files', '--others', '--ignored', '--exclude-standard', '-z']))
-  return ignored.filter(path => !path.startsWith('.agents/worktrees/') && matcher.ignores(path))
+  const args = ['ls-files', '--others', '--ignored', '--exclude-standard', '-z', '--']
+  if (!source.trim()) args.push(':(icase,glob)**/AGENTS.override.md', ':(icase,glob)**/AGENTS.override.md/**')
+  args.push(':(exclude,glob).agents/worktrees/**')
+  const rules = ignore().add(source).add('AGENTS.override.md')
+  const selected = []
+  await git(root, args, { consumeStdout: async stream => {
+    let tail = '', bytes = 0
+    for await (const chunk of stream.setEncoding('utf8')) {
+      const paths = (tail + chunk).split('\0')
+      tail = paths.pop()
+      // ignore caches every path tested. Keep the compiled rules but drop each chunk's cache.
+      const matcher = ignore().add(rules)
+      for (const path of paths) if (matcher.ignores(path)) {
+        bytes += Buffer.byteLength(path) + 1
+        if (bytes > LIMIT) throw new Error('需要带入工作树的文件路径清单超过大小上限。')
+        selected.push(path)
+      }
+    }
+    if (tail) throw new Error('工作树文件路径清单不完整。')
+  } })
+  return selected
 }
 
 async function collectFiles(root, requested, maxBytes = MAX_SNAPSHOT_BYTES) {
