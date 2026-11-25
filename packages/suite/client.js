@@ -167,7 +167,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "worktree-control",
     "name": "dsh-asuta-worktree-control",
-    "version": "0.1.18",
+    "version": "0.1.19",
     "title": "工作树控制",
     "rowId": "worktree-control",
     "bundleConfig": false

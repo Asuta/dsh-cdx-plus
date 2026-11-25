@@ -661,6 +661,91 @@ window.__ModuleLoader__.load({
       return Boolean(left && right && normalize(left) === normalize(right))
     }
 
+    const FLAT_SESSION_ORDER = '__flat_session_order__'
+
+    function forkSessionOrder(ids, saved, summaries, workspaces, sourceId, childId) {
+      const remaining = new Set(ids)
+      remaining.delete(childId)
+      const kept = (saved ?? []).filter(id => remaining.delete(id))
+      const archived = new Set(workspaces.archivedSessionIds)
+      const pinned = new Set(workspaces.pinnedSessionIds)
+      const leading = workspaces.pinnedSessionIds.filter(id =>
+        summaries[id] && !archived.has(id) && remaining.delete(id))
+      const missing = [...remaining].filter(id => summaries[id]).sort((a, b) =>
+        Number(archived.has(a)) - Number(archived.has(b)) ||
+        summaries[b].updatedAt - summaries[a].updatedAt || (a < b ? -1 : a > b ? 1 : 0))
+      const order = [...leading, ...kept, ...missing]
+      // Native rows are partitioned by pin state. Keep the branch in its own
+      // partition if the source cannot be its visible neighbor.
+      const eligible = id => summaries[id] && !summaries[id].blank && summaries[id].origin !== 'subagent' &&
+        !archived.has(id) && pinned.has(id) === pinned.has(childId)
+      const before = eligible(sourceId) ? sourceId : order.find(eligible)
+      const index = order.indexOf(before)
+      order.splice(index < 0 ? order.length : index, 0, childId)
+      return order
+    }
+
+    // Return false only while the native store or membership is still settling.
+    function placeWorktreeFork(ctx, { sourceId, childId }) {
+      if (!childId || childId === sourceId) return true
+      const entry = ctx.slots.entries('sidebar.workspaces').find(item => item.store?.spec?.persist === 'dsh.workspace.view.v5')
+      const store = entry?.store.create()
+      const ui = ctx.get('uiWorkspace')
+      if (!store?.actions?.syncSessionOrders || store.actions !== (ui?.[Symbol.for('cordis.original')] ?? ui)?.view) return false
+      const view = store.getSnapshot()
+      if (view.orderBy !== 'manual') return true
+      const list = ctx.sessions.list.getSnapshot(), workspaces = ctx.workspaces.list.getSnapshot()
+      const source = list.byId[sourceId], child = list.byId[childId]
+      if (list.phase !== 'ready' || workspaces.phase !== 'ready' || workspaces.state === 'loading' || !source || !child) return false
+      const owner = id => workspaces.items.find(workspace => workspace.sessionIds.includes(id))
+      const workspace = owner(sourceId)
+      if (workspace !== owner(childId)) return false
+      if (child.origin === 'subagent' || workspaces.archivedSessionIds.includes(childId)) return true
+      const account = workspace?.workspaceId ?? ''
+      const groupedIds = workspace?.sessionIds ?? (() => {
+        const accounted = new Set(workspaces.items.flatMap(item => item.sessionIds))
+        return list.ids.filter(id => list.byId[id] && !accounted.has(id))
+      })()
+      const flatIds = list.ids.filter(id => {
+        const row = list.byId[id]
+        return row && row.origin !== 'subagent' && (!row.blank || (row.retainedBy?.mainView ?? 0) > 0)
+      })
+      const order = (key, ids) => forkSessionOrder(ids, view.sessionOrderByAccount[key], list.byId, workspaces, sourceId, childId)
+      store.actions.syncSessionOrders({ [account]: order(account, groupedIds), [FLAT_SESSION_ORDER]: order(FLAT_SESSION_ORDER, flatIds) })
+      return true
+    }
+
+    function placeWorktreeForkWhenReady(ctx, job, signal) {
+      return new Promise((resolve, reject) => {
+        let stopped = false
+        const stops = []
+        const finish = error => {
+          if (stopped) return
+          stopped = true
+          clearTimeout(timer)
+          signal.removeEventListener('abort', abort)
+          for (const stop of stops) stop()
+          error ? reject(error) : resolve()
+        }
+        const abort = () => finish()
+        const check = () => {
+          if (stopped) return
+          try { if (placeWorktreeFork(ctx, job)) finish() }
+          catch (error) { finish(error) }
+        }
+        const schedule = () => queueMicrotask(check)
+        const timer = setTimeout(() => finish(), 2500)
+        if (signal.aborted) { finish(); return }
+        signal.addEventListener('abort', abort, { once: true })
+        try {
+          stops.push(ctx.sessions.list.subscribe(schedule))
+          stops.push(ctx.workspaces.list.subscribe(schedule))
+          stops.push(ctx.slots.subscribe('sidebar.workspaces', schedule))
+          check()
+        } catch (error) { finish(error) }
+      })
+    }
+
     function forkFlow(ctx) {
       const jobs = new Map(), ready = new Map(), listeners = new Set()
       const lifetime = new AbortController()
@@ -678,6 +763,13 @@ window.__ModuleLoader__.load({
       const unblock = job => {
         if (job.childId && job.block && blocks.storeFor(job.childId).getSnapshot() === job.block) blocks.set(job.childId, undefined)
       }
+      const setChild = (job, childId) => {
+        if (job.childId === childId) return
+        unblock(job)
+        job.childId = childId
+        job.block = childId ? { reason: '工作树准备就绪后即可发送消息。' } : undefined
+        if (job.block) blocks.set(childId, job.block)
+      }
       const finish = (job, path, openChild = false) => {
         const showingProgress = ctx.layout.panelInfo.getSnapshot().activePanelId === FORK_PANEL && selected === job.id
         if (path) {
@@ -692,25 +784,30 @@ window.__ModuleLoader__.load({
         if (selected === job.id) selected = null
       }
       function reconcile(status, openChild) {
+        if (completed.has(status.id)) return false
         const previous = jobs.get(status.id)
         if (status.phase === 'done' || status.phase === 'abandoned') {
           completed.add(status.id)
           if (!previous) return false
-          finish({ ...previous, childId: status.childId }, status.phase === 'done' ? status.path : undefined, openChild)
+          if (status.phase === 'abandoned') {
+            finish(previous, undefined, openChild)
+            return true
+          }
+          // Keep the placeholder and send guard until the native row has its final order.
+          setChild(previous, status.childId)
+          void placeWorktreeForkWhenReady(ctx, previous, lifetime.signal).catch(error => {
+            console.warn('worktree-control: sidebar fork order', error)
+          }).then(() => {
+            if (lifetime.signal.aborted) return
+            finish(previous, status.path, openChild)
+            publish()
+          })
           return true
         }
-        if (completed.has(status.id)) return false
         const job = previous ?? { id: status.id }
         if (job.accepted && Object.entries(status).every(([key, value]) => job[key] === value)) return false
-        if (job.childId !== status.childId) {
-          unblock(job)
-          job.block = undefined
-          if (status.childId) {
-            job.block = { reason: '工作树准备就绪后即可发送消息。' }
-            blocks.set(status.childId, job.block)
-          }
-        }
-        Object.assign(job, { childId: undefined }, status, { accepted: true })
+        setChild(job, status.childId)
+        Object.assign(job, status, { accepted: true })
         jobs.set(job.id, job)
         return true
       }
@@ -1045,7 +1142,7 @@ window.__ModuleLoader__.load({
     }
 
     return {
-      inject: ['slots', 'sidebarRight', 'sidebarRightTabs', 'sessions', 'uiWorkspace', 'layout', 'conversation'],
+      inject: ['slots', 'sidebarRight', 'sidebarRightTabs', 'sessions', 'workspaces', 'uiWorkspace', 'layout', 'conversation'],
       apply(ctx) {
         const forks = forkFlow(ctx)
         ctx.effect(() => () => forks.dispose(), 'worktree-control: fork lifecycle')
