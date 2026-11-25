@@ -3,12 +3,34 @@ window.__ModuleLoader__.load({
   factory(require) {
     const React = require('react'), h = React.createElement
     const { createPortal } = require('react-dom')
-    const { IconNewChatOutlineRegular } = require('@deepseek-ai/dsh-client-ui-primitives')
+    const { Button, Modal, Toast, IconArchiveOutlineRegular, IconNewChatOutlineRegular, IconShieldOutlineRegular } = require('@deepseek-ai/dsh-client-ui-primitives')
     const NS = 'projectlessChat'
     const UNGROUPED = 'projectless:picker'
     const PickerContext = React.createContext(null)
     const zh = { create: '新建独立对话', creating: '正在创建独立对话…', ungrouped: '未分组', title: '独立对话默认目录', help: '不属于任何工作区的新对话，会在此目录下按日期创建独立文件夹。仅影响以后新建的对话；聊天记录仍由 DSH 管理。', save: '保存', reset: '恢复默认', browse: '选择文件夹', reload: '重新读取', saved: '已保存；新建对话将使用此目录。', cancel: '取消', choose: '使用此文件夹', loading: '正在加载…', close: '关闭', error: '操作失败：', empty: '此目录下没有子文件夹。', truncated: '目录较多，仅显示部分结果；可直接输入完整路径。', retry: '重试打开' }
     const en = { create: 'New independent conversation', creating: 'Creating conversation…', ungrouped: 'Ungrouped', title: 'Default independent conversation folder', help: 'New conversations outside workspaces receive separate dated folders here. Changes apply only to new conversations. DSH continues to manage chat history.', save: 'Save', reset: 'Restore default', browse: 'Choose folder', reload: 'Reload', saved: 'Saved. New conversations will use this folder.', cancel: 'Cancel', choose: 'Use this folder', loading: 'Loading…', close: 'Close', error: 'Operation failed: ', empty: 'No subfolders.', truncated: 'Some folders are omitted. Enter the full path directly if needed.', retry: 'Open again' }
+    Object.assign(zh, {
+      archiveAll: '归档所有对话', archiveConfirm: '确认归档', archiveTitle: '归档未分组对话',
+      protectOn: '开启归档保护', protectOff: '取消归档保护', protected: '归档保护',
+      archiveCount: '将归档 {count} 条未分组对话（包括折叠的条目）。',
+      archiveSkipped: '保留：归档保护 {protected} 条、置顶 {pinned} 条、正在运行 {running} 条。',
+      archiveRestricted: '另有 {count} 条无归档权限。',
+      archiveEmpty: '没有可以批量归档的对话。', archiveHint: '归档后的对话可以恢复。',
+      archiveRunning: '正在归档：{done} / {total}', archiveDone: '已归档 {archived} 条，跳过 {skipped} 条，失败 {failed} 条。',
+      archiveChanged: '操作期间跳过：归档保护 {protected} 条、正在运行 {running} 条、状态已变化 {changed} 条。',
+      archiveNotReady: '对话列表尚未加载完成，请稍后再试。', protectError: '无法保存归档保护，请重试。',
+    })
+    Object.assign(en, {
+      archiveAll: 'Archive all conversations', archiveConfirm: 'Confirm archive', archiveTitle: 'Archive ungrouped conversations',
+      protectOn: 'Enable archive protection', protectOff: 'Remove archive protection', protected: 'Archive protection',
+      archiveCount: 'Archive {count} ungrouped conversations, including collapsed entries.',
+      archiveSkipped: 'Keep: {protected} protected, {pinned} pinned, {running} running.',
+      archiveRestricted: 'Archive access is unavailable for {count} more.',
+      archiveEmpty: 'No conversations are eligible for bulk archive.', archiveHint: 'Archived conversations can be restored.',
+      archiveRunning: 'Archiving: {done} / {total}', archiveDone: 'Archived {archived}, skipped {skipped}, failed {failed}.',
+      archiveChanged: 'Skipped during the operation: {protected} protected, {running} running, {changed} changed.',
+      archiveNotReady: 'The conversation list is still loading. Try again shortly.', protectError: 'Could not save archive protection. Please try again.',
+    })
     async function request(body, signal) {
       const response = await fetch('/projectless-chat/api', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json', 'x-projectless-chat': '1' }, body: JSON.stringify(body), signal })
       const result = await response.json()
@@ -17,8 +39,17 @@ window.__ModuleLoader__.load({
     }
     const CSS = [
       '.pc-new{display:inline-flex;align-items:center;justify-content:center;flex:none;width:28px;height:28px;padding:0;border:0;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:0;transition:opacity 120ms ease;-webkit-app-region:no-drag}',
-      '[data-pc-header]:hover .pc-new,[data-pc-ungrouped]:hover .pc-new{opacity:1}',
-      '.pc-new-ungrouped{margin:-4px -4px -4px auto;width:24px;height:24px;border-radius:var(--dsw-radius-xs);color:var(--dsw-alias-label-tertiary)}',
+      '[data-pc-header]:hover .pc-new,[data-pc-ungrouped]:hover .pc-new,.pc-new:focus-visible{opacity:1}',
+      '.pc-ungrouped-actions{display:flex;align-items:center;flex:none;gap:2px;margin:-4px -4px -4px auto}',
+      '.pc-new-ungrouped{width:24px;height:24px;border-radius:var(--dsw-radius-xs);color:var(--dsw-alias-label-tertiary)}',
+      '[data-row-key^="session:"]:has([data-pc-protection="on"]){box-shadow:inset 2px 0 var(--dsw-alias-state-business-primary,#568dea)}',
+      '[data-row-key^="session:"]:has([data-pc-protection]) button[data-dnm-mute]{display:none}',
+      '.pc-protect-action{display:inline-flex;align-items:center;justify-content:center;flex:none;width:24px;height:24px;margin:-4px;padding:0;border:0;border-radius:var(--dsw-radius-xs);background:transparent;color:var(--dsw-alias-label-tertiary);cursor:pointer}',
+      '.pc-protect-action:hover{color:var(--dsw-alias-label-primary)}.pc-protect-action:focus-visible{outline-offset:-2px}',
+      '.pc-protect-action[aria-pressed="true"]{color:var(--dsw-alias-state-business-primary,#568dea)}',
+      '.pc-protect-action:disabled{opacity:.5;cursor:default}',
+      '.pc-archive-detail{font-size:13px;line-height:1.5;color:var(--dsw-alias-label-secondary);margin:0 0 8px}',
+      '.pc-archive-errors{max-height:180px;overflow:auto;padding-inline-start:20px}',
       '.pc-new:hover,.pc-button:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.pc-new-ungrouped:hover{background:transparent;color:var(--dsw-alias-label-primary)}',
       '.pc-new-ungrouped:focus-visible{outline-offset:-2px}',
@@ -213,8 +244,183 @@ window.__ModuleLoader__.load({
       }
     }
 
-    function Launcher({ ctx, t, wide }) {
+    function protectionSource() {
+      let ids = null, tail = Promise.resolve(), channel
+      const listeners = new Set()
+      const update = body => {
+        const operation = tail.then(async () => {
+          const next = new Set((await request(body)).ids)
+          if (ids === null || ids.size !== next.size || [...next].some(id => !ids.has(id))) {
+            ids = next
+            for (const listener of listeners) listener()
+          }
+          return ids
+        })
+        tail = operation.catch(() => {})
+        return operation
+      }
+      const refresh = () => update({ action: 'archive-protection' })
+      const sync = () => { void refresh().catch(() => {}) }
+      return {
+        getSnapshot: () => ids,
+        subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener) },
+        refresh,
+        async set(id, value) {
+          await update({ action: 'set-archive-protection', id, protected: value })
+          channel?.postMessage('changed')
+        },
+        connect() {
+          channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('projectless-archive-protection') : null
+          channel?.addEventListener('message', sync)
+          window.addEventListener('focus', sync)
+          sync()
+          return () => { window.removeEventListener('focus', sync); channel?.close(); channel = null }
+        },
+      }
+    }
+
+    function access(ctx, id) {
+      return ctx.remoteAccess.source('session', id, 'workspace/archiveSession')
+    }
+
+    function archiveInventory(ctx) {
+      return buildArchiveInventory(ctx.sessions.list.getSnapshot(), ctx.workspaces.list.getSnapshot())
+    }
+
+    function buildArchiveInventory(sessions, workspaces) {
+      if (sessions.phase !== 'ready' || workspaces.phase !== 'ready') return null
+      const assigned = new Set(workspaces.items.flatMap(workspace => workspace.sessionIds))
+      const archived = new Set(workspaces.archivedSessionIds), pinned = new Set(workspaces.pinnedSessionIds)
+      const members = new Map()
+      for (const id of sessions.ids) {
+        const session = sessions.byId[id]
+        if (session && !session.blank && session.origin !== 'subagent' && !assigned.has(id) && !archived.has(id)) members.set(id, session)
+      }
+      return { members, pinned }
+    }
+
+    function archiveStatus(ctx, inventory, protectedIds, id) {
+      const row = inventory.members.get(id)
+      if (!row) return 'changed'
+      if (protectedIds.has(id)) return 'protected'
+      if (inventory.pinned.has(id)) return 'pinned'
+      if (row.running) return 'running'
+      if (!access(ctx, id).getSnapshot()) return 'unavailable'
+      return 'eligible'
+    }
+
+    function ArchiveDialog({ ctx, protection, t, onClose }) {
+      const [preview, setPreview] = React.useState(null), [error, setError] = React.useState('')
+      const [progress, setProgress] = React.useState(null), [result, setResult] = React.useState(null)
+      const busy = React.useRef(false)
+      React.useEffect(() => {
+        let alive = true
+        void protection.refresh().then(ids => {
+          if (!alive) return
+          const inventory = archiveInventory(ctx)
+          if (!inventory) { setError(t('archiveNotReady')); return }
+          const counts = { protected: 0, pinned: 0, running: 0, unavailable: 0 }
+          const targets = []
+          for (const [id, row] of inventory.members) {
+            const status = archiveStatus(ctx, inventory, ids, id)
+            if (status === 'eligible') targets.push({ id, title: row.displayTitle || id })
+            else counts[status]++
+          }
+          setPreview({ counts, targets })
+        }).catch(err => { if (alive) setError(t('error') + err.message) })
+        return () => { alive = false }
+      }, [ctx, protection, t])
+      function close() { if (!busy.current) onClose() }
+      async function confirm() {
+        if (!preview?.targets.length || busy.current || result) return
+        busy.current = true
+        setError('')
+        const total = preview.targets.length
+        setProgress({ done: 0, total })
+        const done = { archived: 0, protected: 0, running: 0, changed: 0, failures: [] }
+        try {
+          // Only submit confirmed IDs. The host rechecks protection and
+          // eligibility for each one, even when this client's view is stale.
+          for (const [i, { id, title }] of preview.targets.entries()) {
+            try {
+              if (!access(ctx, id).getSnapshot()) done.changed++
+              else {
+                const { outcome } = await request({ action: 'archive-ungrouped', id })
+                if (outcome === 'archived' || outcome === 'protected' || outcome === 'running' || outcome === 'changed') done[outcome]++
+                else done.failures.push({ id, title })
+              }
+            } catch {
+              done.failures.push({ id, title })
+            }
+            setProgress({ done: i + 1, total })
+          }
+          const skipped = Object.values(preview.counts).reduce((sum, n) => sum + n, 0) + done.protected + done.running + done.changed
+          setResult({ ...done, skipped, failed: done.failures.length })
+        } catch (err) { setError(t('error') + err.message) }
+        finally { busy.current = false; setProgress(null) }
+      }
+      return h(Modal, { open: true, onClose: close, closeLabel: t('close'), title: t('archiveTitle'),
+        footer: h(React.Fragment, null,
+          h(Button, { variant: 'outline', disabled: !!progress, onClick: close }, t(result || !preview?.targets.length ? 'close' : 'cancel')),
+          !result && preview?.targets.length > 0 ? h(Button, { variant: 'primary', disabled: !!progress, onClick: confirm }, t('archiveConfirm')) : null) },
+        error ? h('p', { role: 'alert', className: 'pc-error' }, error) : null,
+        !preview && !error ? h('p', { role: 'status' }, t('loading')) : null,
+        preview && !result ? h(React.Fragment, null,
+          h('p', null, preview.targets.length ? t('archiveCount', { count: preview.targets.length }) : t('archiveEmpty')),
+          h('p', { className: 'pc-archive-detail' }, t('archiveSkipped', preview.counts)),
+          preview.counts.unavailable ? h('p', { className: 'pc-archive-detail' }, t('archiveRestricted', { count: preview.counts.unavailable })) : null,
+          h('p', { className: 'pc-archive-detail' }, t('archiveHint'))) : null,
+        progress ? h('p', { role: 'status' }, t('archiveRunning', progress)) : null,
+        result ? h(React.Fragment, null, h('p', { role: 'status' }, t('archiveDone', result)),
+          result.protected || result.running || result.changed ? h('p', { className: 'pc-archive-detail' }, t('archiveChanged', result)) : null,
+          result.failures.length ? h('ul', { className: 'pc-archive-errors' }, ...result.failures.map(({ id, title }) => h('li', { key: id }, title))) : null) : null)
+    }
+
+    function archiveMembership(ctx) {
+      let sessions, workspaces, inventory
+      return {
+        subscribe(listener) {
+          const offSessions = ctx.sessions.list.subscribe(listener), offWorkspaces = ctx.workspaces.list.subscribe(listener)
+          return () => { offSessions(); offWorkspaces() }
+        },
+        has(id) {
+          const nextSessions = ctx.sessions.list.getSnapshot(), nextWorkspaces = ctx.workspaces.list.getSnapshot()
+          if (sessions !== nextSessions || workspaces !== nextWorkspaces) {
+            sessions = nextSessions; workspaces = nextWorkspaces
+            inventory = buildArchiveInventory(sessions, workspaces)
+          }
+          return inventory?.members.has(id) ?? false
+        },
+      }
+    }
+
+    function ProtectionRowAction({ ctx, membership, protection, sessionId, t }) {
+      const member = React.useSyncExternalStore(membership.subscribe, () => membership.has(sessionId))
+      const enabled = React.useSyncExternalStore(protection.subscribe, () => protection.getSnapshot()?.has(sessionId) ?? null)
+      const permission = React.useMemo(() => access(ctx, sessionId), [ctx, sessionId])
+      const allowed = React.useSyncExternalStore(cb => permission.subscribe(cb), () => permission.getSnapshot())
+      const [busy, setBusy] = React.useState(false), [error, setError] = React.useState(false)
+      if (!member) return null
+      const mark = { 'data-pc-protection': enabled ? 'on' : 'off' }
+      // Keep the row styling and suppress the Notify shortcut even when archiving is unavailable.
+      if (enabled === null || !allowed) return h('span', { hidden: true, ...mark })
+      async function toggle() {
+        if (busy) return
+        setBusy(true); setError(false)
+        try { await protection.set(sessionId, !enabled) }
+        catch { setError(true) }
+        finally { setBusy(false) }
+      }
+      return h(React.Fragment, null,
+        h('button', { type: 'button', className: 'pc-protect-action', ...mark, 'aria-label': t('protected'),
+          'aria-pressed': enabled, title: t(enabled ? 'protectOff' : 'protectOn'), disabled: busy, onClick: toggle },
+        h(IconShieldOutlineRegular, { size: 14 })),
+        error ? h(Toast, { text: t('protectError'), onDone: () => setError(false) }) : null)
+    }
+
+    function Launcher({ ctx, t, wide, protection }) {
       const [anchor, setAnchor] = React.useState(null), [ungrouped, setUngrouped] = React.useState(null), [busy, setBusy] = React.useState(false), [error, setError] = React.useState('')
+      const [archiveOpen, setArchiveOpen] = React.useState(false)
       const pending = React.useRef(false), alive = React.useRef(true), created = React.useRef(null)
       React.useEffect(() => {
         alive.current = true
@@ -265,18 +471,41 @@ window.__ModuleLoader__.load({
       const button = (inUngrouped = false) => h('button', { type: 'button', className: 'pc-new' + (inUngrouped ? ' pc-new-ungrouped' : ''), 'data-projectless-new': '', 'aria-label': busy ? t('creating') : t('create'), title: t('create'), disabled: busy, onClick: event => { event.stopPropagation(); void create() }, onKeyDown: event => { if (event.key === 'Enter' || event.key === ' ') event.stopPropagation() } },
         h(IconNewChatOutlineRegular, { size: 14 }))
       return h(React.Fragment, null, anchor ? createPortal(button(), anchor) : wide ? h('button', { type: 'button', className: 'pc-button', disabled: busy, onClick: create }, busy ? t('creating') : t('create')) : null,
-        ungrouped ? createPortal(button(true), ungrouped) : null,
+        ungrouped ? createPortal(h('span', { className: 'pc-ungrouped-actions' },
+          h('button', { type: 'button', className: 'pc-new pc-new-ungrouped', 'aria-label': t('archiveAll'), title: t('archiveAll'),
+            onClick: event => { event.stopPropagation(); setArchiveOpen(true) },
+            onKeyDown: event => { if (event.key === 'Enter' || event.key === ' ') event.stopPropagation() } }, h(IconArchiveOutlineRegular, { size: 14 })),
+          button(true)), ungrouped) : null,
+        archiveOpen ? h(ArchiveDialog, { ctx, t, protection, onClose: () => setArchiveOpen(false) }) : null,
         error ? createPortal(h('div', { className: 'pc-failure', role: 'alert' }, h('p', { className: 'pc-error' }, t('error') + error), h('button', { type: 'button', className: 'pc-button', onClick: create }, t('retry')), h('button', { type: 'button', className: 'pc-button', onClick: () => setError('') }, t('close'))), document.body) : null)
     }
     return {
-      inject: ['slots', 'locale', 'sessions', 'uiWorkspace', 'conversation'],
+      inject: ['slots', 'locale', 'sessions', 'workspaces', 'uiWorkspace', 'conversation', 'contextMenus', 'remoteAccess'],
       apply(ctx) {
+        const protection = protectionSource()
+        const membership = archiveMembership(ctx)
         ctx.effect(() => installIndependentComposer(ctx), 'projectless-chat: native independent composer')
         ctx.effect(() => installIndependentPicker(ctx), 'projectless-chat: hero workspace choice')
         ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'projectless-chat: translations')
         ctx.effect(() => { const tag = document.createElement('style'); tag.dataset.plugin = 'dsh-asuta-projectless-chat'; tag.dataset.pluginCss = NS; tag.textContent = CSS; document.head.appendChild(tag); return () => tag.remove() }, 'projectless-chat: styles')
-        ctx.effect(() => ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({ name: 'sidebar.footer.action', id: 'projectless-chat.create', order: 31, locale: NS }, props => h(Launcher, { ...props, ctx }))), 'projectless-chat: recent launcher')
+        ctx.effect(() => ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({ name: 'sidebar.footer.action', id: 'projectless-chat.create', order: 31, locale: NS }, props => h(Launcher, { ...props, ctx, protection }))), 'projectless-chat: recent launcher')
         ctx.effect(() => ctx.slots.inject('settings.general.item', () => ctx.slots.register({ name: 'settings.general.item', id: 'projectless-chat.directory', order: 80, locale: NS }, props => h(DirectorySetting, { ...props, ctx }))), 'projectless-chat: directory preference')
+        ctx.effect(() => protection.connect(), 'projectless-chat: archive protection state')
+        ctx.effect(() => ctx.slots.inject('sidebar.workspaces.session.row.action', () => ctx.slots.register({
+          name: 'sidebar.workspaces.session.row.action', id: 'projectless-chat.archive-protection', order: 20, locale: NS,
+        }, props => h(ProtectionRowAction, { ...props, ctx, membership, protection }))), 'projectless-chat: archive protection row action')
+        ctx.effect(() => ctx.slots.inject('contextMenu.icon', () => ctx.slots.register({ name: 'contextMenu.icon', key: 'projectless-chat.shield' }, IconShieldOutlineRegular)), 'projectless-chat: shield icon')
+        ctx.effect(() => ctx.contextMenus.register({
+          id: 'projectless-chat.archive-protection', target: 'session', order: 550,
+          observe: ({ sessionId }) => [protection, ctx.workspaces.list, ctx.sessions.list, ctx.locale, access(ctx, sessionId)],
+          resolve: ({ sessionId }) => {
+            const ids = protection.getSnapshot()
+            if (!ids || !membership.has(sessionId) || !access(ctx, sessionId).getSnapshot()) return []
+            const enabled = ids.has(sessionId), t = ctx.locale.bind(NS)
+            return [{ id: 'protect', label: t(enabled ? 'protectOff' : 'protectOn'), icon: { key: 'projectless-chat.shield' },
+              failureLabel: t('protectError'), run: () => protection.set(sessionId, !enabled) }]
+          },
+        }), 'projectless-chat: archive protection menu')
       },
     }
   },

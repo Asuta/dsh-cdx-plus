@@ -64,7 +64,7 @@ npm：`dsh-asuta-cdx-plus` · GitHub：`Asuta/dsh-cdx-plus`
 
 ## 安装与快速开始
 
-**本仓库版本 0.1.17，适配基线 DSH 0.2.2-rc.5。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
+**本仓库版本 0.1.18，适配基线 DSH 0.2.2-rc.5。** 下方命令安装 npm 上的最新正式版本；各版本的发布情况见 [RELEASE_STATUS.md](RELEASE_STATUS.md)。
 
 合集与子插件的 DSH 要求为 `>=0.2.2-rc.2`，允许后续预发布版和正式版继续安装、加载。实际验证基线仍为 DSH 0.2.2-rc.5，未来接口变化可能需要功能适配。安装 0.1.6 或更新版本后，宽松规则生效；一次安装合集即可获得 21 个子插件。
 

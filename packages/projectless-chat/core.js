@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { createHash, randomUUID } from 'node:crypto'
+import { setTimeout as delay } from 'node:timers/promises'
 
 const fault = (code, message) => Object.assign(new Error(message), { code })
 const digest = text => createHash('sha256').update(text).digest('hex')
@@ -9,6 +10,68 @@ export function defaultHome(env = process.env) {
   const home = env.DSH_HOME?.trim() || path.join(os.homedir(), '.dsh')
   return path.resolve(home === '~' ? os.homedir() : home.startsWith('~' + path.sep) ? path.join(os.homedir(), home.slice(2)) : home)
 }
+export const validProtectionId = id => typeof id === 'string' && /^[A-Za-z0-9_-]{1,200}$/.test(id)
+
+export function createArchiveProtection({ home = defaultHome() } = {}) {
+  const directory = path.join(home, 'plugin-data', 'projectless-chat')
+  const file = path.join(directory, 'archive-protection.json')
+  const lock = path.join(directory, 'archive-protection-lock.sqlite')
+  let tail = Promise.resolve()
+  async function read() {
+    let raw
+    try { raw = await fs.readFile(file, 'utf8') }
+    catch (error) { if (error.code === 'ENOENT') return []; throw error }
+    const saved = JSON.parse(raw)
+    if (saved?.version !== 1 || !Array.isArray(saved.ids) || !saved.ids.every(validProtectionId)) {
+      throw fault('INVALID_PROTECTION', '归档保护配置无法读取。')
+    }
+    return [...new Set(saved.ids)]
+  }
+  function exclusive(run) {
+    const operation = tail.then(async () => {
+      const { DatabaseSync } = await import('node:sqlite')
+      await fs.mkdir(directory, { recursive: true })
+      // Keep the existing JSON format. SQLite provides an OS-backed lock that
+      // releases on close or process exit, without a stale lockfile timeout.
+      const db = new DatabaseSync(lock)
+      try {
+        const deadline = performance.now() + 15_000
+        for (;;) {
+          try { db.exec('BEGIN IMMEDIATE'); break }
+          catch (error) {
+            if (error.code !== 'ERR_SQLITE_ERROR' || (error.errcode & 0xff) !== 5) throw error
+            if (performance.now() >= deadline) throw fault('PROTECTION_BUSY', '归档保护正在被其他实例使用，请重试。')
+            await delay(25)
+          }
+        }
+        return await run()
+      } finally { db.close() }
+    })
+    tail = operation.catch(() => {})
+    return operation
+  }
+  function set(id, protectedValue) {
+    if (!validProtectionId(id) || typeof protectedValue !== 'boolean') throw fault('INVALID_PROTECTION', '无效的归档保护设置。')
+    return exclusive(async () => {
+      const ids = new Set(await read())
+      if (ids.has(id) === protectedValue) return [...ids]
+      if (protectedValue) ids.add(id)
+      else ids.delete(id)
+      const temporary = file + '.' + randomUUID() + '.tmp'
+      try {
+        await fs.writeFile(temporary, JSON.stringify({ version: 1, ids: [...ids] }), { flag: 'wx', mode: 0o600 })
+        await fs.rename(temporary, file)
+      } finally { await fs.rm(temporary, { force: true }) }
+      return [...ids]
+    })
+  }
+  function archiveIfUnprotected(id, archive) {
+    if (!validProtectionId(id)) throw fault('INVALID_PROTECTION', '无效的会话标识。')
+    return exclusive(async () => (await read()).includes(id) ? 'protected' : await archive(id))
+  }
+  return { read, set, archiveIfUnprotected }
+}
+
 export function createDirectorySettings({ home = defaultHome(), defaultRoot = path.join(os.homedir(), 'Documents', 'DSH'), clock = () => new Date() } = {}) {
   const file = path.join(home, 'plugin-data', 'projectless-chat', 'settings.json')
   let tail = Promise.resolve()

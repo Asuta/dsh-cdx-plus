@@ -1,15 +1,17 @@
-import { archiveWorktree, clearSetupWarning, commit, configure, consumeDraft, createBranch, createWorktree, deleteArchive, deleteEnvironment, discard, environmentCatalog, handoffWorktree, inspect, openPullRequest, overview, push, readEnvironment, restoreArchive, runSetup, samePath, saveEnvironment, selectEnvironment, setPinned, stage, switchWorktree, withCommandContext, withRepoLock, git } from './git.js'
+import { archiveWorktree, clearSetupWarning, commit, configure, consumeDraft, createBranch, createWorktree, deleteArchive, deleteEnvironment, discard, environmentCatalog, git, handoffWorktree, inspect, listWorktrees, openPullRequest, overview, push, readEnvironment, restoreArchive, runSetup, samePath, saveEnvironment, selectEnvironment, setPinned, stage, switchWorktree, withCommandContext, withRepoLock, withSetupRunner, worktreeSession } from './git.js'
 import { resolve } from 'node:path'
+import { lstat } from 'node:fs/promises'
 import { isDeepStrictEqual } from 'node:util'
-import { withSetupRunner } from './git.js'
 import { EnvironmentTerminals } from './terminal-jobs.js'
-import { worktreeSession } from './git.js'
+import { AsyncLocalStorage } from 'node:async_hooks'
 
 export const name = 'dsh-asuta-worktree-control'
-export const inject = ['webServer', 'connection', 'agents', 'sessionQuery', 'workingDirectory', 'subprocess', 'sandbox', 'sandboxPolicy', 'workspaceRegistry']
+export const inject = ['webServer', 'connection', 'agents', 'sessionController', 'sessionQuery', 'workingDirectory', 'subprocess', 'sandbox', 'sandboxPolicy', 'workspaceRegistry']
 
 const ACTIONS = new Set(['capability', 'catalog', 'create', 'fork-capability', 'switch', 'handoff', 'branch', 'archive', 'restore', 'delete-archive', 'pin', 'retention', 'inspect', 'stage', 'unstage', 'discard', 'commit', 'push', 'pull-request', 'setup', 'environment-action', 'environment-save', 'environment-delete', 'environment-select', 'location-kind'])
-for (const action of ['environment-menu', 'terminal-jobs', 'terminal-claim', 'terminal-bind', 'terminal-stop']) ACTIONS.add(action)
+for (const action of ['environment-menu', 'terminal-jobs', 'terminal-claim', 'terminal-bind', 'terminal-stop', 'fork-start', 'fork-jobs', 'fork-retry', 'fork-abandon']) ACTIONS.add(action)
+const FORK_BLOCKED = '工作树准备就绪后即可发送消息；如创建失败，可放弃工作树并打开已创建的对话。'
+const validSessionId = id => typeof id === 'string' && /^[\w-]{1,128}$/.test(id)
 
 async function validateFork(ctx, source, target, atSeq, signal) {
   if (!source) throw new Error('源对话未连接，请重新打开源对话后再试。')
@@ -45,9 +47,108 @@ async function validateFork(ctx, source, target, atSeq, signal) {
 export function apply(ctx) {
   const lifecycle = new AbortController()
   const terminals = new EnvironmentTerminals(ctx, lifecycle.signal)
+  const forkJobs = new Map(), pendingForks = new Map(), creatingFork = new AsyncLocalStorage()
   const visibleSetup = (agent, operation) => withSetupRunner((cwd, script, execute, signal) =>
     terminals.enqueue(agent.id, '初始化环境', cwd, script, execute, { signal }).done, operation)
   const repositories = new Set()
+  // The native fork allocates its own ID. Capture it when the session is
+  // announced, before it can appear in another client's session list.
+  ctx.on('session/created', session => {
+    const job = creatingFork.getStore()
+    if (!job || job.childId || !session.header.isSeeded || session.header.origin === 'subagent') return
+    job.childId = session.id
+    pendingForks.set(session.id, job)
+  }, { prepend: true })
+  ctx.on('agent/created', ({ agent }) => {
+    if (!pendingForks.has(agent.id)) return
+    // Native prompt, steer and plugin callers all enter the durable inbox here.
+    for (const method of ['followup', 'steer']) {
+      const original = agent[method]
+      agent[method] = function (...args) {
+        if (pendingForks.has(agent.id) && !lifecycle.signal.aborted) {
+          // DSH recognizes RemoteError structurally and preserves the message on the wire.
+          throw Object.assign(new Error(FORK_BLOCKED), {
+            isDSHRemoteError: true, code: 'session/agent-busy', details: { reason: 'WORKTREE_PENDING' },
+          })
+        }
+        return original.apply(this, args)
+      }
+    }
+  }, { prepend: true })
+  function settleFork(job, phase) {
+    job.phase = phase
+    job.error = ''
+    job.expires = Date.now() + 30 * 60 * 1000
+    pendingForks.delete(job.childId)
+  }
+  const forkStatus = ({ id, sourceId, seq, title, childId, phase, running, error, path }) =>
+    ({ id, sourceId, seq, title, childId, phase, running, error, path })
+  function sourceFor(job) {
+    const source = ctx.agents.get(job.sourceId)
+    if (!source) throw new Error('源对话未连接，请重新打开源对话后再试。')
+    if (source.status !== 'idle') throw new Error('源对话仍在运行，请等待回复或工具任务完成后再试。')
+    if (ctx.sandboxPolicy.resolve({ session: source.session }).mode === 'read-only') throw new Error('源对话处于只读模式，无法创建工作树。')
+    return source
+  }
+  async function runFork(job) {
+    job.running = true
+    job.error = ''
+    job.expires = undefined
+    try {
+      if (!job.childId) {
+        job.phase = 'fork'
+        sourceFor(job)
+        const result = await creatingFork.run(job, () => ctx.sessionController.fork({ sessionId: job.sourceId, atSeq: job.seq }))
+        if (job.childId !== result.sessionId) throw new Error('无法确认宿主已保护分支对话，请重试。')
+        if (job.rename) {
+          try { await ctx.sessionController.rename({ sessionId: job.childId, title: job.title }) }
+          catch (error) { ctx.logger.warn('worktree-control: 分支已创建，未能更新标题：' + error.message) }
+        }
+      }
+      const agent = ctx.agents.get(job.childId)
+      if (!agent) throw new Error('目标对话未连接，请重新打开后再试。')
+      job.phase = job.path && job.initialized ? 'switch' : 'prepare'
+      await withRepoLock('session:' + agent.id, () => agent.runMaintenance(signal => {
+        const stop = AbortSignal.any([signal, lifecycle.signal])
+        const source = job.initialized ? agent : sourceFor(job)
+        return withCommandContext(ctx, source.session, async () => {
+          if (ctx.sandboxPolicy.resolve({ session: agent.session }).mode === 'read-only') throw new Error('目标对话处于只读模式，无法创建工作树。')
+          if (!job.initialized) {
+            const cwd = await ctx.workingDirectory.ensure(source, stop)
+            const root = (await git(cwd, ['rev-parse', '--show-toplevel'])).trim()
+            if (terminals.using(root)) throw new Error('源工作树有环境命令正在执行，请先停止命令再重试。')
+            if (job.path) {
+              const exists = await lstat(job.path).catch(error => { if (error.code !== 'ENOENT') throw error })
+              if (exists || (await listWorktrees(cwd)).worktrees.some(tree => samePath(tree.path, job.path))) {
+                throw new Error('未完成的工作树仍保留在 ' + job.path + '。请先移除它，再重试。')
+              }
+              job.path = undefined
+            }
+            repositories.add(root)
+            const result = await createWorktree(cwd, {
+              includeChanges: true, sessionId: agent.id, currentPath: root, rollbackOnFailure: true,
+              onCheckout: path => { job.path = path }, onProgress: phase => { job.phase = phase },
+              isAgentActive: async (id, path) => terminals.using(path) || pendingForks.has(id) ||
+                ctx.workspaceRegistry.pinnedSessionIds.includes(id) || ctx.agents.list().some(other => samePath(ctx.workingDirectory.get(other.session), path)),
+            })
+            job.path = result.tree.path
+            job.initialized = true
+          }
+          job.phase = 'switch'
+          if (terminals.using(job.path)) throw new Error('新工作树有环境命令正在执行，请先停止命令再重试。')
+          await ctx.workingDirectory.set(agent, job.path, stop)
+        }, stop)
+      }))
+      settleFork(job, 'done')
+    } catch (error) {
+      if (job.phase === 'fork' && job.childId && !ctx.agents.get(job.childId)) {
+        pendingForks.delete(job.childId)
+        job.childId = undefined
+      }
+      job.error = String(error.message ?? error)
+      if (!job.childId) job.expires = Date.now() + 30 * 60 * 1000
+    } finally { job.running = false }
+  }
   ctx.effect(() => ctx.provide('worktreeSessions', {
     describe: cwd => worktreeSession(cwd),
     async register(cwd, sessionId) {
@@ -59,6 +160,7 @@ export function apply(ctx) {
   const prepared = new WeakSet()
   ctx.on('system-prompt/assemble', async (_assembly, context, next) => {
     const { agent, signal } = context
+    if (agent && pendingForks.has(agent.id)) return next()
     if (agent && !prepared.has(agent)) {
       const cwd = ctx.workingDirectory.get(agent.session)
       const root = await git(cwd, ['rev-parse', '--show-toplevel']).then(value => value.trim()).catch(() => null)
@@ -85,6 +187,7 @@ export function apply(ctx) {
             const catalog = await overview(cwd)
             visitedPaths.push(...catalog.worktrees.map(tree => tree.path))
             const candidates = catalog.worktrees.filter(tree => tree.managed && !tree.pinned && tree.sessionIds?.includes(sessionId)
+              && !tree.sessionIds.some(id => pendingForks.has(id))
               && tree.sessionIds.every(id => workspace.archivedSessionIds.includes(id)))
             for (const tree of candidates) {
               if (terminals.using(tree.path)) continue
@@ -147,7 +250,37 @@ export function apply(ctx) {
           const key = value => process.platform === 'win32' ? value.toLowerCase() : value
           return send(200, { ok: true, value: { worktree: Boolean(root && directory && common && key(resolve(root, directory)) !== key(resolve(root, common))) } })
         }
-        if (typeof body?.sessionId !== 'string' || !/^[\w-]{1,128}$/.test(body.sessionId)) throw new Error('无效的会话 ID。')
+        if (action === 'fork-jobs') {
+          const known = new Set(Array.isArray(body?.ids) ? body.ids.slice(0, 256) : [])
+          const visible = [...forkJobs.values()].filter(job => known.has(job.id) || !job.expires && (job.running || job.childId))
+          return send(200, { ok: true, value: visible.map(forkStatus) })
+        }
+        if (['fork-start', 'fork-retry', 'fork-abandon'].includes(action)) {
+          if (typeof body?.id !== 'string' || !/^[0-9a-f-]{36}$/.test(body.id)) throw new Error('无效的进度 ID。')
+          let job = forkJobs.get(body.id)
+          if (action === 'fork-start' && !job) {
+            if (!validSessionId(body.sourceId) || !Number.isSafeInteger(body.seq) || body.seq < 0 ||
+              typeof body.title !== 'string' || !body.title.trim() || body.title.length > 512) throw new Error('无效的分支请求。')
+            for (const [id, entry] of forkJobs) if (entry.expires && entry.expires <= Date.now()) forkJobs.delete(id)
+            if (forkJobs.size >= 256) {
+              const settled = [...forkJobs].find(([, entry]) => entry.expires)
+              if (settled) forkJobs.delete(settled[0])
+              else throw new Error('尚未处理的分支过多，请先处理失败的分支。')
+            }
+            job = { id: body.id, sourceId: body.sourceId, seq: body.seq, title: body.title, rename: body.rename === true }
+            forkJobs.set(job.id, job)
+            void runFork(job)
+          }
+          if (!job) throw new Error('找不到工作树创建记录。')
+          if (action === 'fork-retry' && !job.running && job.error) void runFork(job)
+          if (action === 'fork-abandon') {
+            if (job.running) throw new Error('工作树正在创建，请等当前操作结束。')
+            if (job.phase !== 'done') settleFork(job, 'abandoned')
+          }
+          return send(200, { ok: true, value: forkStatus(job) })
+        }
+        if (!validSessionId(body?.sessionId)) throw new Error('无效的会话 ID。')
+        if (pendingForks.has(body.sessionId) && !['catalog', 'inspect', 'terminal-jobs'].includes(action)) throw new Error(FORK_BLOCKED)
         if (action === 'terminal-jobs') return send(200, { ok: true, value: terminals.list(body.sessionId) })
         if (action === 'terminal-claim') return send(200, { ok: true, value: terminals.claim(body.sessionId, body.id, body.owner) })
         if (action === 'terminal-bind') {
@@ -220,6 +353,7 @@ export function apply(ctx) {
         repositories.add(currentRoot)
         const isAgentActive = async (sessionId, targetPath) => {
           if (terminals.using(targetPath)) return true
+          if (sessionId && pendingForks.has(sessionId)) return true
           if (sessionId && ctx.get('workspaceRegistry')?.pinnedSessionIds.includes(sessionId)) return true
           for (const other of ctx.agents.list()) {
             const path = ctx.workingDirectory.get(other.session)
@@ -234,14 +368,18 @@ export function apply(ctx) {
           if (action === 'environment-delete') return deleteEnvironment(cwd, body.id)
           if (action === 'environment-select') return selectEnvironment(cwd, body.sessionId, body.id || '', body.kind, body.draft)
           if (action === 'create') {
-            const environments = await environmentCatalog(cwd, body.sessionId)
-            const selected = environments.profiles.find(item => item.id === environments.selectedId)
+            let setupScript = ''
+            if (body.runSetup) {
+              const environments = await environmentCatalog(cwd, body.sessionId)
+              const selected = environments.profiles.find(item => item.id === environments.selectedId)
+              setupScript = selected?.setup || (await readEnvironment(currentRoot)).setup
+            }
             return createWorktree(cwd, {
-            baseRef: body.baseRef, branch: body.branch, name: body.name,
-            includeChanges: Boolean(body.includeChanges), setupScript: body.runSetup ? (selected?.setup || (await readEnvironment(currentRoot)).setup) : '',
-            retentionLimit: body.retentionLimit, sessionId: body.sessionId, currentPath: currentRoot,
-            isAgentActive,
-          })
+              baseRef: body.baseRef, branch: body.branch, name: body.name,
+              includeChanges: Boolean(body.includeChanges), setupScript,
+              retentionLimit: body.retentionLimit, sessionId: body.sessionId, currentPath: currentRoot,
+              isAgentActive,
+            })
           }
           if (action === 'switch') return { path: await switchWorktree(cwd, body.target, body.sessionId) }
           if (action === 'handoff') return handoffWorktree(cwd, body.target, body.sessionId)

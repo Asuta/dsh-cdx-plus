@@ -4,6 +4,11 @@ window.__ModuleLoader__.load({
     const React = require('react'), h = React.createElement
     const { createPortal } = require('react-dom')
     const TAB_ID = 'dsh-asuta-worktree-control/panel', KIND = 'worktree-control'
+    const FORK_PANEL = 'worktree-control.fork-progress'
+    const FORK_STEPS = [
+      ['fork', '复制分支对话历史'], ['prepare', '准备工作区'], ['checkout', '检出文件'],
+      ['copy', '复制本地改动'], ['switch', '切换会话目录'],
+    ]
     const CSS = [
       '.wt-panel{height:100%;min-height:0;display:flex;flex-direction:column;color:var(--dsw-alias-label-primary);font:13px/1.5 var(--dsw-font-family),system-ui,sans-serif}',
       '.wt-panel *{box-sizing:border-box}.wt-head{padding:12px 14px;border-bottom:1px solid var(--dsw-alias-border-l2);display:flex;align-items:center;gap:8px}.wt-head strong{flex:1}.wt-tabs{display:flex;gap:6px;padding:9px 12px;border-bottom:1px solid var(--dsw-alias-border-l2)}',
@@ -20,6 +25,9 @@ window.__ModuleLoader__.load({
       '.wt-select-wrap{position:relative;min-width:0;width:144px;max-width:58%}.wt-select-wrap select{appearance:none;-webkit-appearance:none;width:100%;height:30px;min-width:0;padding:0 22px 0 6px;border:1px solid transparent;border-radius:7px;background:transparent;cursor:pointer;text-align:right;text-overflow:ellipsis}.wt-select-wrap select:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,#ffffff0a);border-color:var(--dsw-alias-border-l2,#383838)}.wt-select-wrap select:disabled{cursor:default}.wt-select-wrap select option{background:var(--dsw-specific-sidebar-fill,#242424);color:var(--dsw-alias-label-primary,#eee)}.wt-select-wrap>.wt-icon{position:absolute;right:4px;top:7px;pointer-events:none;width:14px;color:var(--dsw-alias-label-secondary,#aaa)}',
       '.wt-popover .wt-error{display:block;font-size:12px;margin:6px;line-height:1.4}.wt-popover-footer{border-top:1px solid var(--dsw-alias-border-l2,#383838);margin-top:4px;padding-top:4px}.wt-popover .wt-details{display:flex;align-items:center;justify-content:space-between;width:100%;padding:7px 6px;border:0;border-radius:7px;background:transparent;text-align:left;cursor:pointer;color:var(--dsw-alias-label-secondary,#aaa);font-size:12px}.wt-popover .wt-details:hover{background:var(--dsw-alias-interactive-bg-hover,#ffffff0a);color:var(--dsw-alias-label-primary,#eee)}@media(prefers-reduced-motion:reduce){.wt-switch-track,.wt-switch-track:after{transition:none}}',
       '[data-row-key^="session:"][data-wt-branch="true"]::after{content:"⑂";order:2;flex:none;width:16px;color:var(--dsw-alias-label-secondary);font-size:17px;line-height:20px;text-align:center}[data-row-key^="session:"][data-wt-branch="true"]>span:first-child{order:0}[data-row-key^="session:"][data-wt-branch="true"]>span:nth-child(2){order:1}[data-row-key^="session:"][data-wt-branch="true"]>span:nth-child(n+3){order:3}',
+      '.wt-fork-menu.wt-fork-floating{position:fixed;bottom:auto;z-index:150;max-height:calc(100dvh - 16px);overflow:auto}',
+      '.wt-fork-row{display:flex;align-items:center;gap:8px;height:32px;width:100%;box-sizing:border-box;padding:0 8px;padding-inline-start:calc(var(--dsh-sidebar-row-padding,12px) + var(--dsh-workspace-indent,0px) + 16px + var(--dsh-sidebar-label-gap,6px));border:0;border-radius:var(--dsw-radius-md,8px);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-app-region:no-drag}.wt-fork-row:hover,.wt-fork-row[aria-current=true]{background:var(--dsw-alias-interactive-bg-hover,#ffffff16)}.wt-fork-row:focus-visible,.wt-fork-progress button:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary,#7ea7fa);outline-offset:-2px}.wt-fork-row-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wt-fork-spinner{box-sizing:border-box;display:inline-block;flex:none;width:13px;height:13px;border:1.5px solid currentColor;border-inline-end-color:transparent;border-radius:50%;animation:wt-fork-spin .8s linear infinite}@keyframes wt-fork-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.wt-fork-spinner{animation:none}}',
+      '.wt-fork-page{height:100%;min-height:0;display:flex;flex-direction:column;color:var(--dsw-alias-label-primary,#eee)}.wt-fork-page>header{padding:14px 22px;border-bottom:1px solid var(--dsw-alias-border-l2,#ffffff22);overflow-wrap:anywhere}.wt-fork-page>.wt-fork-progress{flex:1;overflow:auto}.wt-fork-progress{box-sizing:border-box;width:min(100%,800px);margin-inline:auto;padding:clamp(22px,6vh,72px) clamp(16px,4vw,40px) 24px;display:flex;flex-direction:column;gap:16px;font:14px/1.55 var(--dsw-font-family,system-ui),sans-serif}.wt-fork-request{align-self:flex-end;padding:8px 14px;border-radius:16px;background:var(--dsw-alias-interactive-bg-hover,#ffffff14)}.wt-fork-progress h2{font-size:16px;margin:0 0 10px}.wt-fork-progress section{padding:16px;border:1px solid var(--dsw-alias-border-l2,#ffffff22);border-radius:12px}.wt-fork-progress ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}.wt-fork-progress li{display:flex;align-items:center;gap:10px;color:var(--dsw-alias-label-secondary,#aaa)}.wt-fork-progress li[aria-current=step]{color:var(--dsw-alias-state-business-primary,#7ea7fa)}.wt-fork-step-icon{display:inline-grid;place-items:center;width:14px}.wt-fork-progress button{cursor:pointer;color:inherit;font:inherit}.wt-fork-progress button:hover{background:var(--dsw-alias-interactive-bg-hover,#ffffff12)}.wt-fork-progress .wt-error{margin:12px 0 0}',
       '.wt-action-editor{margin-top:8px}.wt-action-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}.wt-action-head input{flex:1}.wt-panel .wt-command{display:block;width:100%;min-height:76px;resize:vertical;font:12px/1.6 ui-monospace,Consolas,monospace}',
       '@media(max-width:420px){.wt-create{grid-template-columns:1fr}.wt-create .wt-wide{grid-column:auto}}',
       '.wt-command-anchor{position:relative;-webkit-app-region:no-drag}.wt-command-trigger{display:flex;align-items:center;gap:3px;height:30px;padding:4px 7px!important;color:inherit;font:inherit;cursor:pointer}.wt-command-trigger .wt-icon{width:16px;height:16px}.wt-command-menu{position:fixed;z-index:150;width:264px;max-width:calc(100vw - 16px);overflow:auto;padding:8px;border:1px solid var(--dsw-alias-border-l2,#444);border-radius:12px;background:var(--dsw-specific-sidebar-fill,#242424);box-shadow:0 12px 36px #0005;color:var(--dsw-alias-label-primary,#eee);font:13px/1.5 var(--dsw-font-family,system-ui),sans-serif;-webkit-app-region:no-drag}.wt-command-caption{padding:4px 8px 8px;color:var(--dsw-alias-label-secondary,#aaa);overflow-wrap:anywhere}.wt-menu-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;overflow-wrap:anywhere}.wt-menu-item:hover{background:var(--dsw-alias-interactive-bg-hover,#ffffff12)}.wt-menu-item:disabled{opacity:.5;cursor:default}.wt-command-menu .wt-icon{width:15px;height:15px;flex:none}.wt-command-menu p{margin:6px 8px}.wt-command-menu .wt-error{padding:6px 8px;font-size:12px;max-height:120px;overflow:auto}.wt-command-footer{border-top:1px solid var(--dsw-alias-border-l2,#444);margin-top:6px;padding-top:5px}.wt-running-dot{width:6px;height:6px;border-radius:50%;background:#7ea7fa}.wt-active-command{display:flex;align-items:center;border-top:1px solid var(--dsw-alias-border-l2,#444);margin-top:5px}.wt-menu-stop{border:0;background:transparent;color:var(--dsw-alias-label-secondary,#aaa);font:inherit;white-space:nowrap;cursor:pointer;padding:6px}.wt-command-anchor button:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary,#7ea7fa);outline-offset:1px}',
@@ -279,25 +287,26 @@ window.__ModuleLoader__.load({
       }
       return locationCache.get(path)
     }
-    function RowBadge({ ctx, sessionId }) {
-      const directory = React.useSyncExternalStore(ctx.sessions.list.subscribe, () => {
-        const row = ctx.sessions.list.getSnapshot().byId[sessionId]
-        return row?.projectionValues?.workingDirectory || row?.cwd || ''
-      }, () => '')
+    function RowBadge({ ctx, sessionId, forks }) {
+      const directory = useSessionDirectory(ctx, sessionId)
+      const getReady = () => forks.getSnapshot().ready.get(sessionId)
+      const ready = React.useSyncExternalStore(forks.subscribe, getReady, getReady)
       const ref = React.useRef(null)
-      const [worktree, setWorktree] = React.useState(false)
+      const [location, setLocation] = React.useState(null)
       React.useEffect(() => {
         let active = true
-        worktreeLocation(directory).then(value => { if (active) setWorktree(value) })
+        worktreeLocation(directory).then(value => { if (active) setLocation({ directory, value }) })
         return () => { active = false }
       }, [directory])
-      React.useEffect(() => {
+      const worktree = Boolean(ready && (!directory || directory === ready.previous || sameDirectory(directory, ready.path))) ||
+        (location?.directory === directory && location.value)
+      React.useLayoutEffect(() => {
         const row = ref.current?.closest('[data-row-key^="session:"]')
         if (!row) return
         if (worktree) row.dataset.wtBranch = 'true'
         else delete row.dataset.wtBranch
         return () => { delete row.dataset.wtBranch }
-      }, [worktree])
+      }, [worktree, directory, sessionId])
       return h('span', { ref, hidden: true, 'data-wt-marker': '' })
     }
     function lineCounts(patch) {
@@ -644,7 +653,272 @@ window.__ModuleLoader__.load({
 
     // Wrap the shipped turn-tail renderer so its own access and unavailable
     // checks still own the branch button; only the click destination changes.
-    function installForkChoices(ctx) {
+    function sameDirectory(left, right) {
+      const normalize = path => {
+        const value = path.replaceAll(String.fromCharCode(92), '/')
+        return /^[A-Za-z]:/.test(value) ? value.toLowerCase() : value
+      }
+      return Boolean(left && right && normalize(left) === normalize(right))
+    }
+
+    function forkFlow(ctx) {
+      const jobs = new Map(), ready = new Map(), listeners = new Set()
+      const lifetime = new AbortController()
+      const requests = new Set(), completed = new Set()
+      let selected = null, idleSnapshot = { jobs: [], ready }, timer, polling, changed = 0
+      const blocks = ctx.conversation.blocks
+      const publish = () => {
+        idleSnapshot = { jobs: [...jobs.values()].map(job => ({ ...job })), ready: new Map(ready), selected }
+        for (const listener of listeners) listener()
+      }
+      const directory = id => {
+        const row = ctx.sessions.list.getSnapshot().byId[id]
+        return row?.projectionValues?.workingDirectory || row?.cwd || ''
+      }
+      const unblock = job => {
+        if (job.childId && job.block && blocks.storeFor(job.childId).getSnapshot() === job.block) blocks.set(job.childId, undefined)
+      }
+      const finish = (job, path, openChild = false) => {
+        const showingProgress = ctx.layout.panelInfo.getSnapshot().activePanelId === FORK_PANEL && selected === job.id
+        if (path) {
+          const previous = directory(job.childId)
+          locationCache.set(path, Promise.resolve(true))
+          if (sameDirectory(previous, path)) locationCache.set(previous, Promise.resolve(true))
+          ready.set(job.childId, { path, previous })
+        }
+        unblock(job)
+        jobs.delete(job.id)
+        if (job.childId && (showingProgress || openChild)) ctx.uiWorkspace.openSession(job.childId)
+        if (selected === job.id) selected = null
+      }
+      function reconcile(status, openChild) {
+        const previous = jobs.get(status.id)
+        if (status.phase === 'done' || status.phase === 'abandoned') {
+          completed.add(status.id)
+          if (!previous) return false
+          finish({ ...previous, childId: status.childId }, status.phase === 'done' ? status.path : undefined, openChild)
+          return true
+        }
+        if (completed.has(status.id)) return false
+        const job = previous ?? { id: status.id }
+        if (job.accepted && Object.entries(status).every(([key, value]) => job[key] === value)) return false
+        if (job.childId !== status.childId) {
+          unblock(job)
+          job.block = undefined
+          if (status.childId) {
+            job.block = { reason: '工作树准备就绪后即可发送消息。' }
+            blocks.set(status.childId, job.block)
+          }
+        }
+        Object.assign(job, { childId: undefined }, status, { accepted: true })
+        jobs.set(job.id, job)
+        return true
+      }
+      async function sync() {
+        if (polling || lifetime.signal.aborted) return
+        polling = true
+        const since = changed
+        try {
+          const statuses = await call('fork-jobs', { ids: [...jobs.keys()] }, lifetime.signal)
+          let dirty = false
+          for (const status of statuses) {
+            if (!requests.has(status.id) && (jobs.get(status.id)?.change ?? 0) <= since) dirty = reconcile(status) || dirty
+          }
+          if (dirty) publish()
+        } catch { /* Host state will be retried on the next poll. */ }
+        finally {
+          polling = false
+          if (jobs.size) schedule([...jobs.values()].some(job => job.running) ? 350 : 2000)
+        }
+      }
+      function schedule(delay) {
+        clearTimeout(timer)
+        if (!lifetime.signal.aborted) timer = setTimeout(sync, delay)
+      }
+      async function request(job, action) {
+        if (requests.has(job.id)) return
+        requests.add(job.id)
+        job.running = true
+        publish()
+        try {
+          const status = await call(action, action === 'fork-start' ? {
+            id: job.id, sourceId: job.sourceId, seq: job.seq, title: job.title, rename: job.rename,
+          } : { id: job.id }, lifetime.signal)
+          if (!lifetime.signal.aborted) reconcile(status, action === 'fork-abandon')
+        } catch (error) {
+          if (!lifetime.signal.aborted) {
+            job.error = String(error?.message ?? error)
+            job.running = false
+          }
+        } finally {
+          requests.delete(job.id)
+          job.change = ++changed
+          publish()
+          schedule(0)
+        }
+      }
+      const open = id => {
+        selected = id
+        ctx.layout.selectPanel(FORK_PANEL)
+        publish()
+      }
+      const unsubscribe = ctx.sessions.list.subscribe(() => {
+        let moved = false
+        for (const [id, entry] of ready) {
+          const current = directory(id)
+          if (!current || current === entry.previous && !sameDirectory(current, entry.path)) continue
+          if (sameDirectory(current, entry.path)) locationCache.set(current, Promise.resolve(true))
+          ready.delete(id)
+          moved = true
+        }
+        if (moved) publish()
+        if (!polling && !jobs.size) schedule(100)
+      })
+      schedule(0)
+      return {
+        getSnapshot: () => idleSnapshot,
+        subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener) },
+        start(sourceId, seq) {
+          const existing = [...jobs.values()].find(job => job.sourceId === sourceId && job.seq === seq)
+          if (existing) { open(existing.id); return }
+          const list = ctx.sessions.list.getSnapshot()
+          const source = list.byId[sourceId]
+          const taken = new Set([...list.ids.map(id => list.byId[id]?.title), ...[...jobs.values()].map(job => job.title)])
+          const increment = title => {
+            const suffix = /^(.*?)([（(])(\d+)([）)])$/u.exec(title)
+            return suffix ? suffix[1] + suffix[2] + (BigInt(suffix[3]) + 1n) + suffix[4] : title + ' (1)'
+          }
+          let title = source?.title ? increment(source.title) : '对话 · 分支'
+          while (source?.title && taken.has(title)) title = increment(title)
+          const job = { id: crypto.randomUUID(), sourceId, seq, title, rename: Boolean(source?.title), phase: 'fork', running: true }
+          jobs.set(job.id, job)
+          open(job.id)
+          void request(job, 'fork-start')
+        },
+        open,
+        retry(id) { const job = jobs.get(id); if (job && !job.running) void request(job, job.accepted ? 'fork-retry' : 'fork-start') },
+        abandon(id) { const job = jobs.get(id); if (job?.childId && !job.running) void request(job, 'fork-abandon') },
+        back(id) {
+          const job = jobs.get(id)
+          if (!job) return
+          if (!job.running && !job.childId) { jobs.delete(id); completed.add(id) }
+          ctx.uiWorkspace.openSession(job.sourceId)
+          publish()
+        },
+        dispose() {
+          lifetime.abort()
+          clearTimeout(timer)
+          unsubscribe()
+          for (const job of jobs.values()) unblock(job)
+          jobs.clear()
+          ready.clear()
+          listeners.clear()
+        },
+      }
+    }
+
+    function ForkProgress({ job, forks }) {
+      const index = FORK_STEPS.findIndex(([key]) => key === job.phase)
+      return h('div', { className: 'wt-fork-progress' },
+        h('div', { className: 'wt-fork-request' }, '在新工作树中创建此对话的分支'),
+        h('section', { 'aria-label': '工作树创建进度' },
+          h('h2', { 'aria-live': 'polite' }, job.error ? '工作树未完成' : '正在创建工作树'),
+          h('ol', null, FORK_STEPS.map(([key, label], step) => h('li', { key, 'aria-current': step === index ? 'step' : undefined },
+            step === index && !job.error ? h('span', { className: 'wt-fork-spinner', 'aria-hidden': true }) :
+              h('span', { className: 'wt-fork-step-icon', 'aria-hidden': true }, step < index ? '✓' : step === index ? '!' : '·'), label))),
+          job.error ? h('p', { className: 'wt-error', role: 'alert' }, job.error) : null,
+          h('div', { className: 'wt-actions' },
+            job.error ? h('button', { className: 'wt-btn', type: 'button', disabled: job.running, onClick: () => forks.retry(job.id) }, '重试') : null,
+            job.error && job.childId ? h('button', { className: 'wt-btn', type: 'button', disabled: job.running, onClick: () => forks.abandon(job.id) }, '放弃工作树，打开已创建的对话') : null,
+            h('button', { className: 'wt-btn', type: 'button', onClick: () => forks.back(job.id) }, '返回源对话'))))
+    }
+
+    function ForkProgressPage({ forks }) {
+      const snapshot = useSnapshot(forks)
+      const job = snapshot.jobs.find(item => item.id === snapshot.selected)
+      return job ? h('div', { className: 'wt-fork-page' }, h('header', null, job.title), h(ForkProgress, { job, forks }),
+        h('div', { className: 'wt-fork-progress', style: { paddingTop: 0 }, role: 'status' },
+          h('section', { className: 'wt-muted', 'aria-disabled': true }, '工作树准备就绪后即可发送消息。'))) : null
+    }
+
+    function ForkSidebarRows({ sourceId, jobs, activeId, forks }) {
+      const [seat] = React.useState(() => {
+        const node = document.createElement('div')
+        node.className = 'wt-fork-rows'
+        return node
+      })
+      React.useLayoutEffect(() => {
+        const selector = '[role="treeitem"][data-row-key="session:' + globalThis.CSS.escape(sourceId) + '"]'
+        let list, frame
+        const place = () => {
+          frame = undefined
+          list = document.querySelector('[data-slot="sidebar.workspaces"] [data-sidebar-list-area]')
+          const source = list?.querySelector(selector)
+          // DSH's HoverCard wraps a full row in a span. Place the seat outside
+          // it so hovering the pending row does not open the source tooltip.
+          const parent = source?.parentElement
+          const anchor = parent?.tagName === 'SPAN' && parent.firstElementChild === source ? parent : source
+          // Keep our portal beside the actual workspace row. Collapsing or filtering
+          // the group removes that anchor; pinned and recent copies are separate.
+          if (!anchor) seat.remove()
+          else if (anchor.previousElementSibling !== seat) anchor.before(seat)
+        }
+        place()
+        const observer = new MutationObserver(records => {
+          if (list?.isConnected && !records.some(({ target }) => list.contains(target) || target.contains(list))) return
+          frame ??= requestAnimationFrame(place)
+        })
+        observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-row-key'] })
+        return () => {
+          observer.disconnect()
+          if (frame !== undefined) cancelAnimationFrame(frame)
+          seat.remove()
+        }
+      }, [seat, sourceId])
+      return createPortal(jobs.map(job => h('button', {
+        key: job.id, type: 'button', className: 'wt-fork-row', 'data-wt-fork-id': job.id,
+        'aria-current': activeId === job.id || undefined,
+        'aria-label': job.title + (job.error ? '，工作树未完成' : '，正在创建工作树'), onClick: () => forks.open(job.id),
+      }, h('span', { className: 'wt-fork-row-title' }, job.title), job.error ? h('span', { 'aria-hidden': true }, '!') :
+        h('span', { className: 'wt-fork-spinner', 'aria-hidden': true }))), seat)
+    }
+
+    function ForkProgressSeats({ ctx, forks }) {
+      const { jobs, selected } = useSnapshot(forks)
+      const panel = useSnapshot(ctx.layout.panelInfo).activePanelId
+      const [seats, setSeats] = React.useState({ native: null, id: null })
+      const active = jobs.length > 0
+      React.useLayoutEffect(() => {
+        if (!active) return
+        let frame
+        const refresh = () => {
+          frame = undefined
+          const content = document.querySelector('[data-slot="main.conversation"] [data-conversation-session]')
+          const native = content?.querySelector('[data-conversation-scroll]') ?? null
+          const id = content?.getAttribute('data-conversation-session') ?? null
+          setSeats(prior => prior.native === native && prior.id === id ? prior : { native, id })
+        }
+        refresh()
+        const observer = new MutationObserver(() => { frame ??= requestAnimationFrame(refresh) })
+        observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-conversation-session'] })
+        return () => { observer.disconnect(); if (frame !== undefined) cancelAnimationFrame(frame) }
+      }, [active])
+      if (!active) return null
+      const nativeJob = panel === null && jobs.find(job => job.childId === seats.id)
+      const rules = jobs.filter(job => job.childId).map(({ childId }) => {
+        const id = globalThis.CSS.escape(childId)
+        return '[data-row-key="session:' + id + '"]{display:none!important}' +
+          '[data-slot="main.conversation"] [data-conversation-session="' + id + '"] [data-conversation-scroll]>:not([data-composer-seat],.wt-fork-native){display:none!important}'
+      }).join('\n')
+      return h(React.Fragment, null, h('style', null, rules),
+        Array.from(Map.groupBy(jobs, job => job.sourceId), ([sourceId, group]) => h(ForkSidebarRows, {
+          key: sourceId, sourceId, jobs: group, activeId: panel === FORK_PANEL ? selected : null, forks,
+        })),
+        nativeJob && seats.native?.isConnected && createPortal(h('div', { className: 'wt-fork-native', style: { order: -1, flex: 1 } },
+          h(ForkProgress, { job: nativeJob, forks })), seats.native))
+    }
+
+    function installForkChoices(ctx, forks) {
       const slots = ctx.slots, originalKey = Symbol.for('cordis.original')
       let patch = null, stopped = false, changing = false
       function restore() {
@@ -672,11 +946,24 @@ window.__ModuleLoader__.load({
           const NativeTail = entry.component
           function ForkChoiceTail(props) {
             const root = React.useRef(null)
+            const menu = React.useRef(null)
             const [seq, setSeq] = React.useState(null)
             const [capability, setCapability] = React.useState(null)
-            const [busy, setBusy] = React.useState(false)
-            const [error, setError] = React.useState('')
-            const [childId, setChildId] = React.useState(null)
+            React.useLayoutEffect(() => {
+              if (seq === null) return
+              function position() {
+                const popup = menu.current, anchor = root.current?.getBoundingClientRect()
+                if (!popup || !anchor) return
+                const above = anchor.top - popup.offsetHeight - 8
+                const bottom = window.innerHeight - popup.offsetHeight - 8
+                popup.style.left = Math.max(8, Math.min(anchor.left, window.innerWidth - popup.offsetWidth - 8)) + 'px'
+                popup.style.top = Math.max(8, Math.min(above >= 8 ? above : anchor.bottom + 8, bottom)) + 'px'
+              }
+              position()
+              window.addEventListener('resize', position)
+              window.addEventListener('scroll', position, true)
+              return () => { window.removeEventListener('resize', position); window.removeEventListener('scroll', position, true) }
+            }, [seq, capability])
             React.useEffect(() => {
               if (seq === null) return
               let active = true
@@ -687,35 +974,24 @@ window.__ModuleLoader__.load({
             }, [seq, props.sessionId])
             React.useEffect(() => {
               if (seq === null) return
-              const outside = event => { if (!root.current?.contains(event.target) && !busy) setSeq(null) }
-              const escape = event => { if (event.key === 'Escape' && !busy) setSeq(null) }
+              const outside = event => { if (!root.current?.contains(event.target) && !menu.current?.contains(event.target)) setSeq(null) }
+              const escape = event => { if (event.key === 'Escape') setSeq(null) }
               document.addEventListener('pointerdown', outside)
               document.addEventListener('keydown', escape)
               return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape) }
-            }, [seq, busy])
-            async function forkInWorktree() {
-              if (busy || seq === null || !capability?.available) return
-              setBusy(true); setError(''); setChildId(null)
-              let createdId = null
-              try {
-                createdId = await ctx.sessions.fork({ sessionId: props.sessionId, atSeq: seq, increaseTitle: true })
-                setChildId(createdId)
-                await call('create', { sessionId: createdId, sourceSessionId: props.sessionId, forkAtSeq: seq, baseRef: 'HEAD', includeChanges: true, runSetup: false })
-                await ctx.uiWorkspace.openSession(createdId)
-                setSeq(null)
-              } catch (cause) {
-                setError((createdId ? '对话已创建，但工作树未完成：' : '创建分支失败：') + String(cause?.message ?? cause))
-              } finally { setBusy(false) }
+            }, [seq])
+            function forkInWorktree() {
+              if (seq === null || !capability?.available) return
+              setSeq(null)
+              forks.start(props.sessionId, seq)
             }
             return h('div', { ref: root, className: 'wt-fork-anchor' },
-              h(NativeTail, { ...props, forkAt: at => { setSeq(at); setCapability(null); setError(''); setChildId(null) } }),
-              seq === null ? null : h('div', { className: 'wt-fork-menu', role: 'dialog', 'aria-label': '从这里创建对话分支' },
+              h(NativeTail, { ...props, forkAt: at => { setSeq(at); setCapability(null) } }),
+              seq === null ? null : createPortal(h('div', { ref: menu, className: 'wt-fork-menu wt-fork-floating', role: 'dialog', 'aria-label': '从这里创建对话分支' },
                 h('strong', null, '从这里创建对话分支'),
-                h('button', { type: 'button', className: 'wt-fork-option', disabled: busy, onClick: () => { setSeq(null); props.forkAt(seq) } }, '在当前工作区中创建分支', h('small', null, '从这条回复继续，沿用当前工作目录')),
-                h('button', { type: 'button', className: 'wt-fork-option', disabled: busy || !capability?.available, onClick: forkInWorktree }, '在新工作树中创建分支', h('small', null, capability === null ? '正在检查 Git 工作区…' : capability.available ? '立即创建工作树，复制当前未提交改动' : capability.reason)),
-                error ? h('p', { className: 'wt-error', role: 'alert' }, error) : null,
-                childId && error ? h('button', { type: 'button', className: 'wt-fork-option', onClick: () => { void ctx.uiWorkspace.openSession(childId); setSeq(null) } }, '打开已创建的对话') : null,
-              ),
+                h('button', { type: 'button', className: 'wt-fork-option', onClick: () => { setSeq(null); props.forkAt(seq) } }, '在当前工作区中创建分支', h('small', null, '从这条回复继续，沿用当前工作目录')),
+                h('button', { type: 'button', className: 'wt-fork-option', disabled: !capability?.available, onClick: forkInWorktree }, '在新工作树中创建分支', h('small', null, capability === null ? '正在检查 Git 工作区…' : capability.available ? '立即创建工作树，复制当前未提交改动' : capability.reason)),
+              ), document.body),
             )
           }
           Object.defineProperty(entry, 'component', { ...descriptor, value: ForkChoiceTail })
@@ -769,8 +1045,12 @@ window.__ModuleLoader__.load({
     }
 
     return {
-      inject: ['slots', 'sidebarRight', 'sidebarRightTabs', 'sessions', 'uiWorkspace'],
+      inject: ['slots', 'sidebarRight', 'sidebarRightTabs', 'sessions', 'uiWorkspace', 'layout', 'conversation'],
       apply(ctx) {
+        const forks = forkFlow(ctx)
+        ctx.effect(() => () => forks.dispose(), 'worktree-control: fork lifecycle')
+        ctx.effect(() => ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: FORK_PANEL }, () => h(ForkProgressPage, { forks }))), 'worktree-control: fork progress page')
+        ctx.effect(() => ctx.slots.inject('shell.overlay', () => ctx.slots.register({ name: 'shell.overlay', id: FORK_PANEL }, () => h(ForkProgressSeats, { ctx, forks }))), 'worktree-control: fork progress seats')
         ctx.effect(() => installEnvironmentTerminals(ctx), 'worktree-control: terminal jobs')
         ctx.effect(() => { const style = document.createElement('style'); style.dataset.plugin = 'dsh-asuta-worktree-control'; style.textContent = CSS; document.head.appendChild(style); return () => style.remove() }, 'worktree-control: styles')
         ctx.effect(() => ctx.sidebarRightTabs.register({
@@ -779,11 +1059,11 @@ window.__ModuleLoader__.load({
         }), 'worktree-control: tab type')
         ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({ name: 'sidebar.right.pane.tab', key: TAB_ID }, props => h(Panel, { ...props, ctx }))), 'worktree-control: panel')
         ctx.effect(() => ctx.slots.inject('conversation.hero.options', () => ctx.slots.register({ name: 'conversation.hero.options', id: 'worktree-control.hero', order: 25 }, props => h(HeroSettings, { ...props, ctx }))), 'worktree-control: hero settings')
-        ctx.effect(() => ctx.slots.inject('sidebar.workspaces.session.row.action', () => ctx.slots.register({ name: 'sidebar.workspaces.session.row.action', id: 'worktree-control.badge', order: 900 }, props => h(RowBadge, { ...props, ctx }))), 'worktree-control: sidebar badges')
+        ctx.effect(() => ctx.slots.inject('sidebar.workspaces.session.row.action', () => ctx.slots.register({ name: 'sidebar.workspaces.session.row.action', id: 'worktree-control.badge', order: 900 }, props => h(RowBadge, { ...props, ctx, forks }))), 'worktree-control: sidebar badges')
         ctx.effect(() => ctx.slots.inject('conversation.session.header.utilities', () => mirrorDirectorySlot(ctx, 'conversation.session.header.utilities', 'open-in-app')), 'worktree-control: current folder')
         ctx.effect(() => ctx.slots.inject('conversation.session.header.utilities', () => ctx.slots.register({ name: 'conversation.session.header.utilities', id: 'worktree-control.commands', order: -7 }, props => h(CommandMenuPlacement, { ...props, ctx }))), 'worktree-control: environment commands')
         ctx.effect(() => ctx.slots.inject('conversation.input.left', () => mirrorDirectorySlot(ctx, 'conversation.input.left', 'git-worktree')), 'worktree-control: current branch')
-        ctx.effect(() => installForkChoices(ctx), 'worktree-control: fork choices')
+        ctx.effect(() => installForkChoices(ctx, forks), 'worktree-control: fork choices')
       },
     }
   },

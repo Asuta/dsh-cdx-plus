@@ -111,7 +111,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "projectless-chat",
     "name": "dsh-asuta-projectless-chat",
-    "version": "0.1.10",
+    "version": "0.1.18",
     "title": "无工作区对话",
     "rowId": "projectless-chat",
     "bundleConfig": false
@@ -167,7 +167,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "worktree-control",
     "name": "dsh-asuta-worktree-control",
-    "version": "0.1.17",
+    "version": "0.1.18",
     "title": "工作树控制",
     "rowId": "worktree-control",
     "bundleConfig": false

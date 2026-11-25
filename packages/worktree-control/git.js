@@ -419,8 +419,7 @@ export async function createWorktree(cwd, options = {}) {
   return withRepoLock(info.commonDir, async () => {
     const state = await loadState(info)
     const baseRef = options.baseRef || 'HEAD'
-    const knownRefs = await refs(info.root)
-    if (baseRef !== 'HEAD' && !knownRefs.includes(baseRef)) throw new Error('请选择仓库中存在的分支或远端分支。')
+    if (baseRef !== 'HEAD' && !(await refs(info.root)).includes(baseRef)) throw new Error('请选择仓库中存在的分支或远端分支。')
     const baseCommit = (await git(info.root, ['rev-parse', '--verify', '--end-of-options', baseRef + '^{commit}'])).trim()
     const branch = safeBranch(options.branch ?? '')
     if (branch) await git(info.root, ['check-ref-format', '--branch', branch])
@@ -437,10 +436,13 @@ export async function createWorktree(cwd, options = {}) {
     await ensureWorktreePool(primaryRoot, pool, destination)
     await mkdir(dirname(destination), { recursive: true })
     const addArgs = branch ? ['worktree', 'add', '-b', branch, '--', destination, baseCommit] : ['worktree', 'add', '--detach', '--', destination, baseCommit]
+    options.onProgress?.('checkout')
     await git(info.root, addArgs, { timeout: 120000 })
     const tree = { path: destination, branch, head: baseCommit, createdAt: new Date().toISOString(), lastUsedAt: new Date().toISOString(), pinned: false, sessionIds: options.sessionId ? [options.sessionId] : [], includedFiles: [] }
     state.worktrees[destination] = tree
     try {
+      options.onCheckout?.(destination)
+      options.onProgress?.('copy')
       await saveState(info, state)
       if (changes.staged) {
         const patchFile = resolve(tmpdir(), 'dsh-worktree-staged-' + randomUUID() + '.patch')
@@ -471,6 +473,19 @@ export async function createWorktree(cwd, options = {}) {
       if (setupWarning) warnings.push(setupWarning)
       return { tree, setupOutput, warnings }
     } catch (error) {
+      if (options.rollbackOnFailure) {
+        try {
+          // The fork still points to its source. Roll back only the tree this
+          // operation just checked out, while holding the repository lock.
+          await git(info.root, ['worktree', 'remove', '--force', '--', destination], { timeout: 120000 })
+        } catch (cleanupError) {
+          throw new Error('初始化失败，且未能清理新工作树：' + destination + '。' + error.message + '；清理失败：' + cleanupError.message, { cause: error })
+        }
+        options.onCheckout?.(undefined)
+        delete state.worktrees[destination]
+        await saveState(info, state).catch(() => {}) // stale entries are ignored when Git no longer lists their path
+        throw new Error('工作树初始化失败，已清理未完成的目录，可以重试。' + error.message, { cause: error })
+      }
       throw new Error('工作树已创建，但初始化未完成；原工作树内容未改动。新目录：' + destination + '。' + error.message, { cause: error })
     }
   })

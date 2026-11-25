@@ -5,7 +5,8 @@ A DSH right-sidebar panel for managing Git worktrees. Switching a worktree only 
 ## Features
 
 - Create a detached worktree from HEAD or a local/remote branch, optionally creating a new branch.
-- The native branch button below an assistant reply offers a regular conversation fork in the current workspace or a fork in a newly created worktree. The worktree option immediately creates and opens the fork, copying uncommitted changes by default; it explains when Git, session state, or read-only access prevents creation.
+- The branch button below an assistant reply offers a regular fork in the current workspace or a fork in a new worktree. A pending fork appears immediately above its source in the workspace list and hides when the source row is hidden. The progress page shows history copy, checkout, and directory switching. Setup keeps running when you switch conversations or reload the page. The worktree copies uncommitted changes by default and accepts messages once ready.
+- If setup fails, retry from the progress page or abandon the worktree and open the existing fork. A copy failure rolls back the incomplete worktree; if only the directory switch failed, retry uses the worktree already prepared.
 - New conversations have a compact picker for creating a worktree, choosing its base ref, and selecting a local environment. Creation occurs on the first prompt; detailed controls remain in the sidebar.
 - A fork marker identifies conversations in any Git linked worktree and follows their current directory.
 - With sidebar-chat, promoting a side chat preserves its project and working directory and registers it as another conversation in the same worktree. Both conversations share files; archiving one preserves the tree while the other still uses it.
