@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "7969f2dcaac271eb871b0287a8598124c5a1a47f",
+  "sourceCommit": "5f2c0c49d03bf73721b2ebb7fa29a2085ba699eb",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.5",
   "dshCompatibility": ">=0.2.2-rc.2",
