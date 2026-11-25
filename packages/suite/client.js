@@ -111,7 +111,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "projectless-chat",
     "name": "dsh-asuta-projectless-chat",
-    "version": "0.1.18",
+    "version": "0.1.21",
     "title": "无工作区对话",
     "rowId": "projectless-chat",
     "bundleConfig": false
@@ -143,7 +143,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "sidebar-chat",
     "name": "dsh-asuta-sidebar-chat",
-    "version": "0.1.15",
+    "version": "0.1.21",
     "title": "侧边对话",
     "rowId": "sidebar-chat",
     "bundleConfig": false
@@ -167,7 +167,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "worktree-control",
     "name": "dsh-asuta-worktree-control",
-    "version": "0.1.19",
+    "version": "0.1.21",
     "title": "工作树控制",
     "rowId": "worktree-control",
     "bundleConfig": false

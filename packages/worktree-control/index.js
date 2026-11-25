@@ -172,11 +172,15 @@ export function apply(ctx) {
   ctx.effect(() => {
     const workspace = ctx.workspaceRegistry
     const original = workspace.archiveSession
+    let active = true
     const archive = async function (sessionId, options) {
+      // A side-chat lifecycle may have captured this wrapper before unload.
+      if (!active || lifecycle.signal.aborted) return original.call(this, sessionId, options)
       const owner = ctx.agents.get(sessionId)
       const known = new Set(repositories)
       if (owner) known.add(ctx.workingDirectory.get(owner.session))
       await original.call(this, sessionId, options)
+      if (!active || lifecycle.signal.aborted) return
       const visitedPaths = []
       for (const cwd of known) {
         if (visitedPaths.some(path => samePath(path, cwd))) continue
@@ -210,7 +214,10 @@ export function apply(ctx) {
       }
     }
     workspace.archiveSession = archive
-    return () => { if (workspace.archiveSession === archive) workspace.archiveSession = original }
+    return () => {
+      active = false
+      if (workspace.archiveSession === archive) workspace.archiveSession = original
+    }
   }, 'worktree-control: chat archive')
   ctx.effect(() => () => lifecycle.abort(), 'worktree-control: lifecycle')
   ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/worktree-control/terminal',

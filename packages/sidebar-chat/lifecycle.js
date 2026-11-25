@@ -27,11 +27,12 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
   const handles = new Map()
   const detachedListeners = new Set()
   let domain, state, tail = Promise.resolve(), scanned = false
-  let ready
+  let ready, disposal
   const rawArchive = (id, options) => originalArchive.call(workspace, id, options)
   const rawRestore = id => originalRestore.call(workspace, id)
   const save = async next => { await domain.global.set(next); state = next }
   const serial = operation => {
+    if (disposal) return Promise.reject(new Error('The side chat plugin is unloading.'))
     const result = tail.then(() => ready).then(operation)
     tail = result.catch(() => {})
     return result
@@ -105,7 +106,9 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
   // Keep initialization errors observable to callers without an unhandled rejection.
   ready.catch(error => ctx.logger?.warn('sidebar-chat lifecycle: ' + error.message))
 
-  const archive = (id, options = {}) => serial(async () => {
+  // Another plugin may still hold this function after we unmount. Drain work
+  // already accepted by this instance, then skip its storage for new calls.
+  const archive = (id, options = {}) => disposal ? tail.then(() => rawArchive(id, options)) : serial(async () => {
     await scan()
     const row = state.threads[id]
     if (row && !row.detached) {
@@ -125,7 +128,7 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
       throw error
     }
   })
-  const restore = id => serial(async () => {
+  const restore = id => disposal ? tail.then(() => rawRestore(id)) : serial(async () => {
     await scan()
     const row = state.threads[id]
     if (row && !row.detached) {
@@ -150,7 +153,7 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
     if (typeof original !== 'function') continue
     const wrapped = async function (...args) {
       const handle = await original.apply(this, args)
-      handles.set(handle.agent.id ?? handle.agent.session.id, handle)
+      if (!disposal) handles.set(handle.agent.id ?? handle.agent.session.id, handle)
       return handle
     }
     originals.set(method, { original, wrapped })
@@ -316,14 +319,15 @@ export function installLifecycle(ctx, { read, isSideHeader, releaseThread }) {
         }
       })
     },
-    async dispose() {
-      await tail
-      if (workspace.archiveSession === archive) workspace.archiveSession = originalArchive
-      if (workspace.unarchiveSession === restore) workspace.unarchiveSession = originalRestore
-      for (const [method, { original, wrapped }] of originals) if (agents[method] === wrapped) agents[method] = original
-      handles.clear()
-      detachedListeners.clear()
-      await domain?.close()
+    dispose() {
+      return disposal ??= tail.then(async () => {
+        if (workspace.archiveSession === archive) workspace.archiveSession = originalArchive
+        if (workspace.unarchiveSession === restore) workspace.unarchiveSession = originalRestore
+        for (const [method, { original, wrapped }] of originals) if (agents[method] === wrapped) agents[method] = original
+        handles.clear()
+        detachedListeners.clear()
+        await domain?.close()
+      })
     },
   }
   function deletionIndex() {

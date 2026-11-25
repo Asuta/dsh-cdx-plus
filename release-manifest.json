@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "5f2c0c49d03bf73721b2ebb7fa29a2085ba699eb",
+  "sourceCommit": "0d6e22b9015cc3bcc8ba2dc1a0119d53d5a56d9c",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.5",
   "dshCompatibility": ">=0.2.2-rc.2",
@@ -136,7 +136,7 @@
     {
       "directory": "projectless-chat",
       "name": "dsh-asuta-projectless-chat",
-      "version": "0.1.18",
+      "version": "0.1.21",
       "title": "无工作区对话",
       "rowId": "projectless-chat",
       "bundleConfig": false
@@ -168,7 +168,7 @@
     {
       "directory": "sidebar-chat",
       "name": "dsh-asuta-sidebar-chat",
-      "version": "0.1.15",
+      "version": "0.1.21",
       "title": "侧边对话",
       "rowId": "sidebar-chat",
       "bundleConfig": false
@@ -192,7 +192,7 @@
     {
       "directory": "worktree-control",
       "name": "dsh-asuta-worktree-control",
-      "version": "0.1.19",
+      "version": "0.1.21",
       "title": "工作树控制",
       "rowId": "worktree-control",
       "bundleConfig": false

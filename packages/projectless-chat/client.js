@@ -17,6 +17,7 @@ window.__ModuleLoader__.load({
       archiveRestricted: '另有 {count} 条无归档权限。',
       archiveEmpty: '没有可以批量归档的对话。', archiveHint: '归档后的对话可以恢复。',
       archiveRunning: '正在归档：{done} / {total}', archiveDone: '已归档 {archived} 条，跳过 {skipped} 条，失败 {failed} 条。',
+      archiveUnknownOutcome: '服务器未返回可识别的归档结果。',
       archiveChanged: '操作期间跳过：归档保护 {protected} 条、正在运行 {running} 条、状态已变化 {changed} 条。',
       archiveNotReady: '对话列表尚未加载完成，请稍后再试。', protectError: '无法保存归档保护，请重试。',
     })
@@ -28,6 +29,7 @@ window.__ModuleLoader__.load({
       archiveRestricted: 'Archive access is unavailable for {count} more.',
       archiveEmpty: 'No conversations are eligible for bulk archive.', archiveHint: 'Archived conversations can be restored.',
       archiveRunning: 'Archiving: {done} / {total}', archiveDone: 'Archived {archived}, skipped {skipped}, failed {failed}.',
+      archiveUnknownOutcome: 'The server returned an unknown archive result.',
       archiveChanged: 'Skipped during the operation: {protected} protected, {running} running, {changed} changed.',
       archiveNotReady: 'The conversation list is still loading. Try again shortly.', protectError: 'Could not save archive protection. Please try again.',
     })
@@ -50,6 +52,7 @@ window.__ModuleLoader__.load({
       '.pc-protect-action:disabled{opacity:.5;cursor:default}',
       '.pc-archive-detail{font-size:13px;line-height:1.5;color:var(--dsw-alias-label-secondary);margin:0 0 8px}',
       '.pc-archive-errors{max-height:180px;overflow:auto;padding-inline-start:20px}',
+      '.pc-archive-reason{margin:2px 0 8px;overflow-wrap:anywhere}',
       '.pc-new:hover,.pc-button:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.pc-new-ungrouped:hover{background:transparent;color:var(--dsw-alias-label-primary)}',
       '.pc-new-ungrouped:focus-visible{outline-offset:-2px}',
@@ -347,10 +350,10 @@ window.__ModuleLoader__.load({
               else {
                 const { outcome } = await request({ action: 'archive-ungrouped', id })
                 if (outcome === 'archived' || outcome === 'protected' || outcome === 'running' || outcome === 'changed') done[outcome]++
-                else done.failures.push({ id, title })
+                else done.failures.push({ id, title, reason: t('archiveUnknownOutcome') })
               }
-            } catch {
-              done.failures.push({ id, title })
+            } catch (err) {
+              done.failures.push({ id, title, code: err?.code, reason: err?.message || t('archiveUnknownOutcome') })
             }
             setProgress({ done: i + 1, total })
           }
@@ -373,7 +376,8 @@ window.__ModuleLoader__.load({
         progress ? h('p', { role: 'status' }, t('archiveRunning', progress)) : null,
         result ? h(React.Fragment, null, h('p', { role: 'status' }, t('archiveDone', result)),
           result.protected || result.running || result.changed ? h('p', { className: 'pc-archive-detail' }, t('archiveChanged', result)) : null,
-          result.failures.length ? h('ul', { className: 'pc-archive-errors' }, ...result.failures.map(({ id, title }) => h('li', { key: id }, title))) : null) : null)
+          result.failures.length ? h('ul', { className: 'pc-archive-errors' }, ...result.failures.map(({ id, title, code, reason }) =>
+            h('li', { key: id }, title, h('div', { className: 'pc-archive-detail pc-archive-reason' }, code ? `[${code}] ${reason}` : reason)))) : null) : null)
     }
 
     function archiveMembership(ctx) {
