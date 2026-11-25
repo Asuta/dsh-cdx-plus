@@ -10,6 +10,8 @@ Installed in the current profile as `dsh-asuta-desktop-navigation` through a loc
 
 ## Behavior
 
+Workspace, Ungrouped, Pinned and Recent session rows hide their relative update time by default. Hover detail cards still show the time. Pending status labels, branch and pin indicators, row actions and sorting are unchanged.
+
 Recent's right-click and More button use the host's shared session menu, including rename, copy Session ID, native open actions and the host's permission checks. Its toolbar follows the native workspace action edge when the sidebar resizes; section chevrons use the same 14px geometry.
 
 Existing Chat blue file links retain the original StoredEntry, component inputs, child declarations, store, hooks, localization, and error/retry surface. A guarded wrapper around that entry's component changes only its `openFile` prop. Relative paths use the viewed Session's current workspace. A directory opens directly in Explorer; a file reveals its containing directory and selects the file. HTTP(S), arbitrary schemes, UNC shares, device paths, control characters, alternate data streams, and unresolved relative paths are rejected. Line anchors such as `#L24-L30` are removed from filesystem targets.

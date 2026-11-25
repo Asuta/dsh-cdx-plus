@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "5f1c1e7e1dfa081a52172987049f32f59aec5c40",
+  "sourceCommit": "7969f2dcaac271eb871b0287a8598124c5a1a47f",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.5",
   "dshCompatibility": ">=0.2.2-rc.2",
@@ -56,7 +56,7 @@
     {
       "directory": "desktop-navigation",
       "name": "dsh-asuta-desktop-navigation",
-      "version": "0.1.9",
+      "version": "0.1.20",
       "title": "桌面导航",
       "rowId": "desktop-enhancements",
       "bundleConfig": false

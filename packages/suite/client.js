@@ -31,7 +31,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "desktop-navigation",
     "name": "dsh-asuta-desktop-navigation",
-    "version": "0.1.9",
+    "version": "0.1.20",
     "title": "桌面导航",
     "rowId": "desktop-enhancements",
     "bundleConfig": false
