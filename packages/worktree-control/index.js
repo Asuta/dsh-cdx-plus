@@ -1,5 +1,5 @@
 import { archiveWorktree, clearSetupWarning, commit, configure, consumeDraft, createBranch, createWorktree, deleteArchive, deleteEnvironment, discard, environmentCatalog, git, handoffWorktree, inspect, listWorktrees, openPullRequest, overview, push, readEnvironment, restoreArchive, runSetup, samePath, saveEnvironment, selectEnvironment, setPinned, stage, switchWorktree, withCommandContext, withRepoLock, withSetupRunner, worktreeSession } from './git.js'
-import { resolve } from 'node:path'
+import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { lstat } from 'node:fs/promises'
 import { isDeepStrictEqual } from 'node:util'
 import { EnvironmentTerminals } from './terminal-jobs.js'
@@ -169,57 +169,89 @@ export function apply(ctx) {
     }
     return next()
   }, { prepend: true })
-  ctx.effect(() => {
+  const archiveJobs = new Map()
+  const warnArchiveCleanup = error => {
+    if (!lifecycle.signal.aborted) ctx.logger.warn('worktree-control: 对话已归档，工作树保留待后续清理：' + String(error?.message ?? error))
+  }
+  async function cleanArchivedWorktrees(sessionId, job) {
+    if (lifecycle.signal.aborted || job.restoring.has(sessionId)) return
     const workspace = ctx.workspaceRegistry
-    const original = workspace.archiveSession
-    let active = true
-    const archive = async function (sessionId, options) {
-      // A side-chat lifecycle may have captured this wrapper before unload.
-      if (!active || lifecycle.signal.aborted) return original.call(this, sessionId, options)
-      const owner = ctx.agents.get(sessionId)
-      const known = new Set(repositories)
-      if (owner) known.add(ctx.workingDirectory.get(owner.session))
-      await original.call(this, sessionId, options)
-      if (!active || lifecycle.signal.aborted) return
-      const visitedPaths = []
-      for (const cwd of known) {
-        if (visitedPaths.some(path => samePath(path, cwd))) continue
-        if (!owner || owner.status !== 'idle') continue
-        try {
-          await owner.runMaintenance(signal => withCommandContext(ctx, owner.session, async () => {
+    const owner = ctx.agents.get(sessionId)
+    if (!owner || owner.status !== 'idle' || !workspace.archivedSessionIds.includes(sessionId)) return
+    const known = new Set(repositories)
+    known.add(ctx.workingDirectory.get(owner.session))
+    const visitedPaths = []
+    const isInUse = id => job.restoring.has(id) || pendingForks.has(id)
+      || workspace.pinnedSessionIds.includes(id) || !workspace.archivedSessionIds.includes(id)
+      || ctx.agents.get(id)?.status === 'running'
+    for (const cwd of known) {
+      if (lifecycle.signal.aborted || owner.status !== 'idle' || isInUse(sessionId)) return
+      if (!cwd || visitedPaths.some(path => samePath(path, cwd))) continue
+      try {
+        await owner.runMaintenance(signal => {
+          const stop = AbortSignal.any([signal, lifecycle.signal])
+          return withCommandContext(ctx, owner.session, async () => {
             if (ctx.sandboxPolicy.resolve({ session: owner.session }).mode === 'read-only') return
             const catalog = await overview(cwd)
             visitedPaths.push(...catalog.worktrees.map(tree => tree.path))
-            const candidates = catalog.worktrees.filter(tree => tree.managed && !tree.pinned && tree.sessionIds?.includes(sessionId)
-              && !tree.sessionIds.some(id => pendingForks.has(id))
-              && tree.sessionIds.every(id => workspace.archivedSessionIds.includes(id)))
+            const candidates = catalog.worktrees.filter(tree => tree.managed && !tree.pinned && tree.sessionIds?.includes(sessionId))
             for (const tree of candidates) {
-              if (terminals.using(tree.path)) continue
-              if (samePath(ctx.workingDirectory.get(owner.session), tree.path)) {
-                await ctx.workingDirectory.set(owner, catalog.primaryRoot, lifecycle.signal)
-              }
-              await archiveWorktree(cwd, tree.path, { sessionId, currentPath: catalog.primaryRoot, isAgentActive: async (id, path) => {
-                if (id && workspace.pinnedSessionIds.includes(id)) return true
-                for (const other of ctx.agents.list()) {
-                  if (other.id === sessionId || workspace.archivedSessionIds.includes(other.id)) continue
-                  const directory = ctx.workingDirectory.get(other.session)
-                  const root = (await git(directory, ['rev-parse', '--show-toplevel']).catch(() => directory)).trim()
-                  if (samePath(root, path)) return true
+              if (stop.aborted || terminals.using(tree.path) || tree.sessionIds.some(isInUse)) continue
+              job.members = new Set(tree.sessionIds)
+              const shouldRetain = () => stop.aborted || terminals.using(tree.path) || [...job.members].some(isInUse)
+              try {
+                const workingDirectory = ctx.workingDirectory
+                const prepareRemoval = async () => {
+                  const previous = workingDirectory.get(owner.session)
+                  const subpath = relative(tree.path, previous)
+                  if (isAbsolute(subpath) || subpath === '..' || subpath.startsWith('..' + sep)) return
+                  await workingDirectory.set(owner, catalog.primaryRoot, stop)
+                  return async () => {
+                    if (samePath(workingDirectory.get(owner.session), catalog.primaryRoot)) await workingDirectory.set(owner, previous)
+                  }
                 }
-                return false
-              } })
+                await archiveWorktree(catalog.primaryRoot, tree.path, { sessionId, currentPath: catalog.primaryRoot, shouldRetain, prepareRemoval, isAgentActive: async (id, path) => {
+                  // The persisted membership may have changed since overview().
+                  if (id) { job.members.add(id); return isInUse(id) }
+                  if (shouldRetain()) return true
+                  for (const other of ctx.agents.list()) {
+                    if (other.id === sessionId || (workspace.archivedSessionIds.includes(other.id) && other.status === 'idle')) continue
+                    const directory = ctx.workingDirectory.get(other.session)
+                    const root = (await git(directory, ['rev-parse', '--show-toplevel']).catch(() => directory)).trim()
+                    if (samePath(root, path)) return true
+                  }
+                  return false
+                } })
+              } finally { job.members.clear() }
             }
-          }, AbortSignal.any([signal, lifecycle.signal])))
-        } catch (error) { ctx.logger.warn('worktree-control: 对话已归档，工作树保留待后续清理：' + error.message) }
-      }
+          }, stop)
+        })
+      } catch (error) { warnArchiveCleanup(error) }
     }
-    workspace.archiveSession = archive
-    return () => {
-      active = false
-      if (workspace.archiveSession === archive) workspace.archiveSession = original
+  }
+  // The registry has already saved the archive and stopped activity. Do not
+  // return the cleanup promise: the native registry awaits event listeners.
+  ctx.on('workspace/session-archived', ({ sessionId }) => {
+    if (lifecycle.signal.aborted || archiveJobs.has(sessionId)) return
+    const job = { members: new Set(), restoring: new Set() }
+    job.done = Promise.resolve().then(() => cleanArchivedWorktrees(sessionId, job))
+      .catch(warnArchiveCleanup).finally(() => archiveJobs.delete(sessionId))
+    archiveJobs.set(sessionId, job)
+  })
+  ctx.on('workspace/session-unarchiving', async ({ sessionId }) => {
+    const pending = []
+    for (const [ownerId, job] of archiveJobs) {
+      // Restores that arrive before discovery are seen when membership is read
+      // under the repository lock. Only an already known match needs a wait.
+      job.restoring.add(sessionId)
+      if (ownerId === sessionId || job.members.has(sessionId)) pending.push(job.done)
     }
-  }, 'worktree-control: chat archive')
-  ctx.effect(() => () => lifecycle.abort(), 'worktree-control: lifecycle')
+    await Promise.allSettled(pending)
+  })
+  ctx.effect(() => async () => {
+    lifecycle.abort()
+    await Promise.allSettled([...archiveJobs.values()].map(job => job.done))
+  }, 'worktree-control: lifecycle')
   ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/worktree-control/terminal',
     handler: async (req, res) => {
       try { await terminals.handle(req, res) }

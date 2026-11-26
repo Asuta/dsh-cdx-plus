@@ -34,6 +34,7 @@ export async function git(cwd, args, options = {}) {
   const runtime = COMMAND_CONTEXT.getStore()
   const gitArgs = ['--no-pager', '-c', 'core.quotepath=false', '-c', 'core.fsmonitor=false', ...args]
   if (runtime) return runManagedCommand(runtime, cwd, ['git', ...gitArgs], options)
+  if (options.beforeSpawn?.() === false) return
   if (options.consumeStdout) {
     const child = spawn('git', gitArgs, { cwd, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env: envForGit(options.env), timeout: options.timeout ?? 30000 })
     let detail = ''
@@ -62,6 +63,8 @@ async function runManagedCommand(runtime, cwd, argv, options = {}) {
     signal.throwIfAborted()
     const command = [await runtime.ctx.subprocess.resolveExecutable(argv[0], undefined, signal), ...argv.slice(1)]
     const wrapped = runtime.policy.mode === 'danger-full-access' ? command : (await runtime.ctx.sandbox.confine(command, { ...runtime.policy, mode: runtime.policy.mode }, signal)).argv
+    signal.throwIfAborted()
+    if (options.beforeSpawn?.() === false) return
     child = runtime.ctx.subprocess.spawn({
       argv: wrapped, cwd, env: envForGit(options.env), signal,
       graceMs: 3000,
@@ -604,6 +607,9 @@ async function snapshotWorktree(info, state, tree, options = {}) {
     if (forced.length) await git(root, ['add', '-f', '--', ...forced.map(file => ':(literal)' + file.path)], { env, timeout: 120000 })
     const snapshotTree = (await git(root, ['write-tree'], { env })).trim()
     const commit = (await git(root, ['commit-tree', snapshotTree, '-p', head, '-m', 'DSH 工作树归档 ' + id])).trim()
+    // Preparing a snapshot can take time. Honor a restore or new activity
+    // before publishing it and removing the checkout.
+    if (options.shouldRetain?.()) return null
     const ref = 'refs/dsh-worktree-control/archive/' + id
     await git(root, ['update-ref', ref, commit])
     const includedFiles = forced.map(file => file.path)
@@ -613,11 +619,39 @@ async function snapshotWorktree(info, state, tree, options = {}) {
     }
     state.archives.push(record)
     await saveState(info, state)
-    try { await git(info.root, ['worktree', 'remove', '--force', '--', root], { timeout: 120000 }) }
-    catch (error) {
+    let undoDirectory, removalStarted = false
+    const rollback = async () => {
+      try { await undoDirectory?.() }
+      finally {
+        state.archives.pop()
+        await saveState(info, state)
+        // Compensation keeps the same sandbox policy even if the operation has been cancelled.
+        const runtime = COMMAND_CONTEXT.getStore()
+        await COMMAND_CONTEXT.run(runtime && { ...runtime, signal: undefined }, () => git(info.root, ['update-ref', '-d', ref, commit]))
+      }
+    }
+    try {
+      if (!options.shouldRetain?.()) {
+        undoDirectory = await options.prepareRemoval?.()
+        await git(info.root, ['worktree', 'remove', '--force', '--', root], { timeout: 120000, beforeSpawn: () => {
+          // Executable resolution and sandbox setup can yield. Check right at launch.
+          if (options.shouldRetain?.()) return false
+          removalStarted = true
+          return true
+        } })
+      }
+    } catch (error) {
+      if (!removalStarted) {
+        await rollback()
+        throw error
+      }
       record.removeError = error.message
       await saveState(info, state)
       throw new Error('快照已保存，但移除工作树失败；可以稍后重试清理。快照编号：' + id)
+    }
+    if (!removalStarted) {
+      await rollback()
+      return null
     }
     delete state.worktrees[root]
     await saveState(info, state)
