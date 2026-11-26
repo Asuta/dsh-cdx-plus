@@ -15,7 +15,6 @@ const validSessionId = id => typeof id === 'string' && /^[\w-]{1,128}$/.test(id)
 
 async function validateFork(ctx, source, target, atSeq, signal) {
   if (!source) throw new Error('源对话未连接，请重新打开源对话后再试。')
-  if (source.status !== 'idle') throw new Error('源对话仍在运行，请等待回复或工具任务完成后再试。')
   const header = target.session.header
   if (source.id === target.id || header.origin === 'subagent' || !header.isSeeded
     || (header.parentSession !== undefined && header.parentSession !== source.id)) {
@@ -86,7 +85,6 @@ export function apply(ctx) {
   function sourceFor(job) {
     const source = ctx.agents.get(job.sourceId)
     if (!source) throw new Error('源对话未连接，请重新打开源对话后再试。')
-    if (source.status !== 'idle') throw new Error('源对话仍在运行，请等待回复或工具任务完成后再试。')
     if (ctx.sandboxPolicy.resolve({ session: source.session }).mode === 'read-only') throw new Error('源对话处于只读模式，无法创建工作树。')
     return source
   }
@@ -162,10 +160,14 @@ export function apply(ctx) {
     const { agent, signal } = context
     if (agent && pendingForks.has(agent.id)) return next()
     if (agent && !prepared.has(agent)) {
-      const cwd = ctx.workingDirectory.get(agent.session)
-      const root = await git(cwd, ['rev-parse', '--show-toplevel']).then(value => value.trim()).catch(() => null)
-      if (root) await withCommandContext(ctx, agent.session, () => visibleSetup(agent, () => consumeDraft(cwd, agent.id, agent, ctx, signal)), signal)
-      prepared.add(agent)
+      // Environment commands must resolve their directory after a first-turn switch.
+      await withRepoLock('session:' + agent.id, async () => {
+        if (prepared.has(agent)) return
+        const cwd = ctx.workingDirectory.get(agent.session)
+        const root = await git(cwd, ['rev-parse', '--show-toplevel']).then(value => value.trim()).catch(() => null)
+        if (root) await withCommandContext(ctx, agent.session, () => visibleSetup(agent, () => consumeDraft(cwd, agent.id, agent, ctx, signal)), signal)
+        prepared.add(agent)
+      })
     }
     return next()
   }, { prepend: true })
@@ -334,12 +336,12 @@ export function apply(ctx) {
         if (!agent) throw new Error('请先打开目标对话，等待会话连接。')
         if (action === 'environment-menu') return send(200, { ok: true, value: await environmentCatalog(ctx.workingDirectory.get(agent.session), agent.id) })
         if (action === 'environment-action' || action === 'setup') {
-          // Maintenance remains idle to observers. Share its session lock until
-          // the terminal is registered; never hold it for the command lifetime.
+          // Order terminal registration after any directory change, including first-turn preparation.
           return await withRepoLock('session:' + body.sessionId, async () => {
             const cwd = ctx.workingDirectory.get(agent.session)
             const root = (await git(cwd, ['rev-parse', '--show-toplevel'])).trim()
             const environments = await environmentCatalog(root, agent.id)
+            if (environments.draft?.create) throw new Error('工作树准备就绪后才能运行环境命令。')
             const selected = environments.profiles.find(item => item.id === environments.selectedId)
             if (body.environmentId !== undefined && body.environmentId !== environments.selectedId) throw new Error('环境已切换，请刷新菜单后重试。')
             const item = action === 'setup' ? { name: '初始化环境', command: selected?.setup }
@@ -347,7 +349,7 @@ export function apply(ctx) {
             if (!item?.command) throw new Error('当前环境没有配置此命令。')
             const active = terminals.active(agent.id, item.name, root, item.command)
             if (active) return send(200, { ok: true, value: { terminalJob: terminals.summary(active) } })
-            if (agent.status !== 'idle') throw new Error('请等待当前回复完成后再运行环境命令。')
+            if (action === 'setup' && agent.status !== 'idle') throw new Error('请等待当前回复完成后再初始化环境。')
             if (ctx.sandboxPolicy.resolve({ session: agent.session }).mode === 'read-only') throw new Error('当前对话处于只读模式，无法运行环境命令。')
             const job = terminals.enqueue(agent.id, item.name, root, item.command, options =>
               withCommandContext(ctx, agent.session, () => {
@@ -366,7 +368,6 @@ export function apply(ctx) {
           return send(200, { ok: true, value: { isGitRepository, available: Boolean(hasHead && writable) } })
         }
         if (action === 'fork-capability') {
-          if (agent.status !== 'idle') return send(200, { ok: true, value: { available: false, reason: '请等待当前回复完成。' } })
           if (ctx.sandboxPolicy.resolve({ session: agent.session }).mode === 'read-only') return send(200, { ok: true, value: { available: false, reason: '当前对话为只读模式。' } })
           const cwd = ctx.workingDirectory.get(agent.session)
           const available = Boolean(await git(cwd, ['rev-parse', '--show-toplevel', '--verify', 'HEAD']).catch(() => ''))

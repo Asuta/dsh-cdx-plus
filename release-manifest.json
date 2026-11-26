@@ -1,6 +1,6 @@
 {
   "repository": "Asuta/dsh-cdx-plus",
-  "sourceCommit": "056c732b7203192fc8f4142ff7dd517626440ba7",
+  "sourceCommit": "01ce99c031c92bec71bc314587018ade98bf3dd0",
   "suite": "dsh-asuta-cdx-plus",
   "dshVersion": "0.2.2-rc.5",
   "dshCompatibility": ">=0.2.2-rc.2",
@@ -56,7 +56,7 @@
     {
       "directory": "desktop-navigation",
       "name": "dsh-asuta-desktop-navigation",
-      "version": "0.1.20",
+      "version": "0.1.23",
       "title": "桌面导航",
       "rowId": "desktop-enhancements",
       "bundleConfig": false
@@ -192,7 +192,7 @@
     {
       "directory": "worktree-control",
       "name": "dsh-asuta-worktree-control",
-      "version": "0.1.22",
+      "version": "0.1.23",
       "title": "工作树控制",
       "rowId": "worktree-control",
       "bundleConfig": false

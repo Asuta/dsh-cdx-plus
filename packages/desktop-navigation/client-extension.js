@@ -85,13 +85,16 @@ function installNavigation(ctx) {
     const tag = document.createElement('style');
     tag.dataset.pluginCss = 'dsh-asuta-desktop-navigation/recent-layout.css';
     tag.textContent = '[data-slot="sidebar.recent.section"] > [class*="_header"] { box-sizing: border-box; width:var(--recent-toolbar-width, 100%); padding-left: var(--dsh-sidebar-row-padding, 12px); padding-right: 1px; }';
-    tag.textContent += '.desktop-navigation-recent-anchor{position:relative;display:block}.aalpzW_row .aalpzW_rowActions{display:none}.aalpzW_row:hover .aalpzW_rowActions,.aalpzW_rowActive .aalpzW_rowActions{display:inline-flex}.aalpzW_row:hover .aalpzW_time,.aalpzW_row:hover .aalpzW_pinIndicator,.aalpzW_rowActive .aalpzW_time,.aalpzW_rowActive .aalpzW_pinIndicator{display:none}';
+    tag.textContent += '.desktop-navigation-recent-anchor{position:relative;display:block}.aalpzW_row .aalpzW_rowActions{display:none}.aalpzW_row:hover .aalpzW_rowActions,.aalpzW_rowActive .aalpzW_rowActions{display:inline-flex}.aalpzW_row:hover .aalpzW_time,.aalpzW_rowActive .aalpzW_time{display:none}';
     // Native rows mark timestamps explicitly. Pinned and Recent reuse their
     // time cell for pending status, marking only that status aria-hidden.
     tag.textContent += `
       [data-row-key^="session:"] > [class*="_rowResting"] > [class*="_timestamp"],
       [data-sm-native-row] > [class$="_time"]:not([aria-hidden]),
       .desktop-navigation-recent-anchor [data-row-key^="session:"] > [class$="_rowTrailing"] > [class$="_time"]:not([aria-hidden]) { display: none; }
+      [data-row-key^="session:"] > [class$="_rowResting"] > [class$="_pinIndicator"],
+      [data-sm-native-row] > [class$="_pinIndicator"],
+      .desktop-navigation-recent-anchor [data-row-key^="session:"] > [class$="_rowTrailing"] > [class$="_pinIndicator"] { display: none; }
     `;
     document.head.appendChild(tag);
     return () => { tag.remove(); };

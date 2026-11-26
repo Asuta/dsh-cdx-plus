@@ -2,7 +2,7 @@ import { execFile, spawn } from 'node:child_process'
 import { promisify, stripVTControlCharacters } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import { AsyncLocalStorage } from 'node:async_hooks'
-import { copyFile, lstat, mkdir, readFile, readdir, realpath, rename, rm, writeFile } from 'node:fs/promises'
+import { copyFile, lstat, mkdir, open, readFile, readdir, realpath, rename, rm, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import ignore from 'ignore'
@@ -333,12 +333,28 @@ async function ensureWorktreePool(root, pool, destination) {
   catch { throw new Error('已有 .agents/worktrees 目录尚未被 Git 忽略。请先在其中配置 .gitignore，再创建工作树。') }
 }
 
-async function captureDirtyState(root) {
-  const staged = await git(root, ['diff', '--cached', '--binary', '--full-index', 'HEAD', '--'])
-  const unstaged = await git(root, ['diff', '--binary', '--full-index', '--'])
-  const names = splitNul(await git(root, ['ls-files', '--others', '--exclude-standard', '-z']))
-  const files = await collectFiles(root, names)
-  return { staged, unstaged, files }
+async function captureDirtyState(root, stateDir) {
+  const index = resolve(root, (await git(root, ['rev-parse', '--git-path', 'index'])).trim())
+  await mkdir(stateDir, { recursive: true })
+  const snapshot = resolve(stateDir, 'fork-index-' + randomUUID())
+  const options = { env: { GIT_INDEX_FILE: snapshot } }
+  try {
+    // Git replaces the index atomically. Read bytes and timestamp from the same open file.
+    const source = await open(index, 'r').catch(error => { if (error.code !== 'ENOENT') throw error })
+    if (source) {
+      try {
+        const { mtimeMs } = await source.stat()
+        await writeFile(snapshot, await source.readFile(), { flag: 'wx', mode: 0o600 })
+        // Never make the snapshot look newer: Git uses its mtime to detect racy stat entries.
+        const mtime = Math.floor(mtimeMs / 1000)
+        await utimes(snapshot, mtime, mtime)
+      } finally { await source.close() }
+    }
+    const staged = await git(root, ['diff', '--cached', '--binary', '--full-index', 'HEAD', '--'], options)
+    const unstaged = await git(root, ['diff', '--binary', '--full-index', '--'], options)
+    const names = splitNul(await git(root, ['ls-files', '--others', '--exclude-standard', '-z'], options))
+    return { staged, unstaged, files: await collectFiles(root, names) }
+  } finally { await rm(snapshot, { force: true }) }
 }
 
 async function applyPatch(root, patch, label) {
@@ -435,7 +451,7 @@ export async function createWorktree(cwd, options = {}) {
     if (await lstat(destination).catch(error => error.code === 'ENOENT' ? null : Promise.reject(error))) throw new Error('工作树目录已存在：' + destination)
 
     const source = resolve(cwd)
-    const changes = options.includeChanges ? await captureDirtyState(source) : { staged: '', unstaged: '', files: [] }
+    const changes = options.includeChanges ? await captureDirtyState(info.root, info.stateDir) : { staged: '', unstaged: '', files: [] }
     await ensureWorktreePool(primaryRoot, pool, destination)
     await mkdir(dirname(destination), { recursive: true })
     const addArgs = branch ? ['worktree', 'add', '-b', branch, '--', destination, baseCommit] : ['worktree', 'add', '--detach', '--', destination, baseCommit]

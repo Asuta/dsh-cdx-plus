@@ -31,7 +31,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "desktop-navigation",
     "name": "dsh-asuta-desktop-navigation",
-    "version": "0.1.20",
+    "version": "0.1.23",
     "title": "桌面导航",
     "rowId": "desktop-enhancements",
     "bundleConfig": false
@@ -167,7 +167,7 @@ window.__ModuleLoader__.load({
   {
     "directory": "worktree-control",
     "name": "dsh-asuta-worktree-control",
-    "version": "0.1.22",
+    "version": "0.1.23",
     "title": "工作树控制",
     "rowId": "worktree-control",
     "bundleConfig": false
